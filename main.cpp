@@ -17,9 +17,11 @@ The parameter list:
 #include <string>
 #include <vector>
 
-#include "yaml-cpp/yaml.h"
+#include <yaml-cpp/yaml.h>
+#include <Eigen/Dense>
 
 using namespace std;
+using namespace Eigen;
 
 int main (int argc, char** argv)
 {
@@ -156,7 +158,7 @@ int main (int argc, char** argv)
         means[i] -= field_size;
 
       vars[i]
-        += (sigmaM * u) * (sigmaM * u) * deltaT * deltaT
+        += ((sigmaM * u) * (sigmaM * u) * deltaT * deltaT
          + sigmaF * sigmaF) * deltaT * deltaT;
     }
 
@@ -330,6 +332,14 @@ int main (int argc, char** argv)
     total_error += errors[i];
   }
   std::cout << "overall average error: " << (total_error/max_time_steps/n_robots) << std::endl;
+
+
+  // just for test of eigen
+  Matrix3d A = Matrix3d::Identity();
+  std::cout << "A = I: " << std::endl << A << std::endl;
+
+  A(1,1) = 5;
+  std::cout << "A(1,1) = 5: " << std::endl << A << std::endl;
 
   return 0;
 }
