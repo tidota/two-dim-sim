@@ -1,24 +1,39 @@
-field_size: 50.0
-max_time_steps: 1000
-deltaT: 0.1
+# max time
+max_time: 100.0
+# simulation update frequendy
+sim_freq: 10.0
+# weight of motion noise
 sigmaM: 1.5
+# sigma for floating effect
 sigmaF: 0.0
-sigmaS:         0.1
-sigmaGlobalLoc: 3
-n_robots: 5
-robots:
-  - x: 0.5
-  - x: 2.0
-  - x: 3.5
-  - x: 5.0
-  - x: 6.5
-ctrl_rate: 1
-ctrl_max: 1
+# sigma for sensor model
+sigmaS: 0.1
+# sigma for global localizaiton
+sigmaGlobalLoc: 3.0
+# control rate
+ctrl_rate: 1.0
+# control max
+ctrl_max: 1.0
+# mode
+mode: 0
+# enable_update_step
 enable_update_step: false
-global_loc: false
+# global localization
+enable_global_loc: false
+# global localization at every specified steps
 global_loc_steps: 1
-mode: 1
-random_order: true
-prob_update: true
-prob_update_p: 0.5
+# robot's locations
+robots:
+  -
+    - 1.0
+    - 2.0
+  -
+    - 3.0
+    - 4.0
+# random order to update estimates?
+enable_random_order: false
+# probabilistically update?
+enable_prob_update: false
+prob_update_p: 1.0
+# allow loopy updates (the last robot can communicate with the first one)
 enable_loop: false

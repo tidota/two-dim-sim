@@ -1,11 +1,6 @@
 /*
 
 The main part of the simulation.
-The parameter list:
-
-- # of robots
-- max range of sensory data
-- size of the world
 
 */
 
@@ -28,12 +23,12 @@ int main (int argc, char** argv)
   std::ifstream fin("settings.yaml");
   YAML::Node doc = YAML::Load(fin);
 
-  // field size
-  double field_size = doc["field_size"].as<double>();
-  // get max time steps
-  int max_time_steps = doc["max_time_steps"].as<int>();
-  // get delta T
-  double deltaT = doc["deltaT"].as<double>();
+  // get max time
+  double max_time = doc["max_time"].as<double>();
+  // get simulation update frequendy
+  double sim_freq = doc["sim_freq"].as<double>();
+
+  std::cout << "1" << std::endl;
   // weight of motion noise
   double sigmaM = doc["sigmaM"].as<double>();
   // get sigma for floating effect
@@ -42,48 +37,58 @@ int main (int argc, char** argv)
   double sigmaS = doc["sigmaS"].as<double>();
   // get sigma for global localizaiton
   double sigmaGlobalLoc = doc["sigmaGlobalLoc"].as<double>();
-  // get # of robots
-  int n_robots = doc["n_robots"].as<int>();
+
+    std::cout << "1" << std::endl;
   // control rate
   double ctrl_rate = doc["ctrl_rate"].as<double>();
   // control max
   double ctrl_max = doc["ctrl_max"].as<double>();
-  // robot's locations
-  std::vector<double> robots(n_robots);
-  // means on robot's locations
-  std::vector<double> means(n_robots);
-  // variance
-  std::vector<double> vars(n_robots);
-  // errors
-  std::vector<double> errors(n_robots, 0);
+
+    std::cout << "1" << std::endl;
   // mode
-  // 0: default (each robot assumes other robot's locations are accurate)
-  // 1: other robot's uncertainty is considered
-  // 2: reduced uncertainty
   int mode = doc["mode"].as<int>();
+
   // enable_update_step
   bool enable_update_step = doc["enable_update_step"].as<bool>();
+
   // global localization
-  bool global_loc = doc["global_loc"].as<bool>();
+  bool enable_global_loc = doc["enable_global_loc"].as<bool>();
   // global localization at every specified steps.
   int global_loc_steps = doc["global_loc_steps"].as<int>();
+
+    std::cout << "2" << std::endl;
+  // robot's locations
+  std::vector<double> robots;
+  // means on robot's locations
+  std::vector<double> means;
+  // variance
+  std::vector<double> vars;
   // for all robots
   for(unsigned int i = 0; i < doc["robots"].size(); ++i)
   {
     // init location x
-    robots[i] = doc["robots"][i]["x"].as<double>();
-    means[i] = robots[i];
-    vars[i] = 0;
+    std::cout << doc["robots"].size() << std::endl;
+    std::cout << "------------" << std::endl;
+    std::cout << "robot[" << i << "]";
+    for (unsigned int j = 0; j < doc["robots"][i].size(); ++j)
+    {
+      double buff = doc["robots"][i][j].as<double>();
+      std::cout << "[" << j << "]: " << buff << ", ";
+    }
+    std::cout << std::endl;
   }
+    std::cout << "3" << std::endl;
+
   // random order to update estimates?
-  bool random_order = doc["random_order"].as<bool>();
+  bool enable_random_order = doc["enable_random_order"].as<bool>();
   // probabilistically update?
-  bool prob_update = doc["prob_update"].as<bool>();
+  bool enable_prob_update = doc["enable_prob_update"].as<bool>();
   double prob_update_p = doc["prob_update_p"].as<double>();
   // allow loopy updates (the last robot can communicate with the first one)
-  bool loopy_updates = doc["enable_loop"].as<bool>();
+  bool enable_loop = doc["enable_loop"].as<bool>();
   fin.close();
 
+/*
   std::cout << "field size: " << field_size << std::endl;
   std::cout << "max time steps: " << max_time_steps << std::endl;
   std::cout << "delta T: " << deltaT << std::endl;
@@ -97,11 +102,13 @@ int main (int argc, char** argv)
     std::cout << "means[" << i << "]: " << means[i] << std::endl;
     std::cout << "vars[" << i << "]: " << vars[i] << std::endl;
   }
+*/
 
   // random numbers
   std::random_device rd{};
   std::mt19937 gen{rd()};
 
+/*
   // print header
   std::cout << "   t  |";
   for (int i = 0; i < n_robots; ++i)
@@ -111,10 +118,10 @@ int main (int argc, char** argv)
     std::cout << "R[" << setw(3) << i << "].V |";
   }
   std::cout << std::endl;
-
+*/
   // prep output file
   ofstream fout ("output.dat");
-
+/*
   // each step
   for (int t = 0; t < max_time_steps; ++t)
   {
@@ -297,8 +304,9 @@ int main (int argc, char** argv)
     std::cout << std::endl;
     fout << std::endl;
   }
+*/
   fout.close();
-
+/*
   // output of gnuplot command
   std::cout << std::endl;
   std::cout << "gnuplot command" << std::endl;
@@ -323,7 +331,9 @@ int main (int argc, char** argv)
     std::cout << std::endl;
   }
   std::cout << std::endl;
+*/
 
+/*
   // display errors
   double total_error = 0;
   for (int i = 0; i < n_robots; ++i)
@@ -332,7 +342,7 @@ int main (int argc, char** argv)
     total_error += errors[i];
   }
   std::cout << "overall average error: " << (total_error/max_time_steps/n_robots) << std::endl;
-
+*/
 
   // just for test of eigen
   Matrix3d A = Matrix3d::Identity();
