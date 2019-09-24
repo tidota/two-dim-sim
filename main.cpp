@@ -79,6 +79,10 @@ int main (int argc, char** argv)
   }
     std::cout << "3" << std::endl;
 
+  // topology/connectivity
+  std::string topology = doc["topology"].as<std::string>();
+  std::vector< std::pair<int,int> > edges;
+
   // random order to update estimates?
   bool enable_random_order = doc["enable_random_order"].as<bool>();
   // probabilistically update?
@@ -88,6 +92,7 @@ int main (int argc, char** argv)
   bool enable_loop = doc["enable_loop"].as<bool>();
   fin.close();
 
+  std::cout << topology << std::endl;
 /*
   std::cout << "field size: " << field_size << std::endl;
   std::cout << "max time steps: " << max_time_steps << std::endl;

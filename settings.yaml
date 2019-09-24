@@ -22,6 +22,8 @@ enable_update_step: false
 enable_global_loc: false
 # global localization at every specified steps
 global_loc_steps: 1
+# network topology
+topology: star
 # robot's locations
 robots:
   -
