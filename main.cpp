@@ -126,6 +126,39 @@ int main (int argc, char** argv)
 */
   // prep output file
   ofstream fout ("output.dat");
+
+  // print the initial states.
+
+  
+  // main part of simulation
+  for (double t = 0; t <= max_time; t += 1.0/sim_freq)
+  {
+    // update connectivity based on the topology mode
+
+    // update simulation env.
+    // for all robots
+      // control values
+
+      // apply the control values
+
+      // apply noise?
+
+    // === prediction ===
+    // for all robots
+      // motion model
+
+    // === estimation update ===
+    // global localization.
+
+    // for all robots
+      // mutual measurement
+
+      // update
+
+    // apply the updated estimations
+
+    // print out the current values.
+  }
 /*
   // each step
   for (int t = 0; t < max_time_steps; ++t)
