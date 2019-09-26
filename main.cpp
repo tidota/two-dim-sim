@@ -28,7 +28,6 @@ int main (int argc, char** argv)
   // get simulation update frequendy
   double sim_freq = doc["sim_freq"].as<double>();
 
-  std::cout << "1" << std::endl;
   // weight of motion noise
   double sigmaM = doc["sigmaM"].as<double>();
   // get sigma for floating effect
@@ -38,13 +37,11 @@ int main (int argc, char** argv)
   // get sigma for global localizaiton
   double sigmaGlobalLoc = doc["sigmaGlobalLoc"].as<double>();
 
-    std::cout << "1" << std::endl;
   // control rate
   double ctrl_rate = doc["ctrl_rate"].as<double>();
   // control max
   double ctrl_max = doc["ctrl_max"].as<double>();
 
-    std::cout << "1" << std::endl;
   // mode
   int mode = doc["mode"].as<int>();
 
@@ -56,28 +53,27 @@ int main (int argc, char** argv)
   // global localization at every specified steps.
   int global_loc_steps = doc["global_loc_steps"].as<int>();
 
-    std::cout << "2" << std::endl;
   // robot's locations
-  std::vector<double> robots;
+  std::vector<VectorXd> robots;
   // means on robot's locations
-  std::vector<double> means;
+  std::vector<VectorXd> means;
   // variance
-  std::vector<double> vars;
+  std::vector<MatrixXd> vars;
+  // number of dimensions
+  int n_dim = doc["robots"][0].size();
   // for all robots
   for(unsigned int i = 0; i < doc["robots"].size(); ++i)
   {
     // init location x
-    std::cout << doc["robots"].size() << std::endl;
-    std::cout << "------------" << std::endl;
-    std::cout << "robot[" << i << "]";
+    VectorXd buff(n_dim);
     for (unsigned int j = 0; j < doc["robots"][i].size(); ++j)
     {
-      double buff = doc["robots"][i][j].as<double>();
-      std::cout << "[" << j << "]: " << buff << ", ";
+      buff(j) = doc["robots"][i][j].as<double>();
     }
-    std::cout << std::endl;
+    robots.push_back(buff);
+    means.push_back(buff);
+    vars.push_back(MatrixXd::Zero(n_dim, n_dim));
   }
-    std::cout << "3" << std::endl;
 
   // topology/connectivity
   std::string topology = doc["topology"].as<std::string>();
@@ -129,7 +125,7 @@ int main (int argc, char** argv)
 
   // print the initial states.
 
-  
+
   // main part of simulation
   for (double t = 0; t <= max_time; t += 1.0/sim_freq)
   {

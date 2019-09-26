@@ -32,6 +32,9 @@ robots:
   -
     - 3.0
     - 4.0
+  -
+    - 5.0
+    - 6.0
 # random order to update estimates?
 enable_random_order: false
 # probabilistically update?
