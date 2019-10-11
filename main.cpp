@@ -88,22 +88,28 @@ int main (int argc, char** argv)
   bool enable_loop = doc["enable_loop"].as<bool>();
   fin.close();
 
-  std::cout << topology << std::endl;
-/*
-  std::cout << "field size: " << field_size << std::endl;
-  std::cout << "max time steps: " << max_time_steps << std::endl;
-  std::cout << "delta T: " << deltaT << std::endl;
+  std::cout << "network topology: " << topology << std::endl;
+  std::cout << "max time: " << max_time << std::endl;
+  std::cout << "simulation update frequency (Hz): " << sim_freq << std::endl;
+  std::cout << "sigmaM: " << sigmaM << std::endl;
   std::cout << "sigmaF: " << sigmaF << std::endl;
   std::cout << "sigmaS: " << sigmaS << std::endl;
-  std::cout << "n_robots: " << n_robots << std::endl;
+  std::cout << "sigmaGlobalLoc: " << sigmaGlobalLoc << std::endl;
   std::cout << "ctrl_rate: " << ctrl_rate << std::endl;
-  for (int i = 0; i < n_robots; ++i)
+  std::cout << "ctrl_max: " << ctrl_max << std::endl;
+  std::cout << "# of robots: " << doc["robots"].size() << std::endl;
+  for (int i = 0; i < doc["robots"].size(); ++i)
   {
-    std::cout << "robot[" << i << "]: " << robots[i] << std::endl;
-    std::cout << "means[" << i << "]: " << means[i] << std::endl;
-    std::cout << "vars[" << i << "]: " << vars[i] << std::endl;
+    std::cout << "robot[" << i << "]: ";
+    for (int idim = 0; idim < 2; ++idim)
+      std::cout << robots[i](idim) << ((idim == (2 - 1))? "": ", ");
+    std::cout << "| ";
+    std::cout << "means[" << i << "]: ";
+    for (int idim = 0; idim < 2; ++idim)
+      std::cout << means[i](idim) << ((idim == (2 - 1))? "": ", ");
+    std::cout << "| ";
+    std::cout << "vars[" << i << "]: " << vars[i].determinant() << std::endl;
   }
-*/
 
   // random numbers
   std::random_device rd{};
