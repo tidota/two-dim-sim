@@ -79,6 +79,40 @@ int main (int argc, char** argv)
   std::string topology = doc["topology"].as<std::string>();
   std::vector< std::pair<int,int> > edges;
 
+  if (topology == "star")
+  {
+    for (int i = 1; i < robots.size(); ++i)
+    {
+      edges.push_back(std::pair<int, int>(0, i));
+    }
+  }
+  else if (topology == "loop")
+  {
+    for (int i = 0; i < robots.size() - 1; ++i)
+    {
+      edges.push_back(std::pair<int, int>(i, i + 1));
+    }
+  }
+  else if (topology == "complete")
+  {
+    for (int i = 1; i < robots.size() - 1; ++i)
+    {
+      for (int j = i + 1; j < robots.size(); ++j)
+      {
+        edges.push_back(std::pair<int, int>(i, j));
+      }
+    }
+  }
+  else if (topology == "dynamic")
+  {
+    // TODO
+  }
+  else // unknown
+  {
+    std::cout << "Error: unknown topology type [" << topology << "]" << std::endl;
+    return -1;
+  }
+
   // random order to update estimates?
   bool enable_random_order = doc["enable_random_order"].as<bool>();
   // probabilistically update?
@@ -110,6 +144,12 @@ int main (int argc, char** argv)
     std::cout << "| ";
     std::cout << "vars[" << i << "]: " << vars[i].determinant() << std::endl;
   }
+  std::cout << "network topology (" << topology << "):";
+  for (auto edge: edges)
+  {
+    std::cout << "(" << edge.first << ", " << edge.second << "), ";
+  }
+  std::cout << std::endl;
 
   // random numbers
   std::random_device rd{};
@@ -136,6 +176,10 @@ int main (int argc, char** argv)
   for (double t = 0; t <= max_time; t += 1.0/sim_freq)
   {
     // update connectivity based on the topology mode
+    if (topology == "dynamic")
+    {
+      // TODO
+    }
 
     // update simulation env.
     // for all robots
