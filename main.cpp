@@ -59,10 +59,12 @@ int main (int argc, char** argv)
   std::vector<VectorXd> means;
   // variance
   std::vector<MatrixXd> vars;
+  // number of robots
+  int n_robots = doc["robots"].size();
   // number of dimensions
   int n_dim = doc["robots"][0].size();
   // for all robots
-  for(unsigned int i = 0; i < doc["robots"].size(); ++i)
+  for(unsigned int i = 0; i < n_robots; ++i)
   {
     // init location x
     VectorXd buff(n_dim);
@@ -81,23 +83,23 @@ int main (int argc, char** argv)
 
   if (topology == "star")
   {
-    for (int i = 1; i < robots.size(); ++i)
+    for (int i = 1; i < n_robots; ++i)
     {
       edges.push_back(std::pair<int, int>(0, i));
     }
   }
   else if (topology == "loop")
   {
-    for (int i = 0; i < robots.size() - 1; ++i)
+    for (int i = 0; i < n_robots - 1; ++i)
     {
       edges.push_back(std::pair<int, int>(i, i + 1));
     }
   }
   else if (topology == "complete")
   {
-    for (int i = 1; i < robots.size() - 1; ++i)
+    for (int i = 1; i < n_robots - 1; ++i)
     {
-      for (int j = i + 1; j < robots.size(); ++j)
+      for (int j = i + 1; j < n_robots; ++j)
       {
         edges.push_back(std::pair<int, int>(i, j));
       }
@@ -175,33 +177,56 @@ int main (int argc, char** argv)
   // main part of simulation
   for (double t = 0; t <= max_time; t += 1.0/sim_freq)
   {
+    // === update simulation env. ===
+
+    // for all robots
+    for (int i = 0; i < n_robots; ++i)
+    {
+      // control values
+
+      // apply the control values
+
+      // apply noise?
+    }
+
     // update connectivity based on the topology mode
     if (topology == "dynamic")
     {
       // TODO
     }
 
-    // update simulation env.
-    // for all robots
-      // control values
-
-      // apply the control values
-
-      // apply noise?
-
     // === prediction ===
     // for all robots
+    for (int i = 0; i < n_robots; ++i)
+    {
       // motion model
+    }
 
     // === estimation update ===
-    // global localization.
+    std::vector<VectorXd> means_buff(means);
+    std::vector<MatrixXd> vars_buff(vars);
 
-    // for all robots
+    // global localization.
+    {
+      // TODO
+    }
+
+    // for all edges of network
+    std::vector<int> indx_list(edges.size());
+    if (true) // to add a flag to shuffle them
+      std::random_shuffle(indx_list.begin(), indx_list.end());
+    for (auto indx: indx_list)
+    {
       // mutual measurement
+      auto edge = edges[indx];
 
       // update
+    }
 
     // apply the updated estimations
+    {
+
+    }
 
     // print out the current values.
   }
