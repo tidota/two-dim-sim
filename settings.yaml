@@ -42,3 +42,5 @@ enable_prob_update: false
 prob_update_p: 1.0
 # allow loopy updates (the last robot can communicate with the first one)
 enable_loop: false
+# every N time steps to plot
+plot_interval: 100
