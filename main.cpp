@@ -194,12 +194,35 @@ int main (int argc, char** argv)
   {
     // === update simulation env. ===
 
-    // for all robots
+    // NOTE: robots are forming a circle.
+
+    // accelerations for robots
+    // TODO
+
+    // Repulsive force
+    for (int i = 0; i < n_robots - 1; ++i)
+    {
+      for (int j = i; j < n_robots; ++j)
+      {
+        // if it is too close, apply a repulsive acceleration.
+        // TODO
+      }
+    }
+    // Attractive force
     for (int i = 0; i < n_robots; ++i)
     {
-      // control values
+      int j = (i + 1) % n_robots;
 
-      // apply the control values
+      // if it is too far, apply an attractive acceleration.
+      // TODO
+    }
+
+    // for all robots, apply the resulted accelerations
+    for (int i = 0; i < n_robots; ++i)
+    {
+      // update the position by the current velocity.
+
+      // update the velocity by the resulted acceleration.
 
       // apply noise?
     }
