@@ -24,37 +24,44 @@ int main (int argc, char** argv)
   YAML::Node doc = YAML::Load(fin);
 
   // get max time
-  double max_time = doc["max_time"].as<double>();
+  const double max_time = doc["max_time"].as<double>();
   // get simulation update frequendy
-  double sim_freq = doc["sim_freq"].as<double>();
+  const double sim_freq = doc["sim_freq"].as<double>();
+  // phase, i.e., deta T
+  const double deltaT = 1.0/sim_freq;
 
   // weight of motion noise
-  double sigmaM = doc["sigmaM"].as<double>();
+  const double sigmaM = doc["sigmaM"].as<double>();
   // get sigma for floating effect
-  double sigmaF = doc["sigmaF"].as<double>();
+  const double sigmaF = doc["sigmaF"].as<double>();
   // get sigma for sensor model
-  double sigmaS = doc["sigmaS"].as<double>();
+  const double sigmaS = doc["sigmaS"].as<double>();
   // get sigma for global localizaiton
-  double sigmaGlobalLoc = doc["sigmaGlobalLoc"].as<double>();
+  const double sigmaGlobalLoc = doc["sigmaGlobalLoc"].as<double>();
 
   // control rate
-  double ctrl_rate = doc["ctrl_rate"].as<double>();
+  const double ctrl_rate = doc["ctrl_rate"].as<double>();
   // control max
-  double ctrl_max = doc["ctrl_max"].as<double>();
+  const double ctrl_max = doc["ctrl_max"].as<double>();
+
+  // weight of motion model
+  const double alphaM = doc["alphaM"].as<double>();
+  // constant value of motion model
+  const double betaM = doc["betaM"].as<double>();
 
   // mode
-  int mode = doc["mode"].as<int>();
+  const int mode = doc["mode"].as<int>();
 
   // enable_update_step
-  bool enable_update_step = doc["enable_update_step"].as<bool>();
+  const bool enable_update_step = doc["enable_update_step"].as<bool>();
 
   // global localization
-  bool enable_global_loc = doc["enable_global_loc"].as<bool>();
+  const bool enable_global_loc = doc["enable_global_loc"].as<bool>();
   // global localization at every specified steps.
-  int global_loc_steps = doc["global_loc_steps"].as<int>();
+  const int global_loc_steps = doc["global_loc_steps"].as<int>();
 
   // plotting interval
-  int plot_interval = doc["plot_interval"].as<int>();
+  const int plot_interval = doc["plot_interval"].as<int>();
 
   // robot's locations
   std::vector<VectorXd> robots;
@@ -183,7 +190,7 @@ int main (int argc, char** argv)
 
 
   // main part of simulation
-  for (double t = 0; t <= max_time; t += 1.0/sim_freq)
+  for (double t = 0; t <= max_time; t += deltaT)
   {
     // === update simulation env. ===
 
@@ -208,7 +215,10 @@ int main (int argc, char** argv)
     for (int i = 0; i < n_robots; ++i)
     {
       // motion model
-      
+      means[i] = means[i] + MatrixXd::Identity(n_dim, n_dim) * vels[i] * deltaT;
+      MatrixXd V = MatrixXd::Identity(n_dim, n_dim) * deltaT;
+      MatrixXd M = MatrixXd::Identity(n_dim, n_dim) * (alphaM * alphaM) * vels[i].inverse() * vels[i];
+      vars[i] = vars[i] + V * M * V.inverse();
     }
 
     // === estimation update ===
