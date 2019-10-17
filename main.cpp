@@ -64,6 +64,8 @@ int main (int argc, char** argv)
   std::vector<MatrixXd> vars;
   // number of robots
   int n_robots = doc["robots"].size();
+  // velocities
+  std::vector<VectorXd> vels;
   // errors
   std::vector<double> errors(n_robots, 0);
   // number of dimensions
@@ -80,6 +82,7 @@ int main (int argc, char** argv)
     robots.push_back(buff);
     means.push_back(buff);
     vars.push_back(MatrixXd::Zero(n_dim, n_dim));
+    vels.push_back(VectorXd::Zero(n_dim));
   }
 
   // topology/connectivity
@@ -205,6 +208,7 @@ int main (int argc, char** argv)
     for (int i = 0; i < n_robots; ++i)
     {
       // motion model
+      
     }
 
     // === estimation update ===
