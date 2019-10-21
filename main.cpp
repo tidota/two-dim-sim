@@ -175,17 +175,16 @@ int main (int argc, char** argv)
   std::random_device rd{};
   std::mt19937 gen{rd()};
 
-/*
   // print header
-  std::cout << "   t  |";
+  std::cout << "    t   |";
   for (int i = 0; i < n_robots; ++i)
   {
-    std::cout << "R[" << setw(3) << i << "].x |";
-    std::cout << "R[" << setw(3) << i << "].m |";
-    std::cout << "R[" << setw(3) << i << "].V |";
+    std::cout << "R[" << setw(7 * n_dim - 7) << i << "].x |";
+    std::cout << "R[" << setw(7 * n_dim - 7) << i << "].m |";
+    std::cout << " det(v) |";
   }
   std::cout << std::endl;
-*/
+
   // prep output file
   ofstream fout ("output.dat");
 
@@ -281,20 +280,44 @@ int main (int argc, char** argv)
     }
 
     // print the estimates
+    std::cout << std::fixed << std::setprecision(2);
+    fout << std::fixed << std::setprecision(3);
     if ((int)(t * sim_freq) % plot_interval == 0)
     {
-      std::cout << std::fixed << std::right << std::setw(8) << std::setprecision(2) << t << "|";
-      fout << std::fixed << std::right << std::setw(8) << std::setprecision(2) << t << " ";
+      std::cout << std::right << std::setw(8) << t << "|";
+      fout << std::right << std::setw(8) << t << " ";
 
       for (int i = 0; i < n_robots; ++i)
       {
-        std::cout << std::fixed << std::right << std::setw(9) << std::setprecision(3) << 0.0 /*robots[i]*/ << "|";
-        std::cout << std::fixed << std::right << std::setw(9) << std::setprecision(3) << 0.0 /*means[i]*/ << "|";
-        std::cout << std::fixed << std::right << std::setw(9) << std::setprecision(3) << 0.0 /*std::sqrt(vars[i])*/ << "|";
+        for (int j = 0; j < n_dim; ++j)
+        {
+          std::cout << std::right << std::setw(6) << 0.0; /*robots[i](j)*/
+          if (j < n_dim - 1)
+            std::cout << ",";
+          else
+            std::cout << "|";
+        }
+        for (int j = 0; j < n_dim; ++j)
+        {
+          std::cout << std::right << std::setw(6) << 0.0; /*means[i](j)*/
+          if (j < n_dim - 1)
+            std::cout << ",";
+          else
+            std::cout << "|";
+        }
+        std::cout << std::right << std::setw(8) << 0.0 /*std::sqrt(vars[i])*/ << "|";
 
-        fout << std::fixed << std::right << std::setw(9) << std::setprecision(3) << 0.0 /*robots[i]*/ << " ";
-        fout << std::fixed << std::right << std::setw(9) << std::setprecision(3) << 0.0 /*means[i]*/ << " ";
-        fout << std::fixed << std::right << std::setw(9) << std::setprecision(3) << 0.0 /*std::sqrt(vars[i])*/ << " ";
+        for (int j = 0; j < n_dim; ++j)
+        {
+          fout << std::right << std::setw(9) << 0.0; /*robots[i](j)*/
+          fout << " ";
+        }
+        for (int j = 0; j < n_dim; ++j)
+        {
+          fout << std::right << std::setw(9) << 0.0; /*means[i](j)*/
+          fout << " ";
+        }
+        fout << std::right << std::setw(9) << 0.0 /*std::sqrt(vars[i])*/ << " ";
       }
 
       std::cout << std::endl;
