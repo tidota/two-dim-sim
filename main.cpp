@@ -164,6 +164,7 @@ int main (int argc, char** argv)
     std::cout << "| ";
     std::cout << "vars[" << i << "]: " << vars[i].determinant() << std::endl;
   }
+  std::cout << "deltaT: " << deltaT << std::endl;
   std::cout << "network topology (" << topology << "):";
   for (auto edge: edges)
   {
@@ -188,26 +189,79 @@ int main (int argc, char** argv)
   // prep output file
   ofstream fout ("output.dat");
 
-  // print the initial states.
-
-
   // main part of simulation
-  for (double t = 0; t <= max_time; t += deltaT)
+  for (int t_step = 0; t_step * deltaT <= max_time; ++t_step)
   {
-    // === update simulation env. ===
+    double t = t_step * deltaT;
+    // print the current states
+    if ((int)(t * sim_freq) % plot_interval == 0)
+    {
+      std::cout << std::fixed << std::setprecision(2);
+      std::cout << std::right << std::setw(8) << t << "|";
+      fout << std::fixed << std::setprecision(3);
+      fout << std::right << std::setw(8) << t << " ";
 
+      for (int i = 0; i < n_robots; ++i)
+      {
+        for (int j = 0; j < n_dim; ++j)
+        {
+          std::cout << std::right << std::setw(6) << robots[i](j);
+          if (j < n_dim - 1)
+            std::cout << ",";
+          else
+            std::cout << "|";
+        }
+        for (int j = 0; j < n_dim; ++j)
+        {
+          std::cout << std::right << std::setw(6) << means[i](j);
+          if (j < n_dim - 1)
+            std::cout << ",";
+          else
+            std::cout << "|";
+        }
+        std::cout << std::right << std::setw(8) << std::sqrt(vars[i].determinant()) << "|";
+
+        for (int j = 0; j < n_dim; ++j)
+        {
+          fout << std::right << std::setw(9) << robots[i](j);
+          fout << " ";
+        }
+        for (int j = 0; j < n_dim; ++j)
+        {
+          fout << std::right << std::setw(9) << means[i](j);
+          fout << " ";
+        }
+        fout << std::right << std::setw(9) << std::sqrt(vars[i].determinant()) << " ";
+      }
+
+      std::cout << std::endl;
+      fout << std::endl;
+    }
+
+    // === update simulation env. ===
     // NOTE: robots are forming a circle.
 
-    // accelerations for robots
-    // TODO
-
+    // accelerations for robots:
+    for (int i = 0; i < n_robots; ++i)
+    {
+      accs[i] = VectorXd::Zero(n_dim);
+    }
     // Repulsive force
     for (int i = 0; i < n_robots - 1; ++i)
     {
-      for (int j = i; j < n_robots; ++j)
+      for (int j = i + 1; j < n_robots; ++j)
       {
         // if it is too close, apply a repulsive acceleration.
-        // TODO
+        const double thresh = 10.0;
+        const double repul_rate = 0.1;
+        VectorXd diff = robots[i] - robots[j];
+        double dist = thresh - diff.norm();
+        if (0 < dist && dist < thresh)
+        {
+          diff = diff / diff.norm();
+          accs[i] += dist * dist * diff * repul_rate;
+          accs[j] -= dist * dist * diff * repul_rate;
+        }
       }
     }
     // Attractive force
@@ -216,17 +270,34 @@ int main (int argc, char** argv)
       int j = (i + 1) % n_robots;
 
       // if it is too far, apply an attractive acceleration.
-      // TODO
+      const double thresh = 3.0;
+      const double attr_rate = 0.1;
+      VectorXd diff = robots[i] - robots[j];
+      double dist = diff.norm() - thresh;
+      if (dist > 0)
+      {
+        diff = diff / diff.norm();
+        accs[i] -= dist * dist * diff * attr_rate;
+        accs[j] += dist * dist * diff * attr_rate;
+      }
+    }
+    // Friction
+    for (int i = 0; i < n_robots; ++i)
+    {
+      const double fric_rate = 0.6;
+      accs[i] -= fric_rate * vels[i];
     }
 
     // for all robots, apply the resulted accelerations
     for (int i = 0; i < n_robots; ++i)
     {
+      std::normal_distribution<> motion_noise(0, sigmaM*std::fabs(vels[i].norm()));
+
       // update the position by the current velocity.
+      robots[i] += deltaT * (vels[i] + motion_noise(gen) * VectorXd::Ones(n_dim));
 
       // update the velocity by the resulted acceleration.
-
-      // apply noise?
+      vels[i] += deltaT * accs[i];
     }
 
     // update connectivity based on the topology mode
@@ -277,51 +348,6 @@ int main (int argc, char** argv)
     {
       // TODO
       //errors[i] += std::fabs(means[i] - robots[i]);
-    }
-
-    // print the estimates
-    std::cout << std::fixed << std::setprecision(2);
-    fout << std::fixed << std::setprecision(3);
-    if ((int)(t * sim_freq) % plot_interval == 0)
-    {
-      std::cout << std::right << std::setw(8) << t << "|";
-      fout << std::right << std::setw(8) << t << " ";
-
-      for (int i = 0; i < n_robots; ++i)
-      {
-        for (int j = 0; j < n_dim; ++j)
-        {
-          std::cout << std::right << std::setw(6) << 0.0; /*robots[i](j)*/
-          if (j < n_dim - 1)
-            std::cout << ",";
-          else
-            std::cout << "|";
-        }
-        for (int j = 0; j < n_dim; ++j)
-        {
-          std::cout << std::right << std::setw(6) << 0.0; /*means[i](j)*/
-          if (j < n_dim - 1)
-            std::cout << ",";
-          else
-            std::cout << "|";
-        }
-        std::cout << std::right << std::setw(8) << 0.0 /*std::sqrt(vars[i])*/ << "|";
-
-        for (int j = 0; j < n_dim; ++j)
-        {
-          fout << std::right << std::setw(9) << 0.0; /*robots[i](j)*/
-          fout << " ";
-        }
-        for (int j = 0; j < n_dim; ++j)
-        {
-          fout << std::right << std::setw(9) << 0.0; /*means[i](j)*/
-          fout << " ";
-        }
-        fout << std::right << std::setw(9) << 0.0 /*std::sqrt(vars[i])*/ << " ";
-      }
-
-      std::cout << std::endl;
-      fout << std::endl;
     }
   }
 
