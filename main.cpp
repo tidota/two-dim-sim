@@ -243,8 +243,8 @@ int main (int argc, char** argv)
       // motion model
       means[i] = means[i] + MatrixXd::Identity(n_dim, n_dim) * vels[i] * deltaT;
       MatrixXd V = MatrixXd::Identity(n_dim, n_dim) * deltaT;
-      MatrixXd M = MatrixXd::Identity(n_dim, n_dim) * (alphaM * alphaM) * vels[i].inverse() * vels[i];
-      vars[i] = vars[i] + V * M * V.inverse();
+      MatrixXd M = (alphaM * alphaM) * MatrixXd::Identity(n_dim, n_dim).cwiseProduct(vels[i] * vels[i].transpose());
+      vars[i] = vars[i] + V.transpose() * M * V;
     }
 
     // === estimation update ===
