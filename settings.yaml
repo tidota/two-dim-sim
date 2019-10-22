@@ -9,7 +9,8 @@ sigmaF: 0.0
 # sigma for sensor model
 sigmaS: 0.1
 # sigma for global localizaiton
-sigmaGlobalLoc: 3.0
+sigmaGlobalLocR: 3.0
+sigmaGlobalLocT: 0.5
 # control rate
 ctrl_rate: 1.0
 # control max

@@ -37,7 +37,8 @@ int main (int argc, char** argv)
   // get sigma for sensor model
   const double sigmaS = doc["sigmaS"].as<double>();
   // get sigma for global localizaiton
-  const double sigmaGlobalLoc = doc["sigmaGlobalLoc"].as<double>();
+  const double sigmaGlobalLocR = doc["sigmaGlobalLocR"].as<double>();
+  const double sigmaGlobalLocT = doc["sigmaGlobalLocT"].as<double>();
 
   // control rate
   const double ctrl_rate = doc["ctrl_rate"].as<double>();
@@ -148,7 +149,8 @@ int main (int argc, char** argv)
   std::cout << "sigmaM: " << sigmaM << std::endl;
   std::cout << "sigmaF: " << sigmaF << std::endl;
   std::cout << "sigmaS: " << sigmaS << std::endl;
-  std::cout << "sigmaGlobalLoc: " << sigmaGlobalLoc << std::endl;
+  std::cout << "sigmaGlobalLocR: " << sigmaGlobalLocR << std::endl;
+  std::cout << "sigmaGlobalLocT: " << sigmaGlobalLocT << std::endl;
   std::cout << "ctrl_rate: " << ctrl_rate << std::endl;
   std::cout << "ctrl_max: " << ctrl_max << std::endl;
   std::cout << "# of robots: " << n_robots << std::endl;
@@ -322,8 +324,27 @@ int main (int argc, char** argv)
     std::vector<MatrixXd> vars_buff(vars);
 
     // global localization.
+    if (enable_global_loc && t_step % global_loc_steps == 0)
     {
-      // TODO
+      // take measurement (communication)
+      VectorXd z(2);
+      std::normal_distribution<> global_locR_noise(0, sigmaGlobalLocR);
+      std::normal_distribution<> global_locT_noise(0, sigmaGlobalLocT);
+      z(0) = robots[0].norm() + global_locR_noise(gen);
+      z(1) = std::atan2(robots[0](1), robots[0](0)) + global_locT_noise(gen);
+
+      // update its location estimate
+      VectorXd z_hat(2);// = means_buff[0];
+      MatrixXd Ht(2,n_dim);// = MatrixXd::Identity(n_dim, n_dim);
+      MatrixXd St(2,2);
+//        = Ht.transpose()*vars_buff[0]*Ht
+//        + sigmaGlobalLocR*sigmaGlobalLocR * MatrixXd::Identity(n_dim, n_dim);
+      VectorXd K(n_dim);// = vars_buff[0]*Ht/St;
+      // means_buff[0] += K*(z - z_hat);
+      // if (means_buff[0] < 0)
+      //   means_buff[0] += field_size;
+      // else if (means_buff[0] >= field_size)
+      //   means_buff[0] -= field_size;
     }
 
     // for all edges of network
