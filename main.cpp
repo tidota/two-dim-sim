@@ -335,16 +335,20 @@ int main (int argc, char** argv)
 
       // update its location estimate
       VectorXd z_hat(2);// = means_buff[0];
-      MatrixXd Ht(2,n_dim);// = MatrixXd::Identity(n_dim, n_dim);
-      MatrixXd St(2,2);
-//        = Ht.transpose()*vars_buff[0]*Ht
-//        + sigmaGlobalLocR*sigmaGlobalLocR * MatrixXd::Identity(n_dim, n_dim);
-      VectorXd K(n_dim);// = vars_buff[0]*Ht/St;
-      // means_buff[0] += K*(z - z_hat);
-      // if (means_buff[0] < 0)
-      //   means_buff[0] += field_size;
-      // else if (means_buff[0] >= field_size)
-      //   means_buff[0] -= field_size;
+      z_hat(0) = means[0].norm();
+      z_hat(1) = std::atan2(means[0](1), means[0](0));
+      MatrixXd Ht(2,n_dim);
+      for (int i = 0; i < n_dim; ++i)
+      {
+        // Ht(0, i) = ;
+        // Ht(1, i) = ;
+      }
+      MatrixXd Q = MatrixXd::Zero(2,2);
+      Q(0,0) = sigmaGlobalLocR * sigmaGlobalLocR;
+      Q(1,1) = sigmaGlobalLocT * sigmaGlobalLocT;
+      MatrixXd St = Ht * vars_buff[0] * Ht.transpose() + Q;
+      MatrixXd K = vars_buff[0] * Ht.transpose() * St.inverse();
+      means_buff[0] += K * (z - z_hat);
     }
 
     // for all edges of network
