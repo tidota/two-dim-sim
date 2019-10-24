@@ -337,18 +337,19 @@ int main (int argc, char** argv)
       VectorXd z_hat(2);// = means_buff[0];
       z_hat(0) = means[0].norm();
       z_hat(1) = std::atan2(means[0](1), means[0](0));
-      MatrixXd Ht(2,n_dim);
-      for (int i = 0; i < n_dim; ++i)
-      {
-        // Ht(0, i) = ;
-        // Ht(1, i) = ;
-      }
+      double q = means[0].squaredNorm();
+      MatrixXd H(2,n_dim);
+      H(0, 0) = means[0](0)/std::sqrt(q);
+      H(1, 0) = -means[0](1)/q;
+      H(0, 1) = means[0](1)/std::sqrt(q);
+      H(1, 1) = means[0](0)/q;
       MatrixXd Q = MatrixXd::Zero(2,2);
       Q(0,0) = sigmaGlobalLocR * sigmaGlobalLocR;
       Q(1,1) = sigmaGlobalLocT * sigmaGlobalLocT;
-      MatrixXd St = Ht * vars_buff[0] * Ht.transpose() + Q;
-      MatrixXd K = vars_buff[0] * Ht.transpose() * St.inverse();
+      MatrixXd St = H * vars_buff[0] * H.transpose() + Q;
+      MatrixXd K = vars_buff[0] * H.transpose() * St.inverse();
       means_buff[0] += K * (z - z_hat);
+      vars_buff[0] = (MatrixXd::Identity(n_dim, n_dim) - K * H) * vars_buff[0];
     }
 
     // for all edges of network
@@ -364,8 +365,13 @@ int main (int argc, char** argv)
     }
 
     // apply the updated estimations
+    if (enable_update_step)
     {
-
+      for (int i = 0; i < n_robots; ++i)
+      {
+        means[i] = means_buff[i];
+        vars[i] = vars_buff[i];
+      }
     }
 
     // calculate errors

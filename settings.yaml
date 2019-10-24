@@ -21,9 +21,9 @@ betaM: 0.01
 # mode
 mode: 0
 # enable_update_step
-enable_update_step: false
+enable_update_step: true
 # global localization
-enable_global_loc: false
+enable_global_loc: true
 # global localization at every specified steps
 global_loc_steps: 1
 # network topology
