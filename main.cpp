@@ -361,7 +361,30 @@ int main (int argc, char** argv)
       // mutual measurement
       auto edge = edges[indx];
 
-      // update
+      // take measurement (communication)
+      VectorXd z(2);
+      std::normal_distribution<> global_locR_noise(0, sigmaGlobalLocR);
+      std::normal_distribution<> global_locT_noise(0, sigmaGlobalLocT);
+      z(0) = robots[0].norm() + global_locR_noise(gen);
+      z(1) = std::atan2(robots[0](1), robots[0](0)) + global_locT_noise(gen);
+
+      // update its location estimate
+      VectorXd z_hat(2);// = means_buff[0];
+      z_hat(0) = means[0].norm();
+      z_hat(1) = std::atan2(means[0](1), means[0](0));
+      double q = means[0].squaredNorm();
+      MatrixXd H(2,n_dim);
+      H(0, 0) = means[0](0)/std::sqrt(q);
+      H(1, 0) = -means[0](1)/q;
+      H(0, 1) = means[0](1)/std::sqrt(q);
+      H(1, 1) = means[0](0)/q;
+      MatrixXd Q = MatrixXd::Zero(2,2);
+      Q(0,0) = sigmaGlobalLocR * sigmaGlobalLocR;
+      Q(1,1) = sigmaGlobalLocT * sigmaGlobalLocT;
+      MatrixXd St = H * vars_buff[0] * H.transpose() + Q;
+      MatrixXd K = vars_buff[0] * H.transpose() * St.inverse();
+      means_buff[0] += K * (z - z_hat);
+      vars_buff[0] = (MatrixXd::Identity(n_dim, n_dim) - K * H) * vars_buff[0];
     }
 
     // apply the updated estimations
