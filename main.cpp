@@ -35,7 +35,8 @@ int main (int argc, char** argv)
   // get sigma for floating effect
   const double sigmaF = doc["sigmaF"].as<double>();
   // get sigma for sensor model
-  const double sigmaS = doc["sigmaS"].as<double>();
+  const double sigmaS_R = doc["sigmaS_R"].as<double>();
+  const double sigmaS_T = doc["sigmaS_T"].as<double>();
   // get sigma for global localizaiton
   const double sigmaGlobalLocR = doc["sigmaGlobalLocR"].as<double>();
   const double sigmaGlobalLocT = doc["sigmaGlobalLocT"].as<double>();
@@ -148,7 +149,8 @@ int main (int argc, char** argv)
   std::cout << "simulation update frequency (Hz): " << sim_freq << std::endl;
   std::cout << "sigmaM: " << sigmaM << std::endl;
   std::cout << "sigmaF: " << sigmaF << std::endl;
-  std::cout << "sigmaS: " << sigmaS << std::endl;
+  std::cout << "sigmaS_R: " << sigmaS_R << std::endl;
+  std::cout << "sigmaS_T: " << sigmaS_T << std::endl;
   std::cout << "sigmaGlobalLocR: " << sigmaGlobalLocR << std::endl;
   std::cout << "sigmaGlobalLocT: " << sigmaGlobalLocT << std::endl;
   std::cout << "ctrl_rate: " << ctrl_rate << std::endl;
@@ -359,32 +361,38 @@ int main (int argc, char** argv)
     for (auto indx: indx_list)
     {
       // mutual measurement
+
+      // get indexes
       auto edge = edges[indx];
+      VectorXd diff = robots[edge.second] - robots[edge.first];
+      VectorXd diff_hat = means[edge.second] - means[edge.first];
 
       // take measurement (communication)
       VectorXd z(2);
-      std::normal_distribution<> global_locR_noise(0, sigmaGlobalLocR);
-      std::normal_distribution<> global_locT_noise(0, sigmaGlobalLocT);
-      z(0) = robots[0].norm() + global_locR_noise(gen);
-      z(1) = std::atan2(robots[0](1), robots[0](0)) + global_locT_noise(gen);
+      std::normal_distribution<> sensor_noiseR(0, sigmaS_R);
+      std::normal_distribution<> sensor_noiseT(0, sigmaS_T);
+      z(0) = diff.norm() + sensor_noiseR(gen);
+      z(1) = std::atan2(diff(1), diff(0)) + sensor_noiseT(gen);
 
       // update its location estimate
       VectorXd z_hat(2);// = means_buff[0];
-      z_hat(0) = means[0].norm();
-      z_hat(1) = std::atan2(means[0](1), means[0](0));
-      double q = means[0].squaredNorm();
-      MatrixXd H(2,n_dim);
-      H(0, 0) = means[0](0)/std::sqrt(q);
-      H(1, 0) = -means[0](1)/q;
-      H(0, 1) = means[0](1)/std::sqrt(q);
-      H(1, 1) = means[0](0)/q;
+      z_hat(0) = diff_hat.norm();
+      z_hat(1) = std::atan2(diff_hat(1), diff_hat(0));
+      double q = diff_hat.squaredNorm();
+
       MatrixXd Q = MatrixXd::Zero(2,2);
-      Q(0,0) = sigmaGlobalLocR * sigmaGlobalLocR;
-      Q(1,1) = sigmaGlobalLocT * sigmaGlobalLocT;
-      MatrixXd St = H * vars_buff[0] * H.transpose() + Q;
-      MatrixXd K = vars_buff[0] * H.transpose() * St.inverse();
-      means_buff[0] += K * (z - z_hat);
-      vars_buff[0] = (MatrixXd::Identity(n_dim, n_dim) - K * H) * vars_buff[0];
+      Q(0,0) = sigmaS_R * sigmaS_R;
+      Q(1,1) = sigmaS_T * sigmaS_T;
+
+      MatrixXd H2(2,n_dim);
+      H2(0, 0) = diff_hat(0)/std::sqrt(q);
+      H2(1, 0) = -diff_hat(1)/q;
+      H2(0, 1) = diff_hat(1)/std::sqrt(q);
+      H2(1, 1) = diff_hat(0)/q;
+      MatrixXd St2 = H2 * vars_buff[edge.second] * H2.transpose() + Q;
+      MatrixXd K2 = vars_buff[edge.second] * H2.transpose() * St2.inverse();
+      means_buff[edge.second] += K2 * (z - z_hat);
+      vars_buff[edge.second] = (MatrixXd::Identity(n_dim, n_dim) - K2 * H2) * vars_buff[edge.second];
     }
 
     // apply the updated estimations
