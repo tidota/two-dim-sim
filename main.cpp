@@ -356,7 +356,9 @@ int main (int argc, char** argv)
 
     // for all edges of network
     std::vector<int> indx_list(edges.size());
-    if (true) // to add a flag to shuffle them
+    for (int i = 0; i < edges.size(); ++i)
+      indx_list[i] = i;
+    if (enable_random_order) // to add a flag to shuffle them
       std::random_shuffle(indx_list.begin(), indx_list.end());
     for (auto indx: indx_list)
     {
@@ -383,6 +385,16 @@ int main (int argc, char** argv)
       MatrixXd Q = MatrixXd::Zero(2,2);
       Q(0,0) = sigmaS_R * sigmaS_R;
       Q(1,1) = sigmaS_T * sigmaS_T;
+
+      MatrixXd H1(2,n_dim);
+      H1(0, 0) = -diff_hat(0)/std::sqrt(q);
+      H1(1, 0) = diff_hat(1)/q;
+      H1(0, 1) = -diff_hat(1)/std::sqrt(q);
+      H1(1, 1) = -diff_hat(0)/q;
+      MatrixXd St1 = H1 * vars_buff[edge.first] * H1.transpose() + Q;
+      MatrixXd K1 = vars_buff[edge.first] * H1.transpose() * St1.inverse();
+      means_buff[edge.first] += K1 * (z - z_hat);
+      vars_buff[edge.first] = (MatrixXd::Identity(n_dim, n_dim) - K1 * H1) * vars_buff[edge.first];
 
       MatrixXd H2(2,n_dim);
       H2(0, 0) = diff_hat(0)/std::sqrt(q);
