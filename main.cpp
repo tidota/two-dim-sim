@@ -140,8 +140,6 @@ int main (int argc, char** argv)
   // probabilistically update?
   bool enable_prob_update = doc["enable_prob_update"].as<bool>();
   double prob_update_p = doc["prob_update_p"].as<double>();
-  // allow loopy updates (the last robot can communicate with the first one)
-  bool enable_loop = doc["enable_loop"].as<bool>();
   fin.close();
 
   std::cout << "network topology: " << topology << std::endl;
@@ -356,13 +354,22 @@ int main (int argc, char** argv)
 
     // for all edges of network
     std::vector<int> indx_list(edges.size());
-    for (int i = 0; i < edges.size(); ++i)
+    for (int i = 0; i < static_cast<int>(edges.size()); ++i)
       indx_list[i] = i;
     if (enable_random_order) // to add a flag to shuffle them
       std::random_shuffle(indx_list.begin(), indx_list.end());
+    // mutual measurement
     for (auto indx: indx_list)
     {
-      // mutual measurement
+      // if probabilistic update is enabled
+      if (enable_prob_update)
+      {
+        // throw a die and decide to update it or not.
+        std::uniform_real_distribution<> dis(0, 1.0);
+        double val = dis(gen);
+        if (val > prob_update_p)
+          continue;
+      }
 
       // get indexes
       auto edge = edges[indx];

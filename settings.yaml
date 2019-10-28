@@ -41,11 +41,9 @@ robots:
     - 5.0
     - 6.0
 # random order to update estimates?
-enable_random_order: false
+enable_random_order: true
 # probabilistically update?
-enable_prob_update: false
-prob_update_p: 1.0
-# allow loopy updates (the last robot can communicate with the first one)
-enable_loop: false
+enable_prob_update: true
+prob_update_p: 0.5
 # every N time steps to plot
 plot_interval: 100
