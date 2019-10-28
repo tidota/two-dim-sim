@@ -21,6 +21,8 @@ alphaM: 0.5
 betaM: 0.01
 # mode
 mode: 0
+# radius of communication area
+comm_radius: 3.0
 # enable_update_step
 enable_update_step: true
 # global localization

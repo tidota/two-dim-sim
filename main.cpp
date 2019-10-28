@@ -54,6 +54,9 @@ int main (int argc, char** argv)
   // mode
   const int mode = doc["mode"].as<int>();
 
+  // communication radius
+  const double comm_radius = doc["comm_radius"].as<double>();
+
   // enable_update_step
   const bool enable_update_step = doc["enable_update_step"].as<bool>();
 
@@ -127,7 +130,17 @@ int main (int argc, char** argv)
   }
   else if (topology == "dynamic")
   {
-    // TODO
+    for (int i = 0; i < n_robots - 1; ++i)
+    {
+      for (int j = i + 1; j < n_robots; ++j)
+      {
+        VectorXd diff = robots[j] - robots[i];
+        if (diff.norm() <= comm_radius)
+        {
+          edges.push_back(std::pair<int, int>(i, j));
+        }
+      }
+    }
   }
   else // unknown
   {
@@ -305,7 +318,18 @@ int main (int argc, char** argv)
     // update connectivity based on the topology mode
     if (topology == "dynamic")
     {
-      // TODO
+      edges.clear();
+      for (int i = 0; i < n_robots - 1; ++i)
+      {
+        for (int j = i + 1; j < n_robots; ++j)
+        {
+          VectorXd diff = robots[j] - robots[i];
+          if (diff.norm() <= comm_radius)
+          {
+            edges.push_back(std::pair<int, int>(i, j));
+          }
+        }
+      }
     }
 
     // === prediction ===
