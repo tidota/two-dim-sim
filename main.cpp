@@ -41,6 +41,13 @@ int main (int argc, char** argv)
   const double sigmaGlobalLocR = doc["sigmaGlobalLocR"].as<double>();
   const double sigmaGlobalLocT = doc["sigmaGlobalLocT"].as<double>();
 
+  // thresholds and rates to generate accelerations
+  const double repul_thresh = doc["repul_thresh"].as<double>();
+  const double repul_rate = doc["repul_rate"].as<double>();
+  const double attr_thresh = doc["attr_thresh"].as<double>();
+  const double attr_rate = doc["attr_rate"].as<double>();
+  const double fric_rate = doc["fric_rate"].as<double>();
+
   // control rate
   const double ctrl_rate = doc["ctrl_rate"].as<double>();
   // control max
@@ -267,11 +274,9 @@ int main (int argc, char** argv)
       for (int j = i + 1; j < n_robots; ++j)
       {
         // if it is too close, apply a repulsive acceleration.
-        const double thresh = 10.0;
-        const double repul_rate = 0.1;
         VectorXd diff = robots[i] - robots[j];
-        double dist = thresh - diff.norm();
-        if (0 < dist && dist < thresh)
+        double dist = repul_thresh - diff.norm();
+        if (0 < dist && dist < repul_thresh)
         {
           diff = diff / diff.norm();
           accs[i] += dist * dist * diff * repul_rate;
@@ -285,10 +290,8 @@ int main (int argc, char** argv)
       int j = (i + 1) % n_robots;
 
       // if it is too far, apply an attractive acceleration.
-      const double thresh = 3.0;
-      const double attr_rate = 0.1;
       VectorXd diff = robots[i] - robots[j];
-      double dist = diff.norm() - thresh;
+      double dist = diff.norm() - attr_thresh;
       if (dist > 0)
       {
         diff = diff / diff.norm();
@@ -299,7 +302,6 @@ int main (int argc, char** argv)
     // Friction
     for (int i = 0; i < n_robots; ++i)
     {
-      const double fric_rate = 0.6;
       accs[i] -= fric_rate * vels[i];
     }
 

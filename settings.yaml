@@ -12,6 +12,12 @@ sigmaS_T: 0.05
 # sigma for global localizaiton
 sigmaGlobalLocR: 3.0
 sigmaGlobalLocT: 0.5
+# thresholds and rates to generate accelerations (repulsive and attractive)
+repul_thresh: 10.0
+repul_rate: 0.1
+attr_thresh: 3.0
+attr_rate: 0.1
+fric_rate: 0.6 # friction
 # control rate
 ctrl_rate: 1.0
 # control max
@@ -22,7 +28,7 @@ betaM: 0.01
 # mode
 mode: 0
 # radius of communication area
-comm_radius: 3.0
+comm_radius: 10.0
 # enable_update_step
 enable_update_step: true
 # global localization
