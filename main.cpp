@@ -482,8 +482,7 @@ int main (int argc, char** argv)
     // calculate errors
     for (int i = 0; i < n_robots; ++i)
     {
-      // TODO
-      //errors[i] += std::fabs(means[i] - robots[i]);
+      errors[i] += (means[i] - robots[i]).norm();
     }
   }
 
