@@ -31,6 +31,8 @@ mode: 0
 comm_radius: 10.0
 # enable_update_step
 enable_update_step: true
+# enable bidirectional mutual update
+enable_bidirectional: true
 # global localization
 enable_global_loc: true
 # global localization at every specified steps

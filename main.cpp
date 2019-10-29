@@ -67,6 +67,9 @@ int main (int argc, char** argv)
   // enable_update_step
   const bool enable_update_step = doc["enable_update_step"].as<bool>();
 
+  // enable_bidirectional
+  const bool enable_bidirectional = doc["enable_bidirectional"].as<bool>();
+
   // global localization
   const bool enable_global_loc = doc["enable_global_loc"].as<bool>();
   // global localization at every specified steps.
@@ -424,17 +427,43 @@ int main (int argc, char** argv)
       H1(1, 0) = diff_hat(1)/q;
       H1(0, 1) = -diff_hat(1)/std::sqrt(q);
       H1(1, 1) = -diff_hat(0)/q;
-      MatrixXd St1 = H1 * vars_buff[edge.first] * H1.transpose() + Q;
-      MatrixXd K1 = vars_buff[edge.first] * H1.transpose() * St1.inverse();
-      means_buff[edge.first] += K1 * (z - z_hat);
-      vars_buff[edge.first] = (MatrixXd::Identity(n_dim, n_dim) - K1 * H1) * vars_buff[edge.first];
 
       MatrixXd H2(2,n_dim);
       H2(0, 0) = diff_hat(0)/std::sqrt(q);
       H2(1, 0) = -diff_hat(1)/q;
       H2(0, 1) = diff_hat(1)/std::sqrt(q);
       H2(1, 1) = diff_hat(0)/q;
+
+      MatrixXd St1 = H1 * vars_buff[edge.first] * H1.transpose() + Q;
       MatrixXd St2 = H2 * vars_buff[edge.second] * H2.transpose() + Q;
+
+      if (mode == 0)
+      {
+        St1 = H1 * vars_buff[edge.first] * H1.transpose() + Q;
+        St2 = H2 * vars_buff[edge.second] * H2.transpose() + Q;
+      }
+      else if (mode == 1)
+      {
+        St1 = H1 * vars_buff[edge.first] * H1.transpose()
+            + H2 * vars_buff[edge.second] * H2.transpose() + Q;
+        St2 = St1;
+      }
+      else if (mode == 2)
+      {
+        vars_buff[edge.first] *= 2;
+        vars_buff[edge.second] *= 2;
+        St1 = H1 * vars_buff[edge.first] * H1.transpose()
+            + H2 * vars_buff[edge.second] * H2.transpose() + Q;
+        St2 = St1;
+      }
+
+      if (enable_bidirectional)
+      {
+        MatrixXd K1 = vars_buff[edge.first] * H1.transpose() * St1.inverse();
+        means_buff[edge.first] += K1 * (z - z_hat);
+        vars_buff[edge.first] = (MatrixXd::Identity(n_dim, n_dim) - K1 * H1) * vars_buff[edge.first];
+      }
+
       MatrixXd K2 = vars_buff[edge.second] * H2.transpose() * St2.inverse();
       means_buff[edge.second] += K2 * (z - z_hat);
       vars_buff[edge.second] = (MatrixXd::Identity(n_dim, n_dim) - K2 * H2) * vars_buff[edge.second];
