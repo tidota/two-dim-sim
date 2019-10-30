@@ -264,7 +264,6 @@ int main (int argc, char** argv)
             fout << " ";
           }
         }
-        fout << std::right << std::setw(9) << std::sqrt(vars[i].determinant()) << " ";
       }
 
       std::cout << std::endl;
@@ -497,29 +496,54 @@ int main (int argc, char** argv)
   fout.close();
 
   // output of gnuplot command
-  // std::cout << std::endl;
-  // std::cout << "gnuplot command" << std::endl;
-  // for (int i = 0; i < n_robots; ++i)
-  // {
-  //   if (i == 0)
-  //     std::cout << "plot ";
-  //   else
-  //     std::cout << "     ";
-  //   std::cout << "\"output.dat\" u 1:" << std::to_string(2+i*3)
-  //             << " title \"x" << std::to_string(1+i) << "\", \\"
-  //             << std::endl;
-  // }
-  // for (int i = 0; i < n_robots; ++i)
-  // {
-  //   std::cout << "     ";
-  //   std::cout << "\"output.dat\" u 1:"
-  //             << std::to_string(3+i*3) << ":" << std::to_string(4+i*3)
-  //             << " with errorbars title \"m" << std::to_string(1+i) << "\"";
-  //   if (i < n_robots - 1)
-  //     std::cout << ", \\";
-  //   std::cout << std::endl;
-  // }
-  // std::cout << std::endl;
+  std::cout << std::endl;
+  std::cout << "~~~ gnuplot command ~~~" << std::endl;
+  std::cout << "h1 = 227/360.0" << std::endl;
+  std::cout << "h2 = 40/360.0" << std::endl;
+  std::cout << "set palette model HSV functions (1-gray)*(h2-h1)+h1,1,0.68"
+            << std::endl;
+  const int off_next_robot = n_dim + n_dim + n_dim*n_dim;
+  for (int i = 0; i < n_robots; ++i)
+  {
+    if (i == 0)
+      std::cout << "plot ";
+    else
+      std::cout << "     ";
+    std::cout << "\"output.dat\" u ";
+    for (int j = 0; j < n_dim; ++j)
+    {
+      std::cout << std::to_string(2+i*off_next_robot+j);
+      if (j < n_dim - 1)
+        std::cout << ":";
+      else
+        std::cout << ":1";
+    }
+    std::cout << " title \"R" << std::to_string(1+i) << "\""
+              << " with linespoints lt -1 lw 1.0 ps 3.0"
+              << " pt " << std::to_string(i + 1)
+              << " lc palette, \\" << std::endl;
+  }
+  for (int i = 0; i < n_robots; ++i)
+  {
+    std::cout << "     ";
+    std::cout << "\"output.dat\" u ";
+    for (int j = 0; j < n_dim; ++j)
+    {
+      std::cout << std::to_string(2+n_dim+i*off_next_robot+j);
+      if (j < n_dim - 1)
+        std::cout << ":";
+      else
+        std::cout << ":1";
+    }
+    std::cout << " title \"Est" << std::to_string(1+i) << "\""
+              << " with linespoints lt 1 lw 3.0 ps 3.0"
+              << " pt " << std::to_string(i + 1)
+              << " lc palette";
+    if (i < n_robots - 1)
+      std::cout << ", \\";
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
 
   // display errors
   double total_error = 0;
