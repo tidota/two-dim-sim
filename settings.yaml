@@ -26,19 +26,20 @@ ctrl_max: 1.0
 alphaM: 0.5
 betaM: 0.01
 # mode
-mode: 2
-# radius of communication area
-comm_radius: 10.0
+mode: 0
 # enable_update_step
 enable_update_step: true
 # enable bidirectional mutual update
-enable_bidirectional: true
+enable_bidirectional: false
 # global localization
 enable_global_loc: true
 # global localization at every specified steps
 global_loc_steps: 1
 # network topology
+# star, loop, complete, dynamic
 topology: star
+# radius of communication area (used when topology is set to dynamic)
+comm_radius: 10.0
 # robot's locations
 robots:
   -
@@ -51,9 +52,9 @@ robots:
     - 5.0
     - 6.0
 # random order to update estimates?
-enable_random_order: true
+enable_random_order: false
 # probabilistically update?
 enable_prob_update: true
-prob_update_p: 0.5
+prob_update_p: 1
 # every N time steps to plot
 plot_interval: 100
