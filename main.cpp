@@ -256,6 +256,14 @@ int main (int argc, char** argv)
           fout << std::right << std::setw(9) << means[i](j);
           fout << " ";
         }
+        for (int j = 0; j < n_dim; ++j)
+        {
+          for (int k = 0; k < n_dim; ++k)
+          {
+            fout << std::right << std::setw(9) << vars[i](j,k);
+            fout << " ";
+          }
+        }
         fout << std::right << std::setw(9) << std::sqrt(vars[i].determinant()) << " ";
       }
 
@@ -521,14 +529,6 @@ int main (int argc, char** argv)
     total_error += errors[i];
   }
   std::cout << "overall average error: " << (total_error/(max_time*sim_freq)/n_robots) << std::endl;
-
-
-  // just for test of eigen
-  Matrix3d A = Matrix3d::Identity();
-  std::cout << "A = I: " << std::endl << A << std::endl;
-
-  A(1,1) = 5;
-  std::cout << "A(1,1) = 5: " << std::endl << A << std::endl;
 
   return 0;
 }
