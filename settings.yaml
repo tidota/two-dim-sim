@@ -57,4 +57,4 @@ enable_random_order: false
 enable_prob_update: true
 prob_update_p: 1
 # every N time steps to plot
-plot_interval: 100
+plot_interval: 10
