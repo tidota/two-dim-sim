@@ -502,13 +502,14 @@ int main (int argc, char** argv)
   std::cout << "h2 = 40/360.0" << std::endl;
   std::cout << "set palette model HSV functions (1-gray)*(h2-h1)+h1,1,0.68"
             << std::endl;
+  std::cout << "set size ratio -1" << std::endl;
   const int off_next_robot = n_dim + n_dim + n_dim*n_dim;
   for (int i = 0; i < n_robots; ++i)
   {
     if (i == 0)
-      std::cout << "plot ";
+      std::cout << "plot   ";
     else
-      std::cout << "     ";
+      std::cout << "replot ";
     std::cout << "\"output.dat\" u ";
     for (int j = 0; j < n_dim; ++j)
     {
@@ -521,11 +522,11 @@ int main (int argc, char** argv)
     std::cout << " title \"R" << std::to_string(1+i) << "\""
               << " with linespoints lt -1 lw 1.0 ps 3.0"
               << " pt " << std::to_string(i + 1)
-              << " lc palette, \\" << std::endl;
+              << " lc palette" << std::endl;
   }
   for (int i = 0; i < n_robots; ++i)
   {
-    std::cout << "     ";
+    std::cout << "replot ";
     std::cout << "\"output.dat\" u ";
     for (int j = 0; j < n_dim; ++j)
     {
@@ -538,10 +539,7 @@ int main (int argc, char** argv)
     std::cout << " title \"Est" << std::to_string(1+i) << "\""
               << " with linespoints lt 1 lw 3.0 ps 3.0"
               << " pt " << std::to_string(i + 1)
-              << " lc palette";
-    if (i < n_robots - 1)
-      std::cout << ", \\";
-    std::cout << std::endl;
+              << " lc palette" << std::endl;
   }
   std::cout << std::endl;
 
