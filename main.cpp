@@ -214,6 +214,11 @@ int main (int argc, char** argv)
   // prep output file
   ofstream fout ("output.dat");
 
+  // buffers for covariances to plot
+  std::vector<VectorXd> last_loc(n_robots);
+  std::vector<VectorXd> last_mean(n_robots);
+  std::vector<MatrixXd> last_var(n_robots);
+
   // main part of simulation
   for (int t_step = 0; t_step * deltaT <= max_time; ++t_step)
   {
@@ -264,6 +269,11 @@ int main (int argc, char** argv)
             fout << " ";
           }
         }
+
+        // store data to the buffer to plot
+        last_loc[i] = robots[i];
+        last_mean[i] = means[i];
+        last_var[i] = vars[i];
       }
 
       std::cout << std::endl;
@@ -498,6 +508,25 @@ int main (int argc, char** argv)
   // output of gnuplot command
   std::cout << std::endl;
   std::cout << "~~~ gnuplot command ~~~" << std::endl;
+  for (int i = 0; i < n_robots; ++i)
+  {
+    Eigen::EigenSolver<MatrixXd> s(vars[i]);
+    auto eigen_val = s.eigenvalues();
+    auto eigen_vec = s.eigenvectors();
+    double var_ang
+      = std::atan2(eigen_vec.col(0)[1].real(), eigen_vec.col(0)[0].real())
+        / M_PI*180.0;
+    std::cout << "set object " << std::to_string(i + 1)
+              << " ellipse center "
+              << std::to_string(last_mean[i](0)) << ","
+              << std::to_string(last_mean[i](1))
+              << " size "
+              << std::to_string(std::sqrt(eigen_val[0].real()) * 2) << ","
+              << std::to_string(std::sqrt(eigen_val[1].real()) * 2)
+              << " angle "
+              << std::to_string(var_ang)
+              << " front fillstyle empty border -1" << std::endl;
+  }
   std::cout << "h1 = 227/360.0" << std::endl;
   std::cout << "h2 = 40/360.0" << std::endl;
   std::cout << "set palette model HSV functions (1-gray)*(h2-h1)+h1,1,0.68"
