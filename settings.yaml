@@ -23,8 +23,9 @@ ctrl_rate: 1.0
 # control max
 ctrl_max: 1.0
 # weights for motion model
-alphaM: 0.5
-betaM: 0.01
+alpha1M: 10.0
+alpha2M: 1.0
+betaM: 0.5
 # mode
 mode: 0
 # enable_update_step

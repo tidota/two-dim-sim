@@ -54,7 +54,8 @@ int main (int argc, char** argv)
   const double ctrl_max = doc["ctrl_max"].as<double>();
 
   // weight of motion model
-  const double alphaM = doc["alphaM"].as<double>();
+  const double alpha1M = doc["alpha1M"].as<double>();
+  const double alpha2M = doc["alpha2M"].as<double>();
   // constant value of motion model
   const double betaM = doc["betaM"].as<double>();
 
@@ -360,8 +361,20 @@ int main (int argc, char** argv)
     {
       // motion model
       means[i] = means[i] + MatrixXd::Identity(n_dim, n_dim) * vels[i] * deltaT;
+
+      MatrixXd FloatEffect = MatrixXd::Identity(2, 2) * betaM;
+      double v = vels[i].norm();
+      MatrixXd EigenVecs(2, 2);
+      EigenVecs(0, 0) = vels[i](0) / v;
+      EigenVecs(1, 0) = vels[i](1) / v;
+      EigenVecs(0, 1) = -vels[i](1) / v;
+      EigenVecs(1, 1) = vels[i](0) / v;
+      MatrixXd EigenVals = MatrixXd::Identity(2, 2);
+      EigenVals(0, 0) = alpha1M * v * v;
+      EigenVals(1, 1) = alpha2M * v * v;
+      // transpose == inverse because eigen vectors are perpendicular to each other
+      MatrixXd M = EigenVecs * EigenVals * EigenVecs.transpose() + FloatEffect;
       MatrixXd V = MatrixXd::Identity(n_dim, n_dim) * deltaT;
-      MatrixXd M = (alphaM * alphaM) * MatrixXd::Identity(n_dim, n_dim).cwiseProduct(vels[i] * vels[i].transpose());
       vars[i] = vars[i] + V.transpose() * M * V;
     }
 
