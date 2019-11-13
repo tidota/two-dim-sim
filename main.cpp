@@ -61,6 +61,9 @@ int main (int argc, char** argv)
 
   // mode
   const int mode = doc["mode"].as<int>();
+  // params for mode2
+  const double mode2_rate1 = doc["mode2_rate1"].as<double>();
+  const double mode2_rate2 = doc["mode2_rate2"].as<double>();
 
   // communication radius
   const double comm_radius = doc["comm_radius"].as<double>();
@@ -480,8 +483,8 @@ int main (int argc, char** argv)
       }
       else if (mode == 2)
       {
-        vars_buff[edge.first] *= 2;
-        vars_buff[edge.second] *= 2;
+        vars_buff[edge.first] *= mode2_rate1;
+        vars_buff[edge.second] *= mode2_rate2;
         St1 = H1 * vars_buff[edge.first] * H1.transpose()
             + H2 * vars_buff[edge.second] * H2.transpose() + Q;
         St2 = St1;
