@@ -124,14 +124,14 @@ int main (int argc, char** argv)
   }
   else if (topology == "loop")
   {
-    for (int i = 0; i < n_robots - 1; ++i)
+    for (int i = 0; i < n_robots; ++i)
     {
-      edges.push_back(std::pair<int, int>(i, i + 1));
+      edges.push_back(std::pair<int, int>(i, (i + 1)%n_robots));
     }
   }
   else if (topology == "complete")
   {
-    for (int i = 1; i < n_robots - 1; ++i)
+    for (int i = 0; i < n_robots - 1; ++i)
     {
       for (int j = i + 1; j < n_robots; ++j)
       {
