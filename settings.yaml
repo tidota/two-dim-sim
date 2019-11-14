@@ -15,8 +15,8 @@ sigmaGlobalLocT: 0.5
 # thresholds and rates to generate accelerations (repulsive and attractive)
 repul_thresh: 10.0
 repul_rate: 0.05
-attr_thresh: 5.0
-attr_rate: 0.05
+attr_thresh: 1.0
+attr_rate: 0.01
 fric_rate: 0.6 # friction
 # control rate
 ctrl_rate: 1.0
@@ -56,8 +56,20 @@ robots:
     - 1.0
     - 0.0
   -
+    - 2.0
+    - 0.0
+  -
+    - 2.0
     - 1.0
+  -
+    - 2.0
+    - 2.0
+  -
     - 1.0
+    - 2.0
+  -
+    - 0.0
+    - 2.0
   -
     - 0.0
     - 1.0
