@@ -64,6 +64,9 @@ int main (int argc, char** argv)
   // params for mode2
   const double mode2_rate1 = doc["mode2_rate1"].as<double>();
   const double mode2_rate2 = doc["mode2_rate2"].as<double>();
+  // params for mode3
+  const double mode3_rate = doc["mode3_rate"].as<double>();
+  const double mode3_bias = doc["mode3_bias"].as<double>();
 
   // communication radius
   const double comm_radius = doc["comm_radius"].as<double>();
@@ -488,6 +491,17 @@ int main (int argc, char** argv)
         St1 = H1 * vars_buff[edge.first] * H1.transpose()
             + H2 * vars_buff[edge.second] * H2.transpose() + Q;
         St2 = St1;
+      }
+      else if (mode == 3)
+      {
+        double rate_me = mode3_rate / mode3_bias;
+        double rate_other = mode3_rate / (mode3_rate - mode3_bias);
+        St1 = H1 * (vars_buff[edge.first] * rate_me) * H1.transpose()
+            + H2 * (vars_buff[edge.second] * rate_other) * H2.transpose() + Q;
+        St2 = H1 * (vars_buff[edge.first] * rate_other) * H1.transpose()
+            + H2 * (vars_buff[edge.second] * rate_me) * H2.transpose() + Q;
+        vars_buff[edge.first] *= rate_me;
+        vars_buff[edge.second] *= rate_me;
       }
 
       if (enable_bidirectional)
