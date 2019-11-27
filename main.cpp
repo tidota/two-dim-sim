@@ -215,6 +215,7 @@ int main (int argc, char** argv)
     std::cout << "R[" << setw(7 * n_dim - 7) << i << "].x |";
     std::cout << "R[" << setw(7 * n_dim - 7) << i << "].m |";
     std::cout << " det(v) |";
+    std::cout << " err |";
   }
   std::cout << std::endl;
 
@@ -257,6 +258,7 @@ int main (int argc, char** argv)
             std::cout << "|";
         }
         std::cout << std::right << std::setw(8) << std::sqrt(vars[i].determinant()) << "|";
+        std::cout << std::right << std::setw(5) << (robots[i] - means[i]).norm() << "|";
 
         for (int j = 0; j < n_dim; ++j)
         {
@@ -276,6 +278,8 @@ int main (int argc, char** argv)
             fout << " ";
           }
         }
+        fout << std::right << std::setw(8)
+             << (robots[i] - means[i]).norm() << " ";
 
         // store data to the buffer to plot
         last_loc[i] = robots[i];
@@ -536,8 +540,26 @@ int main (int argc, char** argv)
   fout.close();
 
   // output of gnuplot command
+  const int off_next_robot = n_dim + n_dim + n_dim*n_dim + 1;
   std::cout << std::endl;
-  std::cout << "~~~ gnuplot command ~~~" << std::endl;
+  std::cout << "~~~ gnuplot command (errors)~~~" << std::endl;
+  std::cout << "clear" << std::endl;
+  for (int i = 0; i < n_robots; ++i)
+  {
+    if (i == 0)
+      std::cout << "plot ";
+    else
+      std::cout << "     ";
+    std::cout << "\"output.dat\" u 1:"
+              << std::to_string(2+(i+1)*off_next_robot-1)
+              << " title \"err" << std::to_string(1+i) << "\" with line";
+    if (i < n_robots - 1)
+      std::cout << ", \\";
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
+  std::cout << "~~~ gnuplot command (locations) ~~~" << std::endl;
+  std::cout << "clear" << std::endl;
   for (int i = 0; i < n_robots; ++i)
   {
     Eigen::EigenSolver<MatrixXd> s(vars[i]);
@@ -562,7 +584,6 @@ int main (int argc, char** argv)
   std::cout << "set palette model HSV functions (1-gray)*(h2-h1)+h1,1,0.68"
             << std::endl;
   std::cout << "set size ratio -1" << std::endl;
-  const int off_next_robot = n_dim + n_dim + n_dim*n_dim;
   for (int i = 0; i < n_robots; ++i)
   {
     if (i == 0)
