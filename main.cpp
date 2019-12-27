@@ -508,15 +508,24 @@ int main (int argc, char** argv)
         vars_buff[edge.second] *= rate_me;
       }
 
+      VectorXd z_diff = z - z_hat;
+      if (z_diff(1) > M_PI)
+      {
+        z_diff(1) -= 2*M_PI;
+      }
+      else if (z_diff(1) <= -M_PI)
+      {
+        z_diff(1) += 2*M_PI;
+      }
       if (enable_bidirectional)
       {
         MatrixXd K1 = vars_buff[edge.first] * H1.transpose() * St1.inverse();
-        means_buff[edge.first] += K1 * (z - z_hat);
+        means_buff[edge.first] += K1 * z_diff;
         vars_buff[edge.first] = (MatrixXd::Identity(n_dim, n_dim) - K1 * H1) * vars_buff[edge.first];
       }
 
       MatrixXd K2 = vars_buff[edge.second] * H2.transpose() * St2.inverse();
-      means_buff[edge.second] += K2 * (z - z_hat);
+      means_buff[edge.second] += K2 * z_diff;
       vars_buff[edge.second] = (MatrixXd::Identity(n_dim, n_dim) - K2 * H2) * vars_buff[edge.second];
     }
 
