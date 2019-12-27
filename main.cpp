@@ -417,8 +417,23 @@ int main (int argc, char** argv)
       Q(1,1) = sigmaGlobalLocT * sigmaGlobalLocT;
       MatrixXd St = H * vars_buff[0] * H.transpose() + Q;
       MatrixXd K = vars_buff[0] * H.transpose() * St.inverse();
-      means_buff[0] += K * (z - z_hat);
+      VectorXd z_diff = z - z_hat;
+      if (z_diff(1) > M_PI)
+      {
+        z_diff(1) -= 2*M_PI;
+      }
+      else if (z_diff(1) <= -M_PI)
+      {
+        z_diff(1) += 2*M_PI;
+      }
+      means_buff[0] += K * z_diff;
       vars_buff[0] = (MatrixXd::Identity(n_dim, n_dim) - K * H) * vars_buff[0];
+      // apply the updated estimations
+      if (enable_update_step)
+      {
+        means[0] = means_buff[0];
+        vars[0] = vars_buff[0];
+      }
     }
 
     // for all edges of network
