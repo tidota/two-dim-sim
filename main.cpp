@@ -527,15 +527,14 @@ int main (int argc, char** argv)
       MatrixXd K2 = vars_buff[edge.second] * H2.transpose() * St2.inverse();
       means_buff[edge.second] += K2 * z_diff;
       vars_buff[edge.second] = (MatrixXd::Identity(n_dim, n_dim) - K2 * H2) * vars_buff[edge.second];
-    }
 
-    // apply the updated estimations
-    if (enable_update_step)
-    {
-      for (int i = 0; i < n_robots; ++i)
+      // apply the updated estimations
+      if (enable_update_step)
       {
-        means[i] = means_buff[i];
-        vars[i] = vars_buff[i];
+        means[edge.first] = means_buff[edge.first];
+        vars[edge.first] = vars_buff[edge.first];
+        means[edge.second] = means_buff[edge.second];
+        vars[edge.second] = vars_buff[edge.second];
       }
     }
 
