@@ -553,6 +553,7 @@ int main (int argc, char** argv)
   std::cout << std::endl;
   std::cout << "~~~ gnuplot command (errors)~~~" << std::endl;
   std::cout << "clear" << std::endl;
+  std::cout << "unset object" << std::endl;
   for (int i = 0; i < n_robots; ++i)
   {
     if (i == 0)
@@ -569,6 +570,7 @@ int main (int argc, char** argv)
   std::cout << std::endl;
   std::cout << "~~~ gnuplot command (locations) ~~~" << std::endl;
   std::cout << "clear" << std::endl;
+  std::cout << "unset object" << std::endl;
   for (int i = 0; i < n_robots; ++i)
   {
     Eigen::EigenSolver<MatrixXd> s(vars[i]);
