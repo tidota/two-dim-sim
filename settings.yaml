@@ -1,5 +1,5 @@
 # max time
-max_time: 100.0
+max_time: 10.0
 # simulation update frequendy
 sim_freq: 10.0
 # weight of motion noise
@@ -49,6 +49,9 @@ topology: complete
 comm_radius: 10.0
 # robot's locations
 robots:
+  -
+    - 0.0
+    - 0.0
   -
     - 1.0
     - 0.0
