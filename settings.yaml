@@ -41,10 +41,10 @@ enable_bidirectional: true
 # global localization
 enable_global_loc: true
 # global localization at every specified steps
-global_loc_steps: 10
+global_loc_steps: 1
 # network topology
 # star, loop, complete, dynamic
-topology: complete
+topology: dynamic
 # radius of communication area (used when topology is set to dynamic)
 comm_radius: 10.0
 # robot's locations
