@@ -521,6 +521,17 @@ int main (int argc, char** argv)
         vars_buff[edge.first] /= mode3_omega;
         vars_buff[edge.second] /= mode3_omega;
       }
+      else if (mode == 4)
+      {
+        double det1 = vars_buff[edge.first].determinant();
+        double det2 = vars_buff[edge.second].determinant();
+        double omega = det2/(det1 + det2);
+        vars_buff[edge.first] *= 1/omega;
+        vars_buff[edge.second] *= 1/(1-omega);
+        St1 = H1 * vars_buff[edge.first] * H1.transpose()
+            + H2 * vars_buff[edge.second] * H2.transpose() + Q;
+        St2 = St1;
+      }
 
       VectorXd z_diff = z - z_hat;
       if (z_diff(1) > M_PI)
