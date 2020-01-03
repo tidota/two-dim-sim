@@ -523,9 +523,9 @@ int main (int argc, char** argv)
       }
       else if (mode == 4)
       {
-        double det1 = vars_buff[edge.first].determinant();
-        double det2 = vars_buff[edge.second].determinant();
-        double omega = det2/(det1 + det2);
+        double det1 = vars_buff[edge.first].inverse().determinant();
+        double det2 = vars_buff[edge.second].inverse().determinant();
+        double omega = det1/(det1 + det2);
         vars_buff[edge.first] *= 1/omega;
         vars_buff[edge.second] *= 1/(1-omega);
         St1 = H1 * vars_buff[edge.first] * H1.transpose()
