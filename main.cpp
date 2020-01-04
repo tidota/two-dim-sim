@@ -512,11 +512,14 @@ int main (int argc, char** argv)
       }
       else if (mode == 3)
       {
-        vars_buff[edge.first] *= 1/mode3_omega;
-        vars_buff[edge.second] *= 1/(1-mode3_omega);
-        St1 = H1 * vars_buff[edge.first] * H1.transpose()
-            + H2 * vars_buff[edge.second] * H2.transpose() + Q;
-        St2 = St1;
+        St1 = H1 * (vars_buff[edge.first] / mode3_omega) * H1.transpose()
+            + H2 * (vars_buff[edge.second] / (1 - mode3_omega)) * H2.transpose()
+            + Q;
+        St2 = H1 * (vars_buff[edge.first] / (1 - mode3_omega)) * H1.transpose()
+            + H2 * (vars_buff[edge.second] / mode3_omega) * H2.transpose()
+            + Q;
+        vars_buff[edge.first] /= mode3_omega;
+        vars_buff[edge.second] /= mode3_omega;
       }
 
       VectorXd z_diff = z - z_hat;
