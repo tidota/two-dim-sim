@@ -18,6 +18,8 @@ The main part of the simulation.
 using namespace std;
 using namespace Eigen;
 
+void getOmega(MatrixXd &, MatrixXd &, double &, double &);
+
 int main (int argc, char** argv)
 {
   std::ifstream fin("settings.yaml");
@@ -521,17 +523,6 @@ int main (int argc, char** argv)
         vars_buff[edge.first] /= mode3_omega;
         vars_buff[edge.second] /= mode3_omega;
       }
-      else if (mode == 4)
-      {
-        double det1 = vars_buff[edge.first].inverse().determinant();
-        double det2 = vars_buff[edge.second].inverse().determinant();
-        double omega = det1/(det1 + det2);
-        vars_buff[edge.first] *= 1/omega;
-        vars_buff[edge.second] *= 1/(1-omega);
-        St1 = H1 * vars_buff[edge.first] * H1.transpose()
-            + H2 * vars_buff[edge.second] * H2.transpose() + Q;
-        St2 = St1;
-      }
 
       VectorXd z_diff = z - z_hat;
       if (z_diff(1) > M_PI)
@@ -542,16 +533,103 @@ int main (int argc, char** argv)
       {
         z_diff(1) += 2*M_PI;
       }
-      if (enable_bidirectional)
-      {
-        MatrixXd K1 = vars_buff[edge.first] * H1.transpose() * St1.inverse();
-        means_buff[edge.first] += K1 * z_diff;
-        vars_buff[edge.first] = (MatrixXd::Identity(n_dim, n_dim) - K1 * H1) * vars_buff[edge.first];
-      }
 
-      MatrixXd K2 = vars_buff[edge.second] * H2.transpose() * St2.inverse();
-      means_buff[edge.second] += K2 * z_diff;
-      vars_buff[edge.second] = (MatrixXd::Identity(n_dim, n_dim) - K2 * H2) * vars_buff[edge.second];
+      if (mode == 4) // Covariance intersection needs a special process
+      {
+        double omega;
+        VectorXd mean1 = means_buff[edge.first];
+        MatrixXd var1 = vars_buff[edge.first];
+        VectorXd mean2 = means_buff[edge.second];
+        MatrixXd var2 = vars_buff[edge.second];
+        {
+          double omega1;
+          double omega2;
+          MatrixXd C1 = H1 * vars_buff[edge.first] * H1.transpose();
+          MatrixXd C2 = H2 * vars_buff[edge.second] * H2.transpose() + Q;
+          getOmega(C1, C2, omega1, omega2);
+          omega = omega1;
+        }
+        if (omega == 0)
+        {
+          VectorXd corr(n_dim);
+          corr(0) = -z(0) * std::cos(z(1));
+          corr(1) = -z(0) * std::sin(z(1));
+          mean1
+            = means_buff[edge.second]
+            + corr;
+          var1 = vars_buff[edge.second];
+        }
+        else if (omega < 1)
+        {
+          St1 = H1 * (vars_buff[edge.first]/omega) * H1.transpose()
+              + H2 * (vars_buff[edge.second]/(1-omega)) * H2.transpose()
+              + (Q/(1-omega));
+          MatrixXd K1
+            = (vars_buff[edge.first]/omega) * H1.transpose() * St1.inverse();
+          mean1 += K1 * z_diff;
+          var1
+            = (MatrixXd::Identity(n_dim, n_dim) - K1 * H1)
+            * (vars_buff[edge.first]/omega);
+        }
+
+        {
+          double omega1;
+          double omega2;
+          MatrixXd C1 = H2 * vars_buff[edge.second] * H2.transpose();
+          MatrixXd C2 = H1 * vars_buff[edge.first] * H1.transpose() + Q;
+          getOmega(C1, C2, omega1, omega2);
+          omega = omega1;
+        }
+        if (omega == 0)
+        {
+          VectorXd corr(n_dim);
+          corr(0) = z(0) * std::cos(z(1));
+          corr(1) = z(0) * std::sin(z(1));
+          mean2
+            = means_buff[edge.first]
+            + corr;
+          var2 = vars_buff[edge.first];
+        }
+        else if (omega < 1)
+        {
+          St2 = H1 * (vars_buff[edge.first]/(1-omega)) * H1.transpose()
+              + H2 * (vars_buff[edge.second]/omega) * H2.transpose()
+              + (Q/(1-omega));
+          MatrixXd K2
+            = (vars_buff[edge.second]/omega) * H2.transpose() * St2.inverse();
+          mean2 += K2 * z_diff;
+          var2
+            = (MatrixXd::Identity(n_dim, n_dim) - K2 * H2)
+            * (vars_buff[edge.second]/omega);
+        }
+        if (var1.determinant() < vars_buff[edge.first].determinant())
+        {
+          means_buff[edge.first] = mean1;
+          vars_buff[edge.first] = var1;
+        }
+        if (var2.determinant() < vars_buff[edge.second].determinant())
+        {
+          means_buff[edge.second] = mean2;
+          vars_buff[edge.second] = var2;
+        }
+      }
+      else // anything except for mode4 (Covariance Intersection)
+      {
+        if (enable_bidirectional)
+        {
+          MatrixXd K1 = vars_buff[edge.first] * H1.transpose() * St1.inverse();
+          means_buff[edge.first] += K1 * z_diff;
+          vars_buff[edge.first]
+            = (MatrixXd::Identity(n_dim, n_dim) - K1 * H1)
+            * vars_buff[edge.first];
+        }
+
+        MatrixXd K2 = vars_buff[edge.second] * H2.transpose() * St2.inverse();
+        means_buff[edge.second] += K2 * z_diff;
+        vars_buff[edge.second]
+          = (MatrixXd::Identity(n_dim, n_dim) - K2 * H2)
+          * vars_buff[edge.second];
+      }
 
       // apply the updated estimations
       if (enable_update_step)
@@ -668,4 +746,72 @@ int main (int argc, char** argv)
   std::cout << "overall average error: " << (total_error/(max_time*sim_freq)/n_robots) << std::endl;
 
   return 0;
+}
+
+// for mode4 (Covariance Intersection)
+void getOmega(MatrixXd &C1, MatrixXd &C2, double &omega1, double &omega2)
+{
+  if (C1.determinant() == 0 || std::isnan(C1.determinant()))
+  {
+    omega1 = 1;
+    omega2 = 0;
+    return;
+  }
+  if (C2.determinant() == 0 || std::isnan(C2.determinant()))
+  {
+    omega1 = 0;
+    omega2 = 1;
+    return;
+  }
+  Eigen::EigenSolver<MatrixXd> slv1(C1);
+  auto eigen_values1 = slv1.eigenvalues();
+  auto eigen_vector1 = slv1.eigenvectors();
+  MatrixXd D1 = MatrixXd::Zero(2,2);
+  MatrixXd V1 = MatrixXd::Zero(2,2);
+  D1(0, 0) = std::sqrt(eigen_values1[0].real());
+  D1(1, 1) = std::sqrt(eigen_values1[1].real());
+  V1(0, 0) = eigen_vector1.col(0)[0].real();
+  V1(0, 1) = eigen_vector1.col(1)[0].real();
+  V1(1, 0) = eigen_vector1.col(0)[1].real();
+  V1(1, 1) = eigen_vector1.col(1)[1].real();
+  MatrixXd T1 = D1.inverse() * V1.transpose();
+
+  Eigen::EigenSolver<MatrixXd> slv2(T1*C2*T1.transpose());
+  auto eigen_values2 = slv2.eigenvalues();
+  auto eigen_vector2 = slv2.eigenvectors();
+  MatrixXd D2 = MatrixXd::Zero(2,2);
+  MatrixXd V2 = MatrixXd::Zero(2,2);
+  // D2(0, 0) = std::sqrt(eigen_values2[0].real());
+  // D2(1, 1) = std::sqrt(eigen_values2[1].real());
+  V2(0, 0) = eigen_vector2.col(0)[0].real();
+  V2(0, 1) = eigen_vector2.col(1)[0].real();
+  V2(1, 0) = eigen_vector2.col(0)[1].real();
+  V2(1, 1) = eigen_vector2.col(1)[1].real();
+
+  double d1 = 1.0/eigen_values2[0].real();
+  d1 = d1/(1-d1);
+  double d2 = 1.0/eigen_values2[1].real();
+  d2 = d2/(1-d2);
+
+  MatrixXd diag = V2*D1*V2.transpose();
+  double a1 = diag(0, 0);
+  double a2 = diag(1, 1);
+
+  double p = (a1*d2*(1+d1) + a2*d1*(1+d2))
+           / (a1*(1+d1) + a2*(1+d2));
+  double q = (a1*d2*d2*(1+d1) + a2*d1*d1*(1+d2))
+           / (a1*(1+d1) + a2*(1+d2));
+  omega1 = -p + std::sqrt(p*p - q);
+  omega2 = -p - std::sqrt(p*p - q);
+
+  if (omega1 < 0 || 1 < omega1 || std::isnan(omega1))
+    omega1 = omega2;
+
+  if (omega1 < 0 || 1 < omega1 || std::isnan(omega1))
+  {
+    if (C1.determinant() < C2.determinant())
+      omega1 = 1;
+    else
+      omega1 = 0;
+  }
 }
