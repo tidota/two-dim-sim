@@ -18,6 +18,9 @@ repul_rate: 0.05
 attr_thresh: 1.0
 attr_rate: 0.01
 fric_rate: 0.6 # friction
+# second destinations
+second_dest: true
+second_dest_rate: 2.0
 # control rate
 ctrl_rate: 1.0
 # control max
@@ -27,12 +30,14 @@ alpha1M: 10.0
 alpha2M: 1.0
 betaM: 0.5
 # mode
-mode: 1
+mode: 2
 # mode2 rate
 mode2_rate1: 2.0
 mode2_rate2: 2.0
+mode2_rateQ: 1.0
 # mode3 rate
-mode3_omega: 0.1
+mode3_omega: 0.9
+mode3_rateQ: 1.0
 # enable_update_step
 enable_update_step: true
 # enable bidirectional mutual update
@@ -43,7 +48,7 @@ enable_global_loc: true
 global_loc_steps: 1
 # network topology
 # star, loop, complete, dynamic
-topology: dynamic
+topology: loop
 # radius of communication area (used when topology is set to dynamic)
 comm_radius: 10.0
 # robot's locations

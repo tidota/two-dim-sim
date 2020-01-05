@@ -44,11 +44,17 @@ int main (int argc, char** argv)
   const double sigmaGlobalLocT = doc["sigmaGlobalLocT"].as<double>();
 
   // thresholds and rates to generate accelerations
-  const double repul_thresh = doc["repul_thresh"].as<double>();
+  double repul_thresh = doc["repul_thresh"].as<double>();
   const double repul_rate = doc["repul_rate"].as<double>();
-  const double attr_thresh = doc["attr_thresh"].as<double>();
+  double attr_thresh = doc["attr_thresh"].as<double>();
   const double attr_rate = doc["attr_rate"].as<double>();
   const double fric_rate = doc["fric_rate"].as<double>();
+
+  // second destinations (if it is true, the robot intervals will be doubled in
+  // the middle of operation)
+  const bool second_dest = doc["second_dest"].as<bool>();
+  const double second_dest_rate = doc["second_dest_rate"].as<double>();
+  bool second_dest_udpated = false;
 
   // control rate
   const double ctrl_rate = doc["ctrl_rate"].as<double>();
@@ -66,8 +72,10 @@ int main (int argc, char** argv)
   // params for mode2
   const double mode2_rate1 = doc["mode2_rate1"].as<double>();
   const double mode2_rate2 = doc["mode2_rate2"].as<double>();
+  const double mode2_rateQ = doc["mode2_rateQ"].as<double>();
   // params for mode3
   const double mode3_omega = doc["mode3_omega"].as<double>();
+  const double mode3_rateQ = doc["mode3_rateQ"].as<double>();
 
   // communication radius
   const double comm_radius = doc["comm_radius"].as<double>();
@@ -232,6 +240,16 @@ int main (int argc, char** argv)
   for (int t_step = 0; t_step * deltaT <= max_time; ++t_step)
   {
     double t = t_step * deltaT;
+
+    if (second_dest && !second_dest_udpated && t_step * deltaT > max_time/2.0)
+    {
+      std::cout << "SECOND DESTINATIONS: thresholds are being doubled."
+                << std::endl;
+      repul_thresh *= second_dest_rate;
+      attr_thresh *= second_dest_rate;
+      second_dest_udpated = true;
+    }
+
     // print the current states
     if ((int)(t * sim_freq) % plot_interval == 0)
     {
@@ -509,17 +527,18 @@ int main (int argc, char** argv)
         vars_buff[edge.first] *= mode2_rate1;
         vars_buff[edge.second] *= mode2_rate2;
         St1 = H1 * vars_buff[edge.first] * H1.transpose()
-            + H2 * vars_buff[edge.second] * H2.transpose() + Q;
+            + H2 * vars_buff[edge.second] * H2.transpose()
+            + (Q * mode2_rateQ);
         St2 = St1;
       }
       else if (mode == 3)
       {
         St1 = H1 * (vars_buff[edge.first] / mode3_omega) * H1.transpose()
             + H2 * (vars_buff[edge.second] / (1 - mode3_omega)) * H2.transpose()
-            + Q;
+            + (Q * mode3_rateQ);
         St2 = H1 * (vars_buff[edge.first] / (1 - mode3_omega)) * H1.transpose()
             + H2 * (vars_buff[edge.second] / mode3_omega) * H2.transpose()
-            + Q;
+            + (Q * mode3_rateQ);
         vars_buff[edge.first] /= mode3_omega;
         vars_buff[edge.second] /= mode3_omega;
       }
