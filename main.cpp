@@ -300,6 +300,7 @@ int main (int argc, char** argv)
             fout << " ";
           }
         }
+        fout << std::setw(8) << std::sqrt(vars[i].determinant())*2 << " ";
         fout << std::right << std::setw(8)
              << (robots[i] - means[i]).norm() << " ";
 
@@ -673,9 +674,24 @@ int main (int argc, char** argv)
   fout.close();
 
   // output of gnuplot command
-  const int off_next_robot = n_dim + n_dim + n_dim*n_dim + 1;
+  const int off_next_robot = n_dim + n_dim + n_dim*n_dim + 2;
   std::cout << std::endl;
-  std::cout << "~~~ gnuplot command (errors)~~~" << std::endl;
+  std::cout << "~~~ gnuplot command (errors vs determinants) ~~~" << std::endl;
+  for (int i = 0; i < n_robots; ++i)
+  {
+    std::cout << "--- ROBOT " << (i + 1) << " ---" << std::endl;
+    std::cout << "clear" << std::endl;
+    std::cout << "unset object" << std::endl;
+    std::cout << "plot \"output.dat\" u 1:"
+              << std::to_string(2+(i+1)*off_next_robot-2)
+              << " title \"sig x 2" << std::to_string(1+i) << "\" with line, ";
+    std::cout << "\"output.dat\" u 1:"
+              << std::to_string(2+(i+1)*off_next_robot-1)
+              << " title \"err" << std::to_string(1+i) << "\" with line";
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
+  std::cout << "~~~ gnuplot command (errors as a whole) ~~~" << std::endl;
   std::cout << "clear" << std::endl;
   std::cout << "unset object" << std::endl;
   for (int i = 0; i < n_robots; ++i)
