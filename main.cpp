@@ -18,7 +18,7 @@ The main part of the simulation.
 using namespace std;
 using namespace Eigen;
 
-void getOmega(MatrixXd &, MatrixXd &, double &, double &);
+void getOmega(MatrixXd &, MatrixXd &, double &, const int &);
 
 int main (int argc, char** argv)
 {
@@ -76,6 +76,8 @@ int main (int argc, char** argv)
   // params for mode3
   const double mode3_omega = doc["mode3_omega"].as<double>();
   const double mode3_rateQ = doc["mode3_rateQ"].as<double>();
+  // params for mode4
+  const int mode4_omega_mode = doc["mode4_omega_mode"].as<int>();
 
   // communication radius
   const double comm_radius = doc["comm_radius"].as<double>();
@@ -561,12 +563,9 @@ int main (int argc, char** argv)
         VectorXd mean2 = means_buff[edge.second];
         MatrixXd var2 = vars_buff[edge.second];
         {
-          double omega1;
-          double omega2;
           MatrixXd C1 = H1 * vars_buff[edge.first] * H1.transpose();
           MatrixXd C2 = H2 * vars_buff[edge.second] * H2.transpose() + Q;
-          getOmega(C1, C2, omega1, omega2);
-          omega = omega1;
+          getOmega(C1, C2, omega, mode4_omega_mode);
         }
         if (omega == 0)
         {
@@ -576,7 +575,10 @@ int main (int argc, char** argv)
           mean1
             = means_buff[edge.second]
             + corr;
-          var1 = vars_buff[edge.second];
+          var1 = vars_buff[edge.second]
+               + (H1.transpose() * H1).inverse() * H1.transpose()
+               * Q
+               * H1 * (H1.transpose() * H1).inverse();
         }
         else if (omega < 1)
         {
@@ -592,12 +594,9 @@ int main (int argc, char** argv)
         }
 
         {
-          double omega1;
-          double omega2;
           MatrixXd C1 = H2 * vars_buff[edge.second] * H2.transpose();
           MatrixXd C2 = H1 * vars_buff[edge.first] * H1.transpose() + Q;
-          getOmega(C1, C2, omega1, omega2);
-          omega = omega1;
+          getOmega(C1, C2, omega, mode4_omega_mode);
         }
         if (omega == 0)
         {
@@ -607,7 +606,10 @@ int main (int argc, char** argv)
           mean2
             = means_buff[edge.first]
             + corr;
-          var2 = vars_buff[edge.first];
+          var2 = vars_buff[edge.first]
+               + (H2.transpose() * H2).inverse() * H2.transpose()
+               * Q
+               * H2 * (H2.transpose() * H2).inverse();
         }
         else if (omega < 1)
         {
@@ -621,16 +623,10 @@ int main (int argc, char** argv)
             = (MatrixXd::Identity(n_dim, n_dim) - K2 * H2)
             * (vars_buff[edge.second]/omega);
         }
-        if (var1.determinant() < vars_buff[edge.first].determinant())
-        {
-          means_buff[edge.first] = mean1;
-          vars_buff[edge.first] = var1;
-        }
-        if (var2.determinant() < vars_buff[edge.second].determinant())
-        {
-          means_buff[edge.second] = mean2;
-          vars_buff[edge.second] = var2;
-        }
+        means_buff[edge.first] = mean1;
+        vars_buff[edge.first] = var1;
+        means_buff[edge.second] = mean2;
+        vars_buff[edge.second] = var2;
       }
       else // anything except for mode4 (Covariance Intersection)
       {
@@ -768,18 +764,46 @@ int main (int argc, char** argv)
 }
 
 // for mode4 (Covariance Intersection)
-void getOmega(MatrixXd &C1, MatrixXd &C2, double &omega1, double &omega2)
+void getOmega(MatrixXd &C1, MatrixXd &C2, double &omega, const int &mode)
 {
-  if (C1.determinant() == 0 || std::isnan(C1.determinant()))
+  if (mode == 0)
   {
-    omega1 = 1;
-    omega2 = 0;
+    omega = 0.5;
     return;
   }
-  if (C2.determinant() == 0 || std::isnan(C2.determinant()))
+  double det1 = C1.determinant();
+  double det2 = C2.determinant();
+  if (det1 == 0 || std::isnan(det1))
   {
-    omega1 = 0;
-    omega2 = 1;
+    omega = 1;
+    return;
+  }
+  if (det2 == 0 || std::isnan(det2))
+  {
+    omega = 0;
+    return;
+  }
+  if (mode == 1)
+  {
+    if (det1 < det2)
+      omega = 1;
+    else
+      omega = 0;
+    return;
+  }
+  if (mode == 2)
+  {
+    if (det1 <= det2)
+      omega = 0.6;
+    else
+      omega = 0.4;
+    return;
+  }
+  if (mode == 3)
+  {
+    double sig1 = std::sqrt(det1);
+    double sig2 = std::sqrt(det2);
+    omega = sig2 / (sig1 + sig2);
     return;
   }
   Eigen::EigenSolver<MatrixXd> slv1(C1);
@@ -820,17 +844,19 @@ void getOmega(MatrixXd &C1, MatrixXd &C2, double &omega1, double &omega2)
            / (a1*(1+d1) + a2*(1+d2));
   double q = (a1*d2*d2*(1+d1) + a2*d1*d1*(1+d2))
            / (a1*(1+d1) + a2*(1+d2));
-  omega1 = -p + std::sqrt(p*p - q);
-  omega2 = -p - std::sqrt(p*p - q);
+  double omega1 = -p + std::sqrt(p*p - q);
+  double omega2 = -p - std::sqrt(p*p - q);
 
-  if (omega1 < 0 || 1 < omega1 || std::isnan(omega1))
-    omega1 = omega2;
+  omega = omega1;
 
-  if (omega1 < 0 || 1 < omega1 || std::isnan(omega1))
+  if (omega < 0 || 1 < omega || std::isnan(omega))
+    omega = omega2;
+
+  if (omega < 0 || 1 < omega || std::isnan(omega))
   {
-    if (C1.determinant() < C2.determinant())
-      omega1 = 1;
+    if (det1 < det2)
+      omega = 1;
     else
-      omega1 = 0;
+      omega = 0;
   }
 }
