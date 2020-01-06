@@ -74,7 +74,8 @@ int main (int argc, char** argv)
   const double mode2_rate2 = doc["mode2_rate2"].as<double>();
   const double mode2_rateQ = doc["mode2_rateQ"].as<double>();
   // params for mode3
-  const double mode3_omega = doc["mode3_omega"].as<double>();
+  const double mode3_omega_variable = doc["mode3_omega_variable"].as<bool>();
+  double mode3_omega = doc["mode3_omega"].as<double>();
   const double mode3_rateQ = doc["mode3_rateQ"].as<double>();
   // params for mode4
   const int mode4_omega_mode = doc["mode4_omega_mode"].as<int>();
@@ -535,6 +536,12 @@ int main (int argc, char** argv)
       }
       else if (mode == 3)
       {
+        if (mode3_omega_variable)
+        {
+          double sig1 = std::sqrt(vars_buff[edge.first].determinant());
+          double sig2 = std::sqrt(vars_buff[edge.second].determinant());
+          mode3_omega = 0.9 - std::fabs(sig1 - sig2)/(sig1 + sig2)*2*0.4;
+        }
         St1 = H1 * (vars_buff[edge.first] / mode3_omega) * H1.transpose()
             + H2 * (vars_buff[edge.second] / (1 - mode3_omega)) * H2.transpose()
             + (Q * mode3_rateQ);
