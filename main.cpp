@@ -69,6 +69,8 @@ int main (int argc, char** argv)
 
   // mode
   const int mode = doc["mode"].as<int>();
+  // params for mode1
+  const double mode1_rateQ = doc["mode1_rateQ"].as<double>();
   // params for mode2
   const double mode2_rate1 = doc["mode2_rate1"].as<double>();
   const double mode2_rate2 = doc["mode2_rate2"].as<double>();
@@ -523,7 +525,7 @@ int main (int argc, char** argv)
       else if (mode == 1)
       {
         St1 = H1 * vars_buff[edge.first] * H1.transpose()
-            + H2 * vars_buff[edge.second] * H2.transpose() + Q;
+            + H2 * vars_buff[edge.second] * H2.transpose() + (Q * mode1_rateQ);
         St2 = St1;
       }
       else if (mode == 2)
