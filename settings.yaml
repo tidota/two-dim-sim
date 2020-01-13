@@ -35,7 +35,7 @@ betaM: 0.5
 # 2: doubling the unceratinties of both
 # 3: biased
 # 4: CI
-mode: 1
+mode: 4
 # mode1 rate
 mode1_rateQ: 1.0
 # mode2 rate
@@ -45,26 +45,31 @@ mode2_rateQ: 1.0
 # mode3 rate
 # if false, it is set to mode3_omega
 mode3_omega_variable: false
-mode3_omega: 0.5
-mode3_rateQ: 1
+mode3_omega: 0.9
+mode3_rateQ: 10
 # mode4 (CI)
 # 0: omega = 0.5
 # 1: omega = 0 or 1 based on the determinants
 # 2: omega = 0.6 or 0.4
 # 3: omega = sqrt(det2)/(sqrt(det1) + sqrt(det2))
 # others: omega calculated by the formula
-mode4_omega_mode: 1
+mode4_omega_mode: 0
+mode4_rateQ: 1.0
+# CI with original algorithm if set to true
+mode4_original: true
+mode4_original_force: true
+mode4_original_omega: 0.9
 # enable_update_step
 enable_update_step: true
 # enable bidirectional mutual update
-enable_bidirectional: false
+enable_bidirectional: true
 # global localization
 enable_global_loc: true
 # global localization at every specified steps
 global_loc_steps: 1
 # network topology
 # star, loop, complete, dynamic
-topology: star
+topology: complete
 # radius of communication area (used when topology is set to dynamic)
 comm_radius: 10.0
 # robot's locations

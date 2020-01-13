@@ -80,7 +80,11 @@ int main (int argc, char** argv)
   double mode3_omega = doc["mode3_omega"].as<double>();
   const double mode3_rateQ = doc["mode3_rateQ"].as<double>();
   // params for mode4
+  const bool mode4_original = doc["mode4_original"].as<bool>();
   const int mode4_omega_mode = doc["mode4_omega_mode"].as<int>();
+  const double mode4_rateQ = doc["mode4_rateQ"].as<double>();
+  const double mode4_original_omega = doc["mode4_original_omega"].as<double>();
+  const bool mode4_original_force = doc["mode4_original_force"].as<bool>();
 
   // communication radius
   const double comm_radius = doc["comm_radius"].as<double>();
@@ -572,66 +576,128 @@ int main (int argc, char** argv)
         MatrixXd var1 = vars_buff[edge.first];
         VectorXd mean2 = means_buff[edge.second];
         MatrixXd var2 = vars_buff[edge.second];
+        if (mode4_original)
         {
-          MatrixXd C1 = H1 * vars_buff[edge.first] * H1.transpose();
-          MatrixXd C2 = H2 * vars_buff[edge.second] * H2.transpose() + Q;
-          getOmega(C1, C2, omega, mode4_omega_mode);
-        }
-        if (omega == 0)
-        {
-          VectorXd corr(n_dim);
-          corr(0) = -z(0) * std::cos(z(1));
-          corr(1) = -z(0) * std::sin(z(1));
-          mean1
-            = means_buff[edge.second]
-            + corr;
-          var1 = vars_buff[edge.second]
-               + (H1.transpose() * H1).inverse() * H1.transpose()
-               * Q
-               * H1 * (H1.transpose() * H1).inverse();
-        }
-        else if (omega < 1)
-        {
-          St1 = H1 * (vars_buff[edge.first]/omega) * H1.transpose()
-              + H2 * (vars_buff[edge.second]/(1-omega)) * H2.transpose()
-              + (Q/(1-omega));
-          MatrixXd K1
-            = (vars_buff[edge.first]/omega) * H1.transpose() * St1.inverse();
-          mean1 += K1 * z_diff;
-          var1
-            = (MatrixXd::Identity(n_dim, n_dim) - K1 * H1)
-            * (vars_buff[edge.first]/omega);
-        }
+          // change dz/dx to dx/dz
+          // assuming the original jacobians were already calculated
+          //H1 = H1.transpose().eval();
+          H1(1, 0) = H1(1, 0) * q;
+          H1(1, 1) = H1(1, 1) * q;
+          if (vars_buff[edge.first].determinant() != 0)
+          {
+            MatrixXd A = vars_buff[edge.first];
+            MatrixXd B
+              = vars_buff[edge.second]
+              + H1.transpose() * (Q * mode4_rateQ) * H1;
+            VectorXd a = means_buff[edge.first];
+            VectorXd b = means_buff[edge.second];
+            b(0) = b(0) - z(0) * std::cos(z(1));
+            b(1) = b(1) - z(0) * std::sin(z(1));
 
-        {
-          MatrixXd C1 = H2 * vars_buff[edge.second] * H2.transpose();
-          MatrixXd C2 = H1 * vars_buff[edge.first] * H1.transpose() + Q;
-          getOmega(C1, C2, omega, mode4_omega_mode);
+            if (mode4_original_force)
+              omega = mode4_original_omega;
+            else
+              getOmega(A, B, omega, mode4_omega_mode);
+            MatrixXd C = (omega*A.inverse() + (1-omega)*B.inverse()).inverse();
+            VectorXd c
+              = C * (omega*A.inverse()*a + (1-omega)*B.inverse()*b);
+            mean1 = c;
+            var1 = C;
+          }
+          // change dz/dx to dx/dz
+          // assuming the original jacobians were already calculated
+          //H2 = H2.transpose().eval();
+          H2(1, 0) = H2(1, 0) * q;
+          H2(1, 1) = H2(1, 1) * q;
+          if (vars_buff[edge.second].determinant() != 0)
+          {
+            MatrixXd A = vars_buff[edge.second];
+            MatrixXd B
+              = vars_buff[edge.first]
+              + H2.transpose() * (Q * mode4_rateQ) * H2;
+            VectorXd a = means_buff[edge.second];
+            VectorXd b = means_buff[edge.first];
+            b(0) = b(0) + z(0) * std::cos(z(1));
+            b(1) = b(1) + z(0) * std::sin(z(1));
+
+            if (mode4_original_force)
+              omega = mode4_original_omega;
+            else
+              getOmega(A, B, omega, mode4_omega_mode);
+            MatrixXd C = (omega*A.inverse() + (1-omega)*B.inverse()).inverse();
+            VectorXd c
+              = C * (omega*A.inverse()*a + (1-omega)*B.inverse()*b);
+            mean2 = c;
+            var2 = C;
+          }
         }
-        if (omega == 0)
+        else
         {
-          VectorXd corr(n_dim);
-          corr(0) = z(0) * std::cos(z(1));
-          corr(1) = z(0) * std::sin(z(1));
-          mean2
-            = means_buff[edge.first]
-            + corr;
-          var2 = vars_buff[edge.first]
-               + (H2.transpose() * H2).inverse() * H2.transpose()
-               * Q
-               * H2 * (H2.transpose() * H2).inverse();
-        }
-        else if (omega < 1)
-        {
-          St2 = H1 * (vars_buff[edge.first]/(1-omega)) * H1.transpose()
-              + H2 * (vars_buff[edge.second]/omega) * H2.transpose()
-              + (Q/(1-omega));
-          MatrixXd K2
-            = (vars_buff[edge.second]/omega) * H2.transpose() * St2.inverse();
-          mean2 += K2 * z_diff;
-          var2
-            = (MatrixXd::Identity(n_dim, n_dim) - K2 * H2)
-            * (vars_buff[edge.second]/omega);
+          {
+            MatrixXd C1 = H1 * vars_buff[edge.first] * H1.transpose();
+            MatrixXd C2
+              = H2 * vars_buff[edge.second] * H2.transpose()
+              + (Q * mode4_rateQ);
+            getOmega(C1, C2, omega, mode4_omega_mode);
+          }
+          if (omega == 0)
+          {
+            VectorXd corr(n_dim);
+            corr(0) = -z(0) * std::cos(z(1));
+            corr(1) = -z(0) * std::sin(z(1));
+            mean1
+              = means_buff[edge.second]
+              + corr;
+            var1 = vars_buff[edge.second]
+                 + (H1.transpose() * H1).inverse() * H1.transpose()
+                 * (Q * mode4_rateQ)
+                 * H1 * (H1.transpose() * H1).inverse();
+          }
+          else if (omega < 1)
+          {
+            St1 = H1 * (vars_buff[edge.first]/omega) * H1.transpose()
+                + H2 * (vars_buff[edge.second]/(1-omega)) * H2.transpose()
+                + ((Q * mode4_rateQ)/(1-omega));
+            MatrixXd K1
+              = (vars_buff[edge.first]/omega) * H1.transpose() * St1.inverse();
+            mean1 += K1 * z_diff;
+            var1
+              = (MatrixXd::Identity(n_dim, n_dim) - K1 * H1)
+              * (vars_buff[edge.first]/omega);
+          }
+
+          {
+            MatrixXd C1 = H2 * vars_buff[edge.second] * H2.transpose();
+            MatrixXd C2
+              = H1 * vars_buff[edge.first] * H1.transpose()
+              + (Q * mode4_rateQ);
+            getOmega(C1, C2, omega, mode4_omega_mode);
+          }
+          if (omega == 0)
+          {
+            VectorXd corr(n_dim);
+            corr(0) = z(0) * std::cos(z(1));
+            corr(1) = z(0) * std::sin(z(1));
+            mean2
+              = means_buff[edge.first]
+              + corr;
+            var2 = vars_buff[edge.first]
+                 + (H2.transpose() * H2).inverse() * H2.transpose()
+                 * (Q * mode4_rateQ)
+                 * H2 * (H2.transpose() * H2).inverse();
+          }
+          else if (omega < 1)
+          {
+            St2 = H1 * (vars_buff[edge.first]/(1-omega)) * H1.transpose()
+                + H2 * (vars_buff[edge.second]/omega) * H2.transpose()
+                + ((Q * mode4_rateQ)/(1-omega));
+            MatrixXd K2
+              = (vars_buff[edge.second]/omega) * H2.transpose() * St2.inverse();
+            mean2 += K2 * z_diff;
+            var2
+              = (MatrixXd::Identity(n_dim, n_dim) - K2 * H2)
+              * (vars_buff[edge.second]/omega);
+          }
         }
         means_buff[edge.first] = mean1;
         vars_buff[edge.first] = var1;
