@@ -765,10 +765,10 @@ int main (int argc, char** argv)
     std::cout << "unset object" << std::endl;
     std::cout << "plot \"output.dat\" u 1:"
               << std::to_string(2+(i+1)*off_next_robot-2)
-              << " title \"sig x 2" << std::to_string(1+i) << "\" with line, ";
+              << " title \"sigma x 2 of robot" << std::to_string(1+i) << "\" with line, ";
     std::cout << "\"output.dat\" u 1:"
               << std::to_string(2+(i+1)*off_next_robot-1)
-              << " title \"err" << std::to_string(1+i) << "\" with line";
+              << " title \"err of robot" << std::to_string(1+i) << "\" with line";
     std::cout << std::endl;
   }
   std::cout << std::endl;
