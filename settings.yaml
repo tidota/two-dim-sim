@@ -49,7 +49,7 @@ mode2_rateQ: 1.0
 # mode3 rate
 # if false, it is set to mode3_omega
 mode3_omega_variable: false
-mode3_omega: 0.9
+mode3_omega: 0.95
 mode3_rateQ: 1
 # mode4 (CI)
 # 0: omega = 0.5
@@ -60,9 +60,9 @@ mode3_rateQ: 1
 mode4_omega_mode: 4
 mode4_rateQ: 1.0
 # CI with original algorithm if set to true
-mode4_original: false
+mode4_original: true
 mode4_original_force: true
-mode4_original_omega: 0.9
+mode4_original_omega: 0.95
 # enable_update_step
 enable_update_step: true
 # enable bidirectional mutual update
