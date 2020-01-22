@@ -30,8 +30,8 @@ ctrl_rate: 1.0
 # control max
 ctrl_max: 1.0
 # weights for motion model
-alpha1M: 10.0
-alpha2M: 1.0
+alpha1M: 1.0
+alpha2M: 0.5
 betaM: 0.5
 # mode
 # 0: no consideration of uncertainty of the other
@@ -61,7 +61,7 @@ mode4_omega_mode: 4
 mode4_rateQ: 1.0
 # CI with original algorithm if set to true
 mode4_original: true
-mode4_original_force: true
+mode4_original_force: false
 mode4_original_omega: 0.95
 # enable_update_step
 enable_update_step: true
