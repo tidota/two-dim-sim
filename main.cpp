@@ -32,6 +32,10 @@ int main (int argc, char** argv)
   // phase, i.e., deta T
   const double deltaT = 1.0/sim_freq;
 
+  // use random seed?
+  const bool use_random_seed = doc["use_random_seed"].as<bool>();
+  const unsigned int random_seed = doc["random_seed"].as<unsigned int>();
+
   // weight of motion noise
   const double sigmaM = doc["sigmaM"].as<double>();
   // get sigma for floating effect
@@ -223,8 +227,17 @@ int main (int argc, char** argv)
   std::cout << std::endl;
 
   // random numbers
-  std::random_device rd{};
-  std::mt19937 gen{rd()};
+  unsigned int seed;
+  if (use_random_seed)
+  {
+    seed = random_seed;
+  }
+  else
+  {
+    std::random_device rd{};
+    seed = rd();
+  }
+  std::mt19937 gen{seed};
 
   // print header
   std::cout << "    t   |";
