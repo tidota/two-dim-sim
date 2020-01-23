@@ -319,7 +319,7 @@ int main (int argc, char** argv)
             fout << " ";
           }
         }
-        fout << std::setw(8) << std::sqrt(vars[i].determinant())*2 << " ";
+        fout << std::setw(8) << std::sqrt(vars[i].determinant()) << " ";
         fout << std::right << std::setw(8)
              << (robots[i] - means[i]).norm() << " ";
 
@@ -765,7 +765,7 @@ int main (int argc, char** argv)
     std::cout << "unset object" << std::endl;
     std::cout << "plot \"output.dat\" u 1:"
               << std::to_string(2+(i+1)*off_next_robot-2)
-              << " title \"sigma x 2 of robot" << std::to_string(1+i) << "\" with line, ";
+              << " title \"|Sigma| of robot" << std::to_string(1+i) << "\" with line, ";
     std::cout << "\"output.dat\" u 1:"
               << std::to_string(2+(i+1)*off_next_robot-1)
               << " title \"err of robot" << std::to_string(1+i) << "\" with line";
