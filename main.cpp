@@ -765,7 +765,7 @@ int main (int argc, char** argv)
     std::cout << "unset object" << std::endl;
     std::cout << "plot \"output.dat\" u 1:"
               << std::to_string(2+(i+1)*off_next_robot-2)
-              << " title \"|Sigma| of robot" << std::to_string(1+i) << "\" with line, ";
+              << " title \"|Sigma|^0.5 of robot" << std::to_string(1+i) << "\" with line, ";
     std::cout << "\"output.dat\" u 1:"
               << std::to_string(2+(i+1)*off_next_robot-1)
               << " title \"err of robot" << std::to_string(1+i) << "\" with line";
