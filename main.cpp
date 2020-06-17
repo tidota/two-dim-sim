@@ -139,6 +139,11 @@ int main (int argc, char** argv)
     accs.push_back(VectorXd::Zero(n_dim));
   }
 
+  // covariance matrix (only for the centralized mode)
+  MatrixXd cent_vars;
+  if (mode == 5)
+    cent_vars = MatrixXd::Zero(n_dim * n_robots, n_dim * n_robots);
+
   // topology/connectivity
   std::string topology = doc["topology"].as<std::string>();
   std::vector< std::pair<int,int> > edges;
@@ -262,6 +267,14 @@ int main (int argc, char** argv)
   for (int t_step = 0; t_step * deltaT <= max_time; ++t_step)
   {
     double t = t_step * deltaT;
+
+    if (mode == 5) // if mode5, copy diagonal matrices
+    {
+      for (int i = 0; i < n_robots; ++i)
+      {
+        vars[i] = cent_vars.block(i * n_dim, i * n_dim, n_dim, n_dim);
+      }
+    }
 
     if (second_dest && !second_dest_udpated && t_step * deltaT > max_time/2.0)
     {
@@ -531,8 +544,12 @@ int main (int argc, char** argv)
       H2(0, 1) = diff_hat(1)/std::sqrt(q);
       H2(1, 1) = diff_hat(0)/q;
 
-      MatrixXd St1 = H1 * vars_buff[edge.first] * H1.transpose() + Q;
-      MatrixXd St2 = H2 * vars_buff[edge.second] * H2.transpose() + Q;
+      // St matrices for decentralized updates
+      MatrixXd St1;// = H1 * vars_buff[edge.first] * H1.transpose() + Q;
+      MatrixXd St2;// = H2 * vars_buff[edge.second] * H2.transpose() + Q;
+      // Matrices for centralized updates
+      MatrixXd H;
+      MatrixXd St;
 
       if (mode == 0)
       {
@@ -570,6 +587,13 @@ int main (int argc, char** argv)
             + (Q * mode3_rateQ);
         vars_buff[edge.first] /= mode3_omega;
         vars_buff[edge.second] /= mode3_omega;
+      }
+      else if (mode == 5)
+      {
+        // TODO: Build H
+
+        // TODO: Build St
+
       }
 
       VectorXd z_diff = z - z_hat;
@@ -717,7 +741,25 @@ int main (int argc, char** argv)
         means_buff[edge.second] = mean2;
         vars_buff[edge.second] = var2;
       }
-      else // anything except for mode4 (Covariance Intersection)
+      else if (mode == 5)
+      {
+        // TODO: Build centralized means
+        VectorXd cent_means_buff;
+        MatrixXd cent_vars_buff = cent_vars;
+        // TODO: Update covariance matrix buffer by vars_buff
+        //
+        MatrixXd K = cent_vars * H.transpose() * St.inverse();
+        // TODO: Build z_diff
+        MatrixXd Z;
+        cent_means_buff += K * Z;
+        // TODO: Copy to means
+        //
+        // TODO: Update the matrix
+        cent_vars_buff;
+        // TODO: Copy to vars_buff
+        //
+      }
+      else // anything except for mode4 (CI) / mode5 (Centralized)
       {
         if (enable_bidirectional)
         {
@@ -742,6 +784,14 @@ int main (int argc, char** argv)
         vars[edge.first] = vars_buff[edge.first];
         means[edge.second] = means_buff[edge.second];
         vars[edge.second] = vars_buff[edge.second];
+      }
+    }
+
+    if (mode == 5) // if mode5, copy diagonal matrices
+    {
+      for (int i = 0; i < n_robots; ++i)
+      {
+        cent_vars.block(i * n_dim, i * n_dim, n_dim, n_dim) = vars[i];
       }
     }
 
