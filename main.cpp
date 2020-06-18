@@ -491,6 +491,14 @@ int main (int argc, char** argv)
       }
     }
 
+    if (mode == 5) // if mode5, update diagonal matrices
+    {
+      for (int i = 0; i < n_robots; ++i)
+      {
+        cent_vars.block(i * n_dim, i * n_dim, n_dim, n_dim) = vars[i];
+      }
+    }
+
     // for all edges of network
     std::vector<int> indx_list(edges.size());
     for (int i = 0; i < static_cast<int>(edges.size()); ++i)
@@ -590,10 +598,12 @@ int main (int argc, char** argv)
       }
       else if (mode == 5)
       {
-        // TODO: Build H
-
-        // TODO: Build St
-
+        H = MatrixXd::Zero(2, n_robots*2);
+        H.block(0, edge.first * 2, 2, 2)
+          = H1;
+        H.block(0, edge.second * 2, 2, 2)
+          = H2;
+        St = H * cent_vars * H.transpose() + Q;
       }
 
       VectorXd z_diff = z - z_hat;
@@ -743,21 +753,29 @@ int main (int argc, char** argv)
       }
       else if (mode == 5)
       {
-        // TODO: Build centralized means
-        VectorXd cent_means_buff;
-        MatrixXd cent_vars_buff = cent_vars;
-        // TODO: Update covariance matrix buffer by vars_buff
-        //
-        MatrixXd K = cent_vars * H.transpose() * St.inverse();
-        // TODO: Build z_diff
-        MatrixXd Z;
-        cent_means_buff += K * Z;
-        // TODO: Copy to means
-        //
-        // TODO: Update the matrix
-        cent_vars_buff;
-        // TODO: Copy to vars_buff
-        //
+        if (enable_update_step)
+        {
+          MatrixXd K = cent_vars * H.transpose() * St.inverse();
+          VectorXd cent_means = VectorXd::Zero(n_robots * n_dim);
+          cent_means.segment(edge.first*n_dim, n_dim)
+            = means_buff[edge.first];
+          cent_means.segment(edge.second*n_dim, n_dim)
+            = means_buff[edge.second];
+          cent_means += K * z_diff;
+          means_buff[edge.first]
+            = cent_means.segment(edge.first*n_dim, n_dim);
+          means_buff[edge.second]
+            = cent_means.segment(edge.second*n_dim, n_dim);
+          cent_vars
+            = (MatrixXd::Identity(n_robots*n_dim, n_robots*n_dim) - K*H)
+            * cent_vars;
+          vars_buff[edge.first]
+            = cent_vars.block(
+                edge.first*n_dim, edge.first*n_dim, n_dim, n_dim);
+          vars_buff[edge.second]
+            = cent_vars.block(
+                edge.second*n_dim, edge.second*n_dim, n_dim, n_dim);
+        }
       }
       else // anything except for mode4 (CI) / mode5 (Centralized)
       {
@@ -784,14 +802,6 @@ int main (int argc, char** argv)
         vars[edge.first] = vars_buff[edge.first];
         means[edge.second] = means_buff[edge.second];
         vars[edge.second] = vars_buff[edge.second];
-      }
-    }
-
-    if (mode == 5) // if mode5, copy diagonal matrices
-    {
-      for (int i = 0; i < n_robots; ++i)
-      {
-        cent_vars.block(i * n_dim, i * n_dim, n_dim, n_dim) = vars[i];
       }
     }
 
