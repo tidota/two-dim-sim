@@ -13,6 +13,12 @@ locations. The estimated location is updated based on that information.
 This work was published to [Ubiquitous Robots 2020](http://www.ubiquitousrobots.org/2020/index.php). For more details, please
 refer to the paper titled "Conservative Data Exchange for Decentralized
 Cooperative Localization."
+This repository have some updates after the conference.
+To see the exact code at the time of presentation at the conference, please checkout
+the update tagged `UR2020` by the following command.
+```
+git checkout UR2020
+```
 
 <!--
 # Pseudocode
