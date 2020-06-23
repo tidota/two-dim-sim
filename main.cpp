@@ -443,12 +443,17 @@ int main (int argc, char** argv)
       vars[i] = vars[i] + V.transpose() * M * V;
     }
 
-    // === estimation update ===
-    std::vector<VectorXd> means_buff(means);
-    std::vector<MatrixXd> vars_buff(vars);
+    if (mode == 5) // if mode5, update diagonal matrices
+    {
+      for (int i = 0; i < n_robots; ++i)
+      {
+        cent_vars.block(i * n_dim, i * n_dim, n_dim, n_dim) = vars[i];
+      }
+    }
 
     // global localization.
-    if (enable_global_loc && t_step % global_loc_steps == 0)
+    if (enable_update_step && enable_global_loc
+      && t_step % global_loc_steps == 0)
     {
       // take measurement (communication)
       VectorXd z(2);
@@ -470,8 +475,6 @@ int main (int argc, char** argv)
       MatrixXd Q = MatrixXd::Zero(2,2);
       Q(0,0) = sigmaGlobalLocR * sigmaGlobalLocR;
       Q(1,1) = sigmaGlobalLocT * sigmaGlobalLocT;
-      MatrixXd St = H * vars_buff[0] * H.transpose() + Q;
-      MatrixXd K = vars_buff[0] * H.transpose() * St.inverse();
       VectorXd z_diff = z - z_hat;
       if (z_diff(1) > M_PI)
       {
@@ -481,23 +484,35 @@ int main (int argc, char** argv)
       {
         z_diff(1) += 2*M_PI;
       }
-      means_buff[0] += K * z_diff;
-      vars_buff[0] = (MatrixXd::Identity(n_dim, n_dim) - K * H) * vars_buff[0];
-      // apply the updated estimations
-      if (enable_update_step)
+
+      if (mode == 5)
       {
-        means[0] = means_buff[0];
-        vars[0] = vars_buff[0];
+        MatrixXd cent_H = MatrixXd::Zero(2, n_robots*2);
+        cent_H.block(0,0,2,2) = H;
+        MatrixXd St = cent_H * cent_vars * cent_H.transpose() + Q;
+        MatrixXd K = cent_vars * cent_H.transpose() * St.inverse();
+        cent_vars
+          = (MatrixXd::Identity(n_robots*n_dim, n_robots*n_dim) - K * cent_H)
+          * cent_vars;
+        VectorXd cent_means_diff = K * z_diff;
+        for (int i = 0; i < n_robots; ++i)
+        {
+          means[i] += cent_means_diff.segment(i*n_dim, n_dim);
+          vars[i] = cent_vars.block(i*n_dim,i*n_dim,n_dim,n_dim);
+        }
+      }
+      else
+      {
+        MatrixXd St = H * vars[0] * H.transpose() + Q;
+        MatrixXd K = vars[0] * H.transpose() * St.inverse();
+        means[0] += K * z_diff;
+        vars[0] = (MatrixXd::Identity(n_dim, n_dim) - K * H) * vars[0];
       }
     }
 
-    if (mode == 5) // if mode5, update diagonal matrices
-    {
-      for (int i = 0; i < n_robots; ++i)
-      {
-        cent_vars.block(i * n_dim, i * n_dim, n_dim, n_dim) = vars[i];
-      }
-    }
+    // === estimation update ===
+    std::vector<VectorXd> means_buff(means);
+    std::vector<MatrixXd> vars_buff(vars);
 
     // for all edges of network
     std::vector<int> indx_list(edges.size());
