@@ -452,8 +452,7 @@ int main (int argc, char** argv)
     }
 
     // global localization.
-    if (enable_update_step && enable_global_loc
-      && t_step % global_loc_steps == 0)
+    if (t_step % global_loc_steps == 0)
     {
       // take measurement (communication)
       VectorXd z(2);
@@ -462,51 +461,54 @@ int main (int argc, char** argv)
       z(0) = robots[0].norm() + global_locR_noise(gen);
       z(1) = std::atan2(robots[0](1), robots[0](0)) + global_locT_noise(gen);
 
-      // update its location estimate
-      VectorXd z_hat(2);// = means_buff[0];
-      z_hat(0) = means[0].norm();
-      z_hat(1) = std::atan2(means[0](1), means[0](0));
-      double q = means[0].squaredNorm();
-      MatrixXd H(2,n_dim);
-      H(0, 0) = means[0](0)/std::sqrt(q);
-      H(1, 0) = -means[0](1)/q;
-      H(0, 1) = means[0](1)/std::sqrt(q);
-      H(1, 1) = means[0](0)/q;
-      MatrixXd Q = MatrixXd::Zero(2,2);
-      Q(0,0) = sigmaGlobalLocR * sigmaGlobalLocR;
-      Q(1,1) = sigmaGlobalLocT * sigmaGlobalLocT;
-      VectorXd z_diff = z - z_hat;
-      if (z_diff(1) > M_PI)
+      if (enable_update_step && enable_global_loc)
       {
-        z_diff(1) -= 2*M_PI;
-      }
-      else if (z_diff(1) <= -M_PI)
-      {
-        z_diff(1) += 2*M_PI;
-      }
-
-      if (mode == 5)
-      {
-        MatrixXd cent_H = MatrixXd::Zero(2, n_robots*2);
-        cent_H.block(0,0,2,2) = H;
-        MatrixXd St = cent_H * cent_vars * cent_H.transpose() + Q;
-        MatrixXd K = cent_vars * cent_H.transpose() * St.inverse();
-        cent_vars
-          = (MatrixXd::Identity(n_robots*n_dim, n_robots*n_dim) - K * cent_H)
-          * cent_vars;
-        VectorXd cent_means_diff = K * z_diff;
-        for (int i = 0; i < n_robots; ++i)
+        // update its location estimate
+        VectorXd z_hat(2);// = means_buff[0];
+        z_hat(0) = means[0].norm();
+        z_hat(1) = std::atan2(means[0](1), means[0](0));
+        double q = means[0].squaredNorm();
+        MatrixXd H(2,n_dim);
+        H(0, 0) = means[0](0)/std::sqrt(q);
+        H(1, 0) = -means[0](1)/q;
+        H(0, 1) = means[0](1)/std::sqrt(q);
+        H(1, 1) = means[0](0)/q;
+        MatrixXd Q = MatrixXd::Zero(2,2);
+        Q(0,0) = sigmaGlobalLocR * sigmaGlobalLocR;
+        Q(1,1) = sigmaGlobalLocT * sigmaGlobalLocT;
+        VectorXd z_diff = z - z_hat;
+        if (z_diff(1) > M_PI)
         {
-          means[i] += cent_means_diff.segment(i*n_dim, n_dim);
-          vars[i] = cent_vars.block(i*n_dim,i*n_dim,n_dim,n_dim);
+          z_diff(1) -= 2*M_PI;
         }
-      }
-      else
-      {
-        MatrixXd St = H * vars[0] * H.transpose() + Q;
-        MatrixXd K = vars[0] * H.transpose() * St.inverse();
-        means[0] += K * z_diff;
-        vars[0] = (MatrixXd::Identity(n_dim, n_dim) - K * H) * vars[0];
+        else if (z_diff(1) <= -M_PI)
+        {
+          z_diff(1) += 2*M_PI;
+        }
+
+        if (mode == 5)
+        {
+          MatrixXd cent_H = MatrixXd::Zero(2, n_robots*2);
+          cent_H.block(0,0,2,2) = H;
+          MatrixXd St = cent_H * cent_vars * cent_H.transpose() + Q;
+          MatrixXd K = cent_vars * cent_H.transpose() * St.inverse();
+          cent_vars
+            = (MatrixXd::Identity(n_robots*n_dim, n_robots*n_dim) - K * cent_H)
+            * cent_vars;
+          VectorXd cent_means_diff = K * z_diff;
+          for (int i = 0; i < n_robots; ++i)
+          {
+            means[i] += cent_means_diff.segment(i*n_dim, n_dim);
+            vars[i] = cent_vars.block(i*n_dim,i*n_dim,n_dim,n_dim);
+          }
+        }
+        else
+        {
+          MatrixXd St = H * vars[0] * H.transpose() + Q;
+          MatrixXd K = vars[0] * H.transpose() * St.inverse();
+          means[0] += K * z_diff;
+          vars[0] = (MatrixXd::Identity(n_dim, n_dim) - K * H) * vars[0];
+        }
       }
     }
 
@@ -523,14 +525,12 @@ int main (int argc, char** argv)
     // mutual measurement
     for (auto indx: indx_list)
     {
-      // if probabilistic update is enabled
-      if (enable_prob_update)
+      // throw a die and decide to update it or not.
+      std::uniform_real_distribution<> dis(0, 1.0);
+      double val = dis(gen);
+      if (enable_prob_update && val > prob_update_p)
       {
-        // throw a die and decide to update it or not.
-        std::uniform_real_distribution<> dis(0, 1.0);
-        double val = dis(gen);
-        if (val > prob_update_p)
-          continue;
+        continue;
       }
 
       // get indexes
