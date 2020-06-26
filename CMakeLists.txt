@@ -10,7 +10,15 @@ find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 include_directories(include)
 
-add_executable(twodimsim src/main.cpp src/ci.cpp)
+add_executable(twodimsim
+  src/main.cpp
+  src/simbase.cpp
+  src/simparam.cpp
+  src/simcent.cpp
+  src/simci.cpp
+  src/simcons.cpp
+  src/simnaive.cpp
+)
 target_link_libraries(twodimsim yaml-cpp Eigen3::Eigen)
 
 #configure_file(settings.yaml settings.yaml COPYONLY)
