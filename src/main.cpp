@@ -27,6 +27,53 @@ int main (int argc, char** argv)
   std::ifstream fin("settings.yaml");
   YAML::Node doc = YAML::Load(fin);
 
+  //=========================================================================================================
+  // in the main function
+
+  // mode
+  const int mode = doc["mode"].as<int>();
+
+  // second destinations (if it is true, the robot intervals will be doubled in
+  // the middle of operation)
+  const bool second_dest = doc["second_dest"].as<bool>();
+  const double second_dest_rate = doc["second_dest_rate"].as<double>();
+  bool second_dest_udpated = false;
+
+  // global localization at every specified steps.
+  const int global_loc_steps = doc["global_loc_steps"].as<int>();
+  // plotting interval
+  const int plot_interval = doc["plot_interval"].as<int>();
+
+  //=========================================================================================================
+  // simbase
+
+  // robot's locations
+  std::vector<VectorXd> robots;
+
+  // number of robots
+  int n_robots = doc["robots"].size();
+  // velocities
+  std::vector<VectorXd> vels;
+  // accelerations
+  std::vector<VectorXd> accs;
+  // errors
+  std::vector<double> errors(n_robots, 0);
+  // number of dimensions
+  int n_dim = doc["robots"][0].size();
+  // for all robots
+  for(int i = 0; i < n_robots; ++i)
+  {
+    // init location x
+    VectorXd buff(n_dim);
+    for (int j = 0; j < n_dim; ++j)
+    {
+      buff(j) = doc["robots"][i][j].as<double>();
+    }
+    robots.push_back(buff);
+    vels.push_back(VectorXd::Zero(n_dim));
+    accs.push_back(VectorXd::Zero(n_dim));
+  }
+
   // get max time
   const double max_time = doc["max_time"].as<double>();
   // get simulation update frequendy
@@ -56,100 +103,16 @@ int main (int argc, char** argv)
   const double attr_rate = doc["attr_rate"].as<double>();
   const double fric_rate = doc["fric_rate"].as<double>();
 
-  // second destinations (if it is true, the robot intervals will be doubled in
-  // the middle of operation)
-  const bool second_dest = doc["second_dest"].as<bool>();
-  const double second_dest_rate = doc["second_dest_rate"].as<double>();
-  bool second_dest_udpated = false;
-
   // control rate
   const double ctrl_rate = doc["ctrl_rate"].as<double>();
   // control max
   const double ctrl_max = doc["ctrl_max"].as<double>();
 
-  // weight of motion model
-  const double alpha1M = doc["alpha1M"].as<double>();
-  const double alpha2M = doc["alpha2M"].as<double>();
-  // constant value of motion model
-  const double betaM = doc["betaM"].as<double>();
-
-  // mode
-  const int mode = doc["mode"].as<int>();
-  // params for mode1
-  const double mode1_rateQ = doc["mode1_rateQ"].as<double>();
-  // params for mode2
-  const double mode2_rate1 = doc["mode2_rate1"].as<double>();
-  const double mode2_rate2 = doc["mode2_rate2"].as<double>();
-  const double mode2_rateQ = doc["mode2_rateQ"].as<double>();
-  // params for mode3
-  const double mode3_omega_variable = doc["mode3_omega_variable"].as<bool>();
-  double mode3_omega = doc["mode3_omega"].as<double>();
-  const double mode3_rateQ = doc["mode3_rateQ"].as<double>();
-  // params for mode4
-  const bool mode4_original = doc["mode4_original"].as<bool>();
-  const int mode4_omega_mode = doc["mode4_omega_mode"].as<int>();
-  const double mode4_rateQ = doc["mode4_rateQ"].as<double>();
-  const double mode4_original_omega = doc["mode4_original_omega"].as<double>();
-  const bool mode4_original_force = doc["mode4_original_force"].as<bool>();
-
   // communication radius
   const double comm_radius = doc["comm_radius"].as<double>();
-
-  // enable_update_step
-  const bool enable_update_step = doc["enable_update_step"].as<bool>();
-
-  // enable_bidirectional
-  const bool enable_bidirectional = doc["enable_bidirectional"].as<bool>();
-
-  // global localization
-  const bool enable_global_loc = doc["enable_global_loc"].as<bool>();
-  // global localization at every specified steps.
-  const int global_loc_steps = doc["global_loc_steps"].as<int>();
-
-  // plotting interval
-  const int plot_interval = doc["plot_interval"].as<int>();
-
-  // robot's locations
-  std::vector<VectorXd> robots;
-  // means on robot's locations
-  std::vector<VectorXd> means;
-  // variance
-  std::vector<MatrixXd> vars;
-  // number of robots
-  int n_robots = doc["robots"].size();
-  // velocities
-  std::vector<VectorXd> vels;
-  // accelerations
-  std::vector<VectorXd> accs;
-  // errors
-  std::vector<double> errors(n_robots, 0);
-  // number of dimensions
-  int n_dim = doc["robots"][0].size();
-  // for all robots
-  for(int i = 0; i < n_robots; ++i)
-  {
-    // init location x
-    VectorXd buff(n_dim);
-    for (int j = 0; j < n_dim; ++j)
-    {
-      buff(j) = doc["robots"][i][j].as<double>();
-    }
-    robots.push_back(buff);
-    means.push_back(buff);
-    vars.push_back(MatrixXd::Zero(n_dim, n_dim));
-    vels.push_back(VectorXd::Zero(n_dim));
-    accs.push_back(VectorXd::Zero(n_dim));
-  }
-
-  // covariance matrix (only for the centralized mode)
-  MatrixXd cent_vars;
-  if (mode == 5)
-    cent_vars = MatrixXd::Zero(n_dim * n_robots, n_dim * n_robots);
-
   // topology/connectivity
   std::string topology = doc["topology"].as<std::string>();
   std::vector< std::pair<int,int> > edges;
-
   if (topology == "star")
   {
     for (int i = 1; i < n_robots; ++i)
@@ -193,14 +156,78 @@ int main (int argc, char** argv)
     std::cout << "Error: unknown topology type [" << topology << "]" << std::endl;
     return -1;
   }
-
   // random order to update estimates?
   bool enable_random_order = doc["enable_random_order"].as<bool>();
   // probabilistically update?
   bool enable_prob_update = doc["enable_prob_update"].as<bool>();
   double prob_update_p = doc["prob_update_p"].as<double>();
+
+  // enable_update_step
+  const bool enable_update_step = doc["enable_update_step"].as<bool>();
+  // global localization
+  const bool enable_global_loc = doc["enable_global_loc"].as<bool>();
+  // enable_bidirectional
+  const bool enable_bidirectional = doc["enable_bidirectional"].as<bool>();
+  //=========================================================================================================
+  // parametric
+
+  // weight of motion model
+  const double alpha1M = doc["alpha1M"].as<double>();
+  const double alpha2M = doc["alpha2M"].as<double>();
+  // constant value of motion model
+  const double betaM = doc["betaM"].as<double>();
+
+  // means on robot's locations
+  std::vector<VectorXd> means;
+  // variance
+  std::vector<MatrixXd> vars;
+  // for all robots
+  for(int i = 0; i < n_robots; ++i)
+  {
+    // init location x
+    VectorXd buff(n_dim);
+    for (int j = 0; j < n_dim; ++j)
+    {
+      buff(j) = doc["robots"][i][j].as<double>();
+    }
+    means.push_back(buff);
+    vars.push_back(MatrixXd::Zero(n_dim, n_dim));
+  }
+
+  // buffers for covariances to plot
+  std::vector<VectorXd> last_loc(n_robots);
+  std::vector<VectorXd> last_mean(n_robots);
+  std::vector<MatrixXd> last_var(n_robots);
+  //=========================================================================================================
+  // for each mode
+
+  // params for mode1
+  const double mode1_rateQ = doc["mode1_rateQ"].as<double>();
+  // params for mode2
+  const double mode2_rate1 = doc["mode2_rate1"].as<double>();
+  const double mode2_rate2 = doc["mode2_rate2"].as<double>();
+  const double mode2_rateQ = doc["mode2_rateQ"].as<double>();
+  // params for mode3
+  const double mode3_omega_variable = doc["mode3_omega_variable"].as<bool>();
+  double mode3_omega = doc["mode3_omega"].as<double>();
+  const double mode3_rateQ = doc["mode3_rateQ"].as<double>();
+  // params for mode4
+  const bool mode4_original = doc["mode4_original"].as<bool>();
+  const int mode4_omega_mode = doc["mode4_omega_mode"].as<int>();
+  const double mode4_rateQ = doc["mode4_rateQ"].as<double>();
+  const double mode4_original_omega = doc["mode4_original_omega"].as<double>();
+  const bool mode4_original_force = doc["mode4_original_force"].as<bool>();
+  // covariance matrix (only for the centralized mode)
+  MatrixXd cent_vars;
+  if (mode == 5)
+    cent_vars = MatrixXd::Zero(n_dim * n_robots, n_dim * n_robots);
+
+  //=========================================================================================================
+  // main function
   fin.close();
 
+  //=========================================================================================================
+  // print sim infor from simbase
   std::cout << "network topology: " << topology << std::endl;
   std::cout << "max time: " << max_time << std::endl;
   std::cout << "simulation update frequency (Hz): " << sim_freq << std::endl;
@@ -218,12 +245,7 @@ int main (int argc, char** argv)
     std::cout << "robot[" << i << "]: ";
     for (int idim = 0; idim < 2; ++idim)
       std::cout << robots[i](idim) << ((idim == (2 - 1))? "": ", ");
-    std::cout << "| ";
-    std::cout << "means[" << i << "]: ";
-    for (int idim = 0; idim < 2; ++idim)
-      std::cout << means[i](idim) << ((idim == (2 - 1))? "": ", ");
-    std::cout << "| ";
-    std::cout << "vars[" << i << "]: " << vars[i].determinant() << std::endl;
+    std::cout << std::endl;
   }
   std::cout << "deltaT: " << deltaT << std::endl;
   std::cout << "network topology (" << topology << "):";
@@ -233,6 +255,19 @@ int main (int argc, char** argv)
   }
   std::cout << std::endl;
 
+  //=========================================================================================================
+  // print sim infor from parametric
+  for (int i = 0; i < n_robots; ++i)
+  {
+    std::cout << "means[" << i << "]: ";
+    for (int idim = 0; idim < 2; ++idim)
+      std::cout << means[i](idim) << ((idim == (2 - 1))? "": ", ");
+    std::cout << "| ";
+    std::cout << "vars[" << i << "]: " << vars[i].determinant() << std::endl;
+  }
+
+  //=========================================================================================================
+  // in main
   // random numbers
   unsigned int seed;
   if (use_random_seed)
@@ -246,7 +281,8 @@ int main (int argc, char** argv)
   }
   std::mt19937 gen{seed};
 
-  // print header
+  //=========================================================================================================
+  // start log from parametric
   std::cout << "    t   |";
   for (int i = 0; i < n_robots; ++i)
   {
@@ -260,23 +296,12 @@ int main (int argc, char** argv)
   // prep output file
   ofstream fout ("output.dat");
 
-  // buffers for covariances to plot
-  std::vector<VectorXd> last_loc(n_robots);
-  std::vector<VectorXd> last_mean(n_robots);
-  std::vector<MatrixXd> last_var(n_robots);
+  //=========================================================================================================
 
   // main part of simulation
   for (int t_step = 0; t_step * deltaT <= max_time; ++t_step)
   {
     double t = t_step * deltaT;
-
-    if (mode == 5) // if mode5, copy diagonal matrices
-    {
-      for (int i = 0; i < n_robots; ++i)
-      {
-        vars[i] = cent_vars.block(i * n_dim, i * n_dim, n_dim, n_dim);
-      }
-    }
 
     if (second_dest && !second_dest_udpated && t_step * deltaT > max_time/2.0)
     {
@@ -287,6 +312,8 @@ int main (int argc, char** argv)
       second_dest_udpated = true;
     }
 
+    //=========================================================================================================
+    // log from parametric
     // print the current states
     if ((int)(t * sim_freq) % plot_interval == 0)
     {
@@ -348,6 +375,8 @@ int main (int argc, char** argv)
       fout << std::endl;
     }
 
+    //=========================================================================================================
+    // update sim from simbase
     // === update simulation env. ===
     // NOTE: robots are forming a circle.
 
@@ -422,6 +451,8 @@ int main (int argc, char** argv)
       }
     }
 
+    // =================================================================================================================================
+    // predict from parametric
     // === prediction ===
     // for all robots
     for (int i = 0; i < n_robots; ++i)
@@ -453,9 +484,10 @@ int main (int argc, char** argv)
       }
     }
 
-    // global localization.
     if (t_step % global_loc_steps == 0)
     {
+      // =================================================================================================================================
+      // global localization from simbase
       // take measurement (communication)
       VectorXd z(2);
       std::normal_distribution<> global_locR_noise(0, sigmaGlobalLocR);
@@ -463,10 +495,12 @@ int main (int argc, char** argv)
       z(0) = robots[0].norm() + global_locR_noise(gen);
       z(1) = std::atan2(robots[0](1), robots[0](0)) + global_locT_noise(gen);
 
+      // =================================================================================================================================
+      // estimation for global localization from parametric
       if (enable_update_step && enable_global_loc)
       {
         // update its location estimate
-        VectorXd z_hat(2);// = means_buff[0];
+        VectorXd z_hat(2);
         z_hat(0) = means[0].norm();
         z_hat(1) = std::atan2(means[0](1), means[0](0));
         double q = means[0].squaredNorm();
@@ -514,9 +548,9 @@ int main (int argc, char** argv)
       }
     }
 
+    // =================================================================================================================================
+    // mutual localization from simbase
     // === estimation update ===
-    std::vector<VectorXd> means_buff(means);
-    std::vector<MatrixXd> vars_buff(vars);
 
     // for all edges of network
     std::vector<int> indx_list(edges.size());
@@ -537,9 +571,9 @@ int main (int argc, char** argv)
 
       // get indexes
       auto edge = edges[indx];
-      VectorXd diff = robots[edge.second] - robots[edge.first];
-      VectorXd diff_hat = means[edge.second] - means[edge.first];
 
+      // difference between the two robots
+      VectorXd diff = robots[edge.second] - robots[edge.first];
       // take measurement (communication)
       VectorXd z(2);
       std::normal_distribution<> sensor_noiseR(0, sigmaS_R);
@@ -547,8 +581,20 @@ int main (int argc, char** argv)
       z(0) = diff.norm() + sensor_noiseR(gen);
       z(1) = std::atan2(diff(1), diff(0)) + sensor_noiseT(gen);
 
+      // if the update step is not enabled, just skip the rest. This just
+      // generates random numbers which are the same sequence for the enabled
+      // case so that the grand-truth trajectories are the same in both cases.
+      if (!enable_update_step)
+      {
+        continue;
+      }
+
+      // =================================================================================================================================
+      // estimation for mutual localization from parametric
+
       // update its location estimate
-      VectorXd z_hat(2);// = means_buff[0];
+      VectorXd diff_hat = means[edge.second] - means[edge.first];
+      VectorXd z_hat(2);
       z_hat(0) = diff_hat.norm();
       z_hat(1) = std::atan2(diff_hat(1), diff_hat(0));
       double q = diff_hat.squaredNorm();
@@ -569,60 +615,6 @@ int main (int argc, char** argv)
       H2(0, 1) = diff_hat(1)/std::sqrt(q);
       H2(1, 1) = diff_hat(0)/q;
 
-      // St matrices for decentralized updates
-      MatrixXd St1;// = H1 * vars_buff[edge.first] * H1.transpose() + Q;
-      MatrixXd St2;// = H2 * vars_buff[edge.second] * H2.transpose() + Q;
-      // Matrices for centralized updates
-      MatrixXd H;
-      MatrixXd St;
-
-      if (mode == 0)
-      {
-        St1 = H1 * vars_buff[edge.first] * H1.transpose() + Q;
-        St2 = H2 * vars_buff[edge.second] * H2.transpose() + Q;
-      }
-      else if (mode == 1)
-      {
-        St1 = H1 * vars_buff[edge.first] * H1.transpose()
-            + H2 * vars_buff[edge.second] * H2.transpose() + (Q * mode1_rateQ);
-        St2 = St1;
-      }
-      else if (mode == 2)
-      {
-        vars_buff[edge.first] *= mode2_rate1;
-        vars_buff[edge.second] *= mode2_rate2;
-        St1 = H1 * vars_buff[edge.first] * H1.transpose()
-            + H2 * vars_buff[edge.second] * H2.transpose()
-            + (Q * mode2_rateQ);
-        St2 = St1;
-      }
-      else if (mode == 3)
-      {
-        if (mode3_omega_variable)
-        {
-          double sig1 = std::sqrt(vars_buff[edge.first].determinant());
-          double sig2 = std::sqrt(vars_buff[edge.second].determinant());
-          mode3_omega = 0.9 - std::fabs(sig1 - sig2)/(sig1 + sig2)*2*0.4;
-        }
-        St1 = H1 * (vars_buff[edge.first] / mode3_omega) * H1.transpose()
-            + H2 * (vars_buff[edge.second] / (1 - mode3_omega)) * H2.transpose()
-            + (Q * mode3_rateQ);
-        St2 = H1 * (vars_buff[edge.first] / (1 - mode3_omega)) * H1.transpose()
-            + H2 * (vars_buff[edge.second] / mode3_omega) * H2.transpose()
-            + (Q * mode3_rateQ);
-        vars_buff[edge.first] /= mode3_omega;
-        vars_buff[edge.second] /= mode3_omega;
-      }
-      else if (mode == 5)
-      {
-        H = MatrixXd::Zero(2, n_robots*2);
-        H.block(0, edge.first * 2, 2, 2)
-          = H1;
-        H.block(0, edge.second * 2, 2, 2)
-          = H2;
-        St = H * cent_vars * H.transpose() + Q;
-      }
-
       VectorXd z_diff = z - z_hat;
       if (z_diff(1) > M_PI)
       {
@@ -633,13 +625,77 @@ int main (int argc, char** argv)
         z_diff(1) += 2*M_PI;
       }
 
-      if (mode == 4) // Covariance intersection needs a special process
+      // =================================================================================================================================
+      // implementation of estimation from each mode
+
+      // St matrices for decentralized updates
+      MatrixXd St1;
+      MatrixXd St2;
+      // Matrices for centralized updates
+      MatrixXd H;
+      MatrixXd St;
+
+      if (mode <= 3) // anything except for mode4 (CI) / mode5 (Centralized)
+      {
+        if (mode == 0)
+        {
+          St1 = H1 * vars[edge.first] * H1.transpose() + Q;
+          St2 = H2 * vars[edge.second] * H2.transpose() + Q;
+        }
+        else if (mode == 1)
+        {
+          St1 = H1 * vars[edge.first] * H1.transpose()
+              + H2 * vars[edge.second] * H2.transpose() + (Q * mode1_rateQ);
+          St2 = St1;
+        }
+        else if (mode == 2)
+        {
+          vars[edge.first] *= mode2_rate1;
+          vars[edge.second] *= mode2_rate2;
+          St1 = H1 * vars[edge.first] * H1.transpose()
+              + H2 * vars[edge.second] * H2.transpose()
+              + (Q * mode2_rateQ);
+          St2 = St1;
+        }
+        else if (mode == 3)
+        {
+          if (mode3_omega_variable)
+          {
+            double sig1 = std::sqrt(vars[edge.first].determinant());
+            double sig2 = std::sqrt(vars[edge.second].determinant());
+            mode3_omega = 0.9 - std::fabs(sig1 - sig2)/(sig1 + sig2)*2*0.4;
+          }
+          St1 = H1 * (vars[edge.first] / mode3_omega) * H1.transpose()
+              + H2 * (vars[edge.second] / (1 - mode3_omega)) * H2.transpose()
+              + (Q * mode3_rateQ);
+          St2 = H1 * (vars[edge.first] / (1 - mode3_omega)) * H1.transpose()
+              + H2 * (vars[edge.second] / mode3_omega) * H2.transpose()
+              + (Q * mode3_rateQ);
+          vars[edge.first] /= mode3_omega;
+          vars[edge.second] /= mode3_omega;
+        }
+        if (enable_bidirectional)
+        {
+          MatrixXd K1 = vars[edge.first] * H1.transpose() * St1.inverse();
+          means[edge.first] += K1 * z_diff;
+          vars[edge.first]
+            = (MatrixXd::Identity(n_dim, n_dim) - K1 * H1)
+            * vars[edge.first];
+        }
+
+        MatrixXd K2 = vars[edge.second] * H2.transpose() * St2.inverse();
+        means[edge.second] += K2 * z_diff;
+        vars[edge.second]
+          = (MatrixXd::Identity(n_dim, n_dim) - K2 * H2)
+          * vars[edge.second];
+      }
+      else if (mode == 4) // Covariance intersection needs a special process
       {
         double omega;
-        VectorXd mean1 = means_buff[edge.first];
-        MatrixXd var1 = vars_buff[edge.first];
-        VectorXd mean2 = means_buff[edge.second];
-        MatrixXd var2 = vars_buff[edge.second];
+        VectorXd mean1 = means[edge.first];
+        MatrixXd var1 = vars[edge.first];
+        VectorXd mean2 = means[edge.second];
+        MatrixXd var2 = vars[edge.second];
         if (mode4_original)
         {
           // change dz/dx to dx/dz
@@ -647,14 +703,14 @@ int main (int argc, char** argv)
           //H1 = H1.transpose().eval();
           H1(1, 0) = H1(1, 0) * q;
           H1(1, 1) = H1(1, 1) * q;
-          if (vars_buff[edge.first].determinant() != 0)
+          if (var1.determinant() != 0)
           {
-            MatrixXd A = vars_buff[edge.first];
+            MatrixXd A = vars[edge.first];
             MatrixXd B
-              = vars_buff[edge.second]
+              = vars[edge.second]
               + H1.transpose() * (Q * mode4_rateQ) * H1;
-            VectorXd a = means_buff[edge.first];
-            VectorXd b = means_buff[edge.second];
+            VectorXd a = means[edge.first];
+            VectorXd b = means[edge.second];
             b(0) = b(0) - z(0) * std::cos(z(1));
             b(1) = b(1) - z(0) * std::sin(z(1));
 
@@ -673,14 +729,14 @@ int main (int argc, char** argv)
           //H2 = H2.transpose().eval();
           H2(1, 0) = H2(1, 0) * q;
           H2(1, 1) = H2(1, 1) * q;
-          if (vars_buff[edge.second].determinant() != 0)
+          if (vars[edge.second].determinant() != 0)
           {
-            MatrixXd A = vars_buff[edge.second];
+            MatrixXd A = vars[edge.second];
             MatrixXd B
-              = vars_buff[edge.first]
+              = vars[edge.first]
               + H2.transpose() * (Q * mode4_rateQ) * H2;
-            VectorXd a = means_buff[edge.second];
-            VectorXd b = means_buff[edge.first];
+            VectorXd a = means[edge.second];
+            VectorXd b = means[edge.first];
             b(0) = b(0) + z(0) * std::cos(z(1));
             b(1) = b(1) + z(0) * std::sin(z(1));
 
@@ -698,9 +754,9 @@ int main (int argc, char** argv)
         else
         {
           {
-            MatrixXd C1 = H1 * vars_buff[edge.first] * H1.transpose();
+            MatrixXd C1 = H1 * vars[edge.first] * H1.transpose();
             MatrixXd C2
-              = H2 * vars_buff[edge.second] * H2.transpose()
+              = H2 * vars[edge.second] * H2.transpose()
               + (Q * mode4_rateQ);
             getOmega(C1, C2, omega, mode4_omega_mode);
           }
@@ -710,30 +766,30 @@ int main (int argc, char** argv)
             corr(0) = -z(0) * std::cos(z(1));
             corr(1) = -z(0) * std::sin(z(1));
             mean1
-              = means_buff[edge.second]
+              = means[edge.second]
               + corr;
-            var1 = vars_buff[edge.second]
+            var1 = vars[edge.second]
                  + (H1.transpose() * H1).inverse() * H1.transpose()
                  * (Q * mode4_rateQ)
                  * H1 * (H1.transpose() * H1).inverse();
           }
           else if (omega < 1)
           {
-            St1 = H1 * (vars_buff[edge.first]/omega) * H1.transpose()
-                + H2 * (vars_buff[edge.second]/(1-omega)) * H2.transpose()
+            St1 = H1 * (vars[edge.first]/omega) * H1.transpose()
+                + H2 * (vars[edge.second]/(1-omega)) * H2.transpose()
                 + ((Q * mode4_rateQ)/(1-omega));
             MatrixXd K1
-              = (vars_buff[edge.first]/omega) * H1.transpose() * St1.inverse();
+              = (vars[edge.first]/omega) * H1.transpose() * St1.inverse();
             mean1 += K1 * z_diff;
             var1
               = (MatrixXd::Identity(n_dim, n_dim) - K1 * H1)
-              * (vars_buff[edge.first]/omega);
+              * (vars[edge.first]/omega);
           }
 
           {
-            MatrixXd C1 = H2 * vars_buff[edge.second] * H2.transpose();
+            MatrixXd C1 = H2 * vars[edge.second] * H2.transpose();
             MatrixXd C2
-              = H1 * vars_buff[edge.first] * H1.transpose()
+              = H1 * vars[edge.first] * H1.transpose()
               + (Q * mode4_rateQ);
             getOmega(C1, C2, omega, mode4_omega_mode);
           }
@@ -743,85 +799,68 @@ int main (int argc, char** argv)
             corr(0) = z(0) * std::cos(z(1));
             corr(1) = z(0) * std::sin(z(1));
             mean2
-              = means_buff[edge.first]
+              = means[edge.first]
               + corr;
-            var2 = vars_buff[edge.first]
+            var2 = vars[edge.first]
                  + (H2.transpose() * H2).inverse() * H2.transpose()
                  * (Q * mode4_rateQ)
                  * H2 * (H2.transpose() * H2).inverse();
           }
           else if (omega < 1)
           {
-            St2 = H1 * (vars_buff[edge.first]/(1-omega)) * H1.transpose()
-                + H2 * (vars_buff[edge.second]/omega) * H2.transpose()
+            St2 = H1 * (vars[edge.first]/(1-omega)) * H1.transpose()
+                + H2 * (vars[edge.second]/omega) * H2.transpose()
                 + ((Q * mode4_rateQ)/(1-omega));
             MatrixXd K2
-              = (vars_buff[edge.second]/omega) * H2.transpose() * St2.inverse();
+              = (vars[edge.second]/omega) * H2.transpose() * St2.inverse();
             mean2 += K2 * z_diff;
             var2
               = (MatrixXd::Identity(n_dim, n_dim) - K2 * H2)
-              * (vars_buff[edge.second]/omega);
+              * (vars[edge.second]/omega);
           }
         }
-        means_buff[edge.first] = mean1;
-        vars_buff[edge.first] = var1;
-        means_buff[edge.second] = mean2;
-        vars_buff[edge.second] = var2;
+        means[edge.first] = mean1;
+        vars[edge.first] = var1;
+        means[edge.second] = mean2;
+        vars[edge.second] = var2;
       }
       else if (mode == 5)
       {
+        H = MatrixXd::Zero(2, n_robots*2);
+        H.block(0, edge.first * 2, 2, 2)
+          = H1;
+        H.block(0, edge.second * 2, 2, 2)
+          = H2;
+        St = H * cent_vars * H.transpose() + Q;
+
         if (enable_update_step)
         {
           MatrixXd K = cent_vars * H.transpose() * St.inverse();
           VectorXd cent_means = VectorXd::Zero(n_robots * n_dim);
           cent_means.segment(edge.first*n_dim, n_dim)
-            = means_buff[edge.first];
+            = means[edge.first];
           cent_means.segment(edge.second*n_dim, n_dim)
-            = means_buff[edge.second];
+            = means[edge.second];
           cent_means += K * z_diff;
-          means_buff[edge.first]
+          means[edge.first]
             = cent_means.segment(edge.first*n_dim, n_dim);
-          means_buff[edge.second]
+          means[edge.second]
             = cent_means.segment(edge.second*n_dim, n_dim);
           cent_vars
             = (MatrixXd::Identity(n_robots*n_dim, n_robots*n_dim) - K*H)
             * cent_vars;
-          vars_buff[edge.first]
+          vars[edge.first]
             = cent_vars.block(
                 edge.first*n_dim, edge.first*n_dim, n_dim, n_dim);
-          vars_buff[edge.second]
+          vars[edge.second]
             = cent_vars.block(
                 edge.second*n_dim, edge.second*n_dim, n_dim, n_dim);
         }
       }
-      else // anything except for mode4 (CI) / mode5 (Centralized)
-      {
-        if (enable_bidirectional)
-        {
-          MatrixXd K1 = vars_buff[edge.first] * H1.transpose() * St1.inverse();
-          means_buff[edge.first] += K1 * z_diff;
-          vars_buff[edge.first]
-            = (MatrixXd::Identity(n_dim, n_dim) - K1 * H1)
-            * vars_buff[edge.first];
-        }
-
-        MatrixXd K2 = vars_buff[edge.second] * H2.transpose() * St2.inverse();
-        means_buff[edge.second] += K2 * z_diff;
-        vars_buff[edge.second]
-          = (MatrixXd::Identity(n_dim, n_dim) - K2 * H2)
-          * vars_buff[edge.second];
-      }
-
-      // apply the updated estimations
-      if (enable_update_step)
-      {
-        means[edge.first] = means_buff[edge.first];
-        vars[edge.first] = vars_buff[edge.first];
-        means[edge.second] = means_buff[edge.second];
-        vars[edge.second] = vars_buff[edge.second];
-      }
     }
 
+    //=========================================================================================================
+    // calcError from parametric
     // calculate errors
     for (int i = 0; i < n_robots; ++i)
     {
@@ -829,6 +868,8 @@ int main (int argc, char** argv)
     }
   }
 
+  // =================================================================================================================================
+  // endLog from parametric
   fout.close();
 
   // output of gnuplot command
