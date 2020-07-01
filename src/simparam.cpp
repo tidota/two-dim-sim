@@ -111,9 +111,13 @@ void SimParam::endLog()
     std::cout << std::endl;
   }
   std::cout << std::endl;
-  std::cout << "~~~ gnuplot command (locations) ~~~" << std::endl;
-  std::cout << "clear" << std::endl;
-  std::cout << "unset object" << std::endl;
+
+  std::cout << "~~~ trajectories of the robots (ground-truth vs estimation) ~~~"
+            << std::endl;
+  std::cout << "writing a gnuplot script..." << std::endl;
+  std::fstream f_gnuplot("gnuplot_traj.plt", std::fstream::out);
+  f_gnuplot << "clear" << std::endl;
+  f_gnuplot << "unset object" << std::endl;
   for (int i = 0; i < n_robots; ++i)
   {
     Eigen::EigenSolver<MatrixXd> s(vars[i]);
@@ -122,7 +126,7 @@ void SimParam::endLog()
     double var_ang
       = std::atan2(eigen_vec.col(0)[1].real(), eigen_vec.col(0)[0].real())
         / M_PI*180.0;
-    std::cout << "set object " << std::to_string(i + 1)
+    f_gnuplot << "set object " << std::to_string(i + 1)
               << " ellipse center "
               << std::to_string(last_mean[i](0)) << ","
               << std::to_string(last_mean[i](1))
@@ -133,62 +137,55 @@ void SimParam::endLog()
               << std::to_string(var_ang)
               << " front fillstyle empty border -1" << std::endl;
   }
-  std::cout << "h1 = 227/360.0" << std::endl;
-  std::cout << "h2 = 40/360.0" << std::endl;
-  std::cout << "set palette model HSV functions (1-gray)*(h2-h1)+h1,1,0.68"
+  f_gnuplot << "h1 = 227/360.0" << std::endl;
+  f_gnuplot << "h2 = 40/360.0" << std::endl;
+  f_gnuplot << "set palette model HSV functions (1-gray)*(h2-h1)+h1,1,0.68"
             << std::endl;
-  std::cout << "set size ratio -1" << std::endl;
+  f_gnuplot << "set size ratio -1" << std::endl;
   for (int i = 0; i < n_robots; ++i)
   {
     if (i == 0)
-      std::cout << "plot   ";
+      f_gnuplot << "plot   ";
     else
-      std::cout << "replot ";
-    std::cout << "\"output.dat\" u ";
+      f_gnuplot << "replot ";
+    f_gnuplot << "\"output.dat\" u ";
     for (int j = 0; j < n_dim; ++j)
     {
-      std::cout << std::to_string(2+i*off_next_robot+j);
+      f_gnuplot << std::to_string(2+i*off_next_robot+j);
       if (j < n_dim - 1)
-        std::cout << ":";
+        f_gnuplot << ":";
       else
-        std::cout << ":1";
+        f_gnuplot << ":1";
     }
-    std::cout << " title \"R" << std::to_string(1+i) << "\""
+    f_gnuplot << " title \"R" << std::to_string(1+i) << "\""
               << " with linespoints lt -1 lw 1.0 ps 3.0"
               << " pt " << std::to_string(i + 1)
               << " lc palette" << std::endl;
   }
   for (int i = 0; i < n_robots; ++i)
   {
-    std::cout << "replot ";
-    std::cout << "\"output.dat\" u ";
+    f_gnuplot << "replot ";
+    f_gnuplot << "\"output.dat\" u ";
     for (int j = 0; j < n_dim; ++j)
     {
-      std::cout << std::to_string(2+n_dim+i*off_next_robot+j);
+      f_gnuplot << std::to_string(2+n_dim+i*off_next_robot+j);
       if (j < n_dim - 1)
-        std::cout << ":";
+        f_gnuplot << ":";
       else
-        std::cout << ":1";
+        f_gnuplot << ":1";
     }
-    std::cout << " title \"Est" << std::to_string(1+i) << "\""
+    f_gnuplot << " title \"Est" << std::to_string(1+i) << "\""
               << " with linespoints lt 1 lw 3.0 ps 3.0"
               << " pt " << std::to_string(i + 1)
               << " lc palette" << std::endl;
   }
-  std::cout << std::endl;
+  f_gnuplot << "pause -1 \"Hit any key to continue\"" << std::endl;
+  f_gnuplot.close();
+  std::cout << "To run the gnuplot script:" << std::endl << std::endl;
+  std::cout << "        gnuplot gnuplot_traj.plt" << std::endl << std::endl;
 
-  // display errors
-  double total_error = 0;
-  for (int i = 0; i < n_robots; ++i)
-  {
-    std::cout << "robot[" << i << "]'s average error:" << (errors[i]/(max_time*sim_freq)) << std::endl;
-    total_error += errors[i];
-  }
-  std::cout << "overall average error: " << (total_error/(max_time*sim_freq)/n_robots) << std::endl;
-
-  std::cout << "~~~ writing a matplotlib.pyplot script ~~~" << std::endl;
-  std::fstream f_pyplot;
-  f_pyplot.open("pyplot.py", std::fstream::out);
+  std::cout << "writing a matplotlib.pyplot script..." << std::endl;
+  std::fstream f_pyplot("pyplot_traj.py", std::fstream::out);
   f_pyplot <<
     "import numpy as np" << std::endl <<
     "import matplotlib.pyplot as plt" << std::endl <<
@@ -385,7 +382,18 @@ void SimParam::endLog()
     "# save the figure" << std::endl <<
     "#fig.savefig('result.png')" << std::endl;
   f_pyplot.close();
-  std::cout << "Done" << std::endl;
+  std::cout << "To run the matplot.pyplot script: " << std::endl << std::endl;
+  std::cout << "        python3 pyplot_traj.py" << std::endl << std::endl;
+
+  std::cout << "~~~ average errors ~~~" << std::endl;
+  // display errors
+  double total_error = 0;
+  for (int i = 0; i < n_robots; ++i)
+  {
+    std::cout << "robot[" << i << "]'s average error:" << (errors[i]/(max_time*sim_freq)) << std::endl;
+    total_error += errors[i];
+  }
+  std::cout << "overall average error: " << (total_error/(max_time*sim_freq)/n_robots) << std::endl;
 }
 
 // =============================================================================
