@@ -35,8 +35,9 @@ each step
 -->
 
 # Compilation
+The code is being developed on Ubuntu 18.04.
+
 CMake and gcc/g++ must be installed.
-Also gnuplot is required to display the outputs.
 
 In the directory where this file is located,
 ```
@@ -44,6 +45,21 @@ mkdir build
 cd build
 cmake ..
 make
+```
+
+# Plotting software
+
+You need to have gnuplot or matplotlib to generate figures.
+
+## gnuplot
+```
+sudo apt install gnuplot
+```
+
+## matplotlib
+```
+sudo apt install python3-matplotlib
+sudo apt install dvipng
 ```
 
 # How to Run/Outputs
@@ -55,9 +71,21 @@ In the directory where you compiled the source code,
 ```
 
 It will show simulation results in the terminal. At the end, gnuplot commands
-will be printed so the results can be graphically displayed.
+will be printed so you can copy and paste them to the gnuplot terminal.
 
-For example,
+In addition, the program writes scripts for gnuplot and matplotlib to display trajectories so that the results can be graphically displayed.
+
+To run gnuplot script,
+```
+gnuplot gnuplot_traj.plt
+```
+
+To run matplotlib script,
+```
+python3 pyplot_traj.py
+```
+
+<!--
 ```
 gnuplot
 plot "output.dat" u 1:2 title "x1", "output.dat" u 1:5 title "x2", "output.dat" u 1:8 title "x3", "output.dat" u 1:3:4 with errorbars title "m1", "output.dat" u 1:6:7 with errorbars title "m2", "output.dat" u 1:9:10 with errorbars title "m3"
@@ -65,9 +93,7 @@ plot "output.dat" u 1:2 title "x1", "output.dat" u 1:5 title "x2", "output.dat" 
 ```
 plot "output.dat" u 1:2 title "x1", "output.dat" u 1:5 title "x2", "output.dat" u 1:8 title "x3", "output.dat" u 1:11 title "x4", "output.dat" u 1:14 title "x5", "output.dat" u 1:3:4 with errorbars title "m1", "output.dat" u 1:6:7 with errorbars title "m2", "output.dat" u 1:9:10 with errorbars title "m3", "output.dat" u 1:12:13 with errorbars title "m4", "output.dat" u 1:15:16 with errorbars title "m5"
 ```
-
-In the terminal, run gnuplot and run the gnuplot commands which was displayed in
-the simulation results.
+-->
 
 The results will look like the following figures. Thin lines are their actual
 trajectories, and thick lines are estimated ones by each method.
