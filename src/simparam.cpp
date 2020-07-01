@@ -185,6 +185,207 @@ void SimParam::endLog()
     total_error += errors[i];
   }
   std::cout << "overall average error: " << (total_error/(max_time*sim_freq)/n_robots) << std::endl;
+
+  std::cout << "~~~ writing a matplotlib.pyplot script ~~~" << std::endl;
+  std::fstream f_pyplot;
+  f_pyplot.open("pyplot.py", std::fstream::out);
+  f_pyplot <<
+    "import numpy as np" << std::endl <<
+    "import matplotlib.pyplot as plt" << std::endl <<
+    "from matplotlib.lines import Line2D" << std::endl <<
+    "import colorsys" << std::endl <<
+    "import matplotlib as mpl" << std::endl <<
+    "from mpl_toolkits.axes_grid1 import make_axes_locatable" << std::endl <<
+    "import copy" << std::endl <<
+    "import matplotlib.patches as mpatches" << std::endl <<
+
+    "mpl.rcParams['text.usetex'] = True" << std::endl <<
+
+    "cm_new = False" << std::endl <<
+
+    "# load data" << std::endl <<
+    "f = open('output.dat', 'r')" << std::endl <<
+    "data = np.array([[float(v) for v in line.split()] for line in f])" << std::endl <<
+    "f.close()" << std::endl <<
+
+    "maxt = data[-1][0]" << std::endl <<
+
+    "def f(t):" << std::endl <<
+    "    return np.exp(-t) * np.cos(2*np.pi*t)" << std::endl <<
+    "def g(t):" << std::endl <<
+    "    return np.exp(-2*t) * np.sin(2*np.pi*t)" << std::endl <<
+
+    "def cmf(val):" << std::endl <<
+    "    if cm_new:" << std::endl <<
+    "        val /= maxt" << std::endl <<
+    "        return plt.cm.jet(0.97-val*0.82)" << std::endl <<
+    "    else:" << std::endl <<
+    "        val /= maxt" << std::endl <<
+    "        h1 = 227/360" << std::endl <<
+    "        h2 = 40/360" << std::endl <<
+    "        h = (1-val)*(h2-h1)+h1" << std::endl <<
+    "        return np.array(list(colorsys.hsv_to_rgb(h,1,0.68)) + [1])" << std::endl <<
+
+    "subtle_alpha = 0.25" << std::endl <<
+    "def cmf_s(val):" << std::endl <<
+    "    if cm_new:" << std::endl <<
+    "        val /= maxt" << std::endl <<
+    "        c = plt.cm.jet(0.97-val*0.82)" << std::endl <<
+    "        c[3] = subtle_alpha" << std::endl <<
+    "        return c" << std::endl <<
+    "    else:" << std::endl <<
+    "        val /= maxt" << std::endl <<
+    "        h1 = 227/360" << std::endl <<
+    "        h2 = 40/360" << std::endl <<
+    "        h = (1-val)*(h2-h1)+h1" << std::endl <<
+    "        return np.array(list(colorsys.hsv_to_rgb(h,1,0.68)) + [subtle_alpha])" << std::endl <<
+
+    "# def cm1f(val): # original" << std::endl <<
+    "#     val /= maxt" << std::endl <<
+    "#     h1 = 227/360" << std::endl <<
+    "#     h2 = 40/360" << std::endl <<
+    "#     h = (1-val)*(h2-h1)+h1" << std::endl <<
+    "#     return np.array(list(colorsys.hsv_to_rgb(h,1,0.68)) + [1])" << std::endl <<
+
+    "# def cm2f(val): # kind of new" << std::endl <<
+    "#     val /= maxt" << std::endl <<
+    "#     return plt.cm.jet(0.97-val*0.82)" << std::endl <<
+
+    "def plotPath(points, style, cm, lw=1, ms=5):" << std::endl <<
+    "    # p[0]: x_1" << std::endl <<
+    "    # p[1]: x_2" << std::endl <<
+    "    # p[2]: t" << std::endl <<
+    "    for i in range(1,len(points)):" << std::endl <<
+    "        p_prev = points[i-1]" << std::endl <<
+    "        p = points[i]" << std::endl <<
+    "        plt.plot(" << std::endl <<
+    "            [p_prev[0], p[0]]," << std::endl <<
+    "            [p_prev[1], p[1]]," << std::endl <<
+    "            style if '-' in style else '-' + style," << std::endl <<
+    "            color=cm(p[2])," << std::endl <<
+    "            linewidth=lw," << std::endl <<
+    "            markersize=ms)" << std::endl <<
+
+    "# custom colormap" << std::endl <<
+    "cm = copy.deepcopy(plt.cm.get_cmap('jet'))" << std::endl <<
+    "cm._init()" << std::endl <<
+    "cm._lut = np.array([cmf(x) for x in np.linspace(0, maxt, cm.N)])" << std::endl <<
+    "mpl.cm.register_cmap(name='cm', cmap=cm)" << std::endl <<
+
+    "cm_s = copy.deepcopy(plt.cm.get_cmap('jet'))" << std::endl <<
+    "cm_s._init()" << std::endl <<
+    "cm_s._lut = np.array([cmf_s(x) for x in np.linspace(0, maxt, cm_s.N)])" << std::endl <<
+    "mpl.cm.register_cmap(name='cm_s', cmap=cm)" << std::endl <<
+
+    "# prep figure" << std::endl <<
+    "fig, ax = plt.subplots()" << std::endl <<
+    "#fig.set_size_inches(6,5)" << std::endl <<
+    "fig.set_dpi(200)" << std::endl <<
+    "# ax.set_aspect('equal')" << std::endl <<
+    "#ax.set_title('Trajectories')" << std::endl <<
+
+    "# markers" << std::endl <<
+    "markers = [" << std::endl <<
+    "    'o', '*', '^', 's', '1', 'x', 'v', 'D', '1', '+'" << std::endl <<
+    "]" << std::endl <<
+
+    "# plot ground-truth" << std::endl <<
+    "for i in range(8):" << std::endl <<
+    "    print('plotting ground-truth of robot ' + str(i+1) + '...')" << std::endl <<
+    "    plotPath(" << std::endl <<
+    "        np.concatenate(" << std::endl <<
+    "            (data[:,1+10*i:2+10*i]," << std::endl <<
+    "             data[:,2+10*i:3+10*i]," << std::endl <<
+    "             data[:,0:1]),axis=1).tolist()," << std::endl <<
+    "        markers[i]+'--', cmf_s, lw=1, ms=4)" << std::endl <<
+    "# plot estimated trajectories" << std::endl <<
+    "for i in range(8):" << std::endl <<
+    "    print('plotting estimation of robot ' + str(i+1) + '...')" << std::endl <<
+    "    plotPath(" << std::endl <<
+    "        np.concatenate(" << std::endl <<
+    "            (data[:,3+10*i:4+10*i]," << std::endl <<
+    "             data[:,4+10*i:5+10*i]," << std::endl <<
+    "             data[:,0:1]),axis=1).tolist()," << std::endl <<
+    "        markers[i], cmf, lw=1, ms=4)" << std::endl <<
+
+    "# fix the ratio" << std::endl <<
+    "xleft, xright = ax.get_xlim()" << std::endl <<
+    "ybottom, ytop = ax.get_ylim()" << std::endl <<
+    "ratio = abs((xright-xleft)/(ybottom-ytop))" << std::endl <<
+    "ax.set_aspect(1)" << std::endl <<
+
+    "# labels" << std::endl <<
+    "plt.ylabel(r'$x_2$ \\small{(meters)}', fontsize=18)" << std::endl <<
+    "plt.xlabel(r'$x_1$ \\small{(meters)}', fontsize=18)" << std::endl <<
+
+    "# colorbar" << std::endl <<
+    "print('adding colorbar...')" << std::endl <<
+    "divider = make_axes_locatable(plt.gca())" << std::endl <<
+    "norm = mpl.colors.Normalize(vmin = 0, vmax = maxt)" << std::endl <<
+    "ax_cb = divider.new_horizontal(size=\"5%\", pad=0.05)" << std::endl <<
+    "ax_cb.set_title('$t$ \\small{(sec)}', fontsize=18)" << std::endl <<
+    "cb = mpl.colorbar.ColorbarBase(ax_cb, cmap='cm', norm=norm, orientation='vertical')" << std::endl <<
+    "plt.gcf().add_axes(ax_cb)" << std::endl <<
+
+    "# legends" << std::endl <<
+    "print('adding legends...')" << std::endl <<
+    "# legend_elements = [" << std::endl <<
+    "#     Line2D([0], [0]," << std::endl <<
+    "#         color='k', lw=1," << std::endl <<
+    "#         linestyle='--'," << std::endl <<
+    "#         marker=markers[i]," << std::endl <<
+    "#         markersize=5, label='R'+str(i+1)) for i in range(8)]" << std::endl <<
+    "# legend_elements += [" << std::endl <<
+    "#     Line2D([0], [0]," << std::endl <<
+    "#         color='k', lw=1," << std::endl <<
+    "#         marker=markers[i]," << std::endl <<
+    "#         markersize=8, label='Est'+str(i+1)) for i in range(8)]" << std::endl <<
+    "legend_elements = [" << std::endl <<
+    "    Line2D([0], [0]," << std::endl <<
+    "        color='k', lw=1," << std::endl <<
+    "        linestyle=''," << std::endl <<
+    "        marker=markers[i]," << std::endl <<
+    "        markersize=5, label='Robot'+str(i+1)) for i in range(8)]" << std::endl <<
+    "ax.legend(" << std::endl <<
+    "    handles=legend_elements," << std::endl <<
+    "    loc='best'," << std::endl <<
+    "    fontsize=5)" << std::endl <<
+
+    "# add covariances" << std::endl <<
+    "print('adding covariances...')" << std::endl <<
+    "def addEllipse(center, r1, r2, deg):" << std::endl <<
+    "    center = np.array(center)" << std::endl <<
+    "    major_ax = r1" << std::endl <<
+    "    minor_ax = r2" << std::endl <<
+    "    angle_deg = deg" << std::endl <<
+    "    patch = mpatches.Ellipse(center, major_ax, minor_ax, angle_deg, fc='none', ls='solid', ec='k', lw='1', zorder=100)" << std::endl <<
+    "    ax.add_patch(patch)" << std::endl;
+
+  for (int i = 0; i < n_robots; ++i)
+  {
+    Eigen::EigenSolver<MatrixXd> s(vars[i]);
+    auto eigen_val = s.eigenvalues();
+    auto eigen_vec = s.eigenvectors();
+    double var_ang
+      = std::atan2(eigen_vec.col(0)[1].real(), eigen_vec.col(0)[0].real())
+        / M_PI*180.0;
+    f_pyplot << "addEllipse(["
+             << std::to_string(last_mean[i](0)) << ", "
+             << std::to_string(last_mean[i](1)) << "], "
+             << std::to_string(std::sqrt(eigen_val[0].real()) * 2) << ", "
+             << std::to_string(std::sqrt(eigen_val[1].real()) * 2) << ", "
+             << std::to_string(var_ang) << ")" << std::endl;
+  }
+
+  f_pyplot <<
+    "# show the figure" << std::endl <<
+    "print('showing the figure...')" << std::endl <<
+    "plt.show()" << std::endl <<
+
+    "# save the figure" << std::endl <<
+    "#fig.savefig('result.png')" << std::endl;
+  f_pyplot.close();
+  std::cout << "Done" << std::endl;
 }
 
 // =============================================================================
