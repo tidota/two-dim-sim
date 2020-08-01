@@ -107,3 +107,14 @@ purposes, so the actual outputs will not show the axis caption.
 ![](./img/traj_mode4.png)
 ## Proposed
 ![](./img/traj_mode3.png)
+
+# Class dependency
+
+- simbase
+
+  - simparam
+
+    - simnaive
+    - simci
+    - simcons
+    - simcent
