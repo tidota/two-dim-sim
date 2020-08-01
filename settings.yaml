@@ -110,3 +110,5 @@ enable_prob_update: true
 prob_update_p: 1
 # every N time steps to plot
 plot_interval: 10
+# Number of particles
+n_particles: 100
