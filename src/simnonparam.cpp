@@ -44,14 +44,38 @@ void SimNonParam::printSimInfo()
   SimBase::printSimInfo();
 
   // TODO
-  // for (int i = 0; i < n_robots; ++i)
-  // {
-  //   std::cout << "means[" << i << "]: ";
-  //   for (int idim = 0; idim < 2; ++idim)
-  //     std::cout << means[i](idim) << ((idim == (2 - 1))? "": ", ");
-  //   std::cout << "| ";
-  //   std::cout << "vars[" << i << "]: " << vars[i].determinant() << std::endl;
-  // }
+  for (int i = 0; i < n_robots; ++i)
+  {
+    std::cout << "average[" << i << "]: ";
+    VectorXd mean = VectorXd::Zero(n_dim);
+    for (int ip = 0; ip < n_particles; ++ip)
+    {
+      mean = mean + ests[i][ip];
+    }
+    mean = mean / n_particles;
+    for (int idim = 0; idim < n_dim; ++idim)
+    {
+      std::cout << mean(idim) << ((idim == (2 - 1))? "": ", ");
+    }
+    std::cout << "| ";
+    VectorXd var = VectorXd::Zero(n_dim);
+    for (int ip = 0; ip < n_particles; ++ip)
+    {
+      VectorXd diff = ests[i][ip] - mean;
+      for (int idim = 0; idim < n_dim; ++idim)
+      {
+        diff(idim) = diff(idim) * diff(idim);
+      }
+      var = var + diff;
+    }
+    var = var / n_particles;
+    std::cout << "variance[" << i << "]: ";
+    for (int idim = 0; idim < n_dim; ++idim)
+    {
+      std::cout << var(idim) << ((idim == (2 - 1))? "": ", ");
+    }
+    std::cout << std::endl;
+  }
 }
 
 // =============================================================================
