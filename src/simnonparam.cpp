@@ -81,17 +81,16 @@ void SimNonParam::printSimInfo()
 // =============================================================================
 bool SimNonParam::startLog(const std::string& fname)
 {
-  // TODO
-  // // start log from parametric
-  // std::cout << "    t   |";
-  // for (int i = 0; i < n_robots; ++i)
-  // {
-  //   std::cout << "R[" << setw(7 * n_dim - 7) << i << "].x |";
-  //   std::cout << "R[" << setw(7 * n_dim - 7) << i << "].m |";
-  //   std::cout << " det(v) |";
-  //   std::cout << " err |";
-  // }
-  // std::cout << std::endl;
+  // start log from nonparametric
+  std::cout << "    t   |";
+  for (int i = 0; i < n_robots; ++i)
+  {
+    std::cout << "R[" << setw(7 * n_dim - 7) << i << "].x |";
+    // std::cout << "R[" << setw(7 * n_dim - 7) << i << "].m |";
+    // std::cout << " det(v) |";
+    std::cout << " err |";
+  }
+  std::cout << std::endl;
 
   // prep output file
   if (!fout)
@@ -105,6 +104,11 @@ bool SimNonParam::startLog(const std::string& fname)
 void SimNonParam::endLog()
 {
   fout.close();
+
+  // TODO
+  // write in the particles at the end
+
+
 /*
   // output of gnuplot command
   const int off_next_robot = n_dim + n_dim + n_dim*n_dim + 2;
@@ -430,7 +434,12 @@ void SimNonParam::endLog()
 // =============================================================================
 void SimNonParam::plotImpl()
 {
-/*
+  // for the terminal,
+  // just print the actual locations and errors
+
+  // for the file
+  // print the actual location, the average estimated locations, and errors
+
   std::cout << std::fixed << std::setprecision(2);
   std::cout << std::right << std::setw(8) << t << "|";
   fout << std::fixed << std::setprecision(3);
@@ -438,6 +447,15 @@ void SimNonParam::plotImpl()
 
   for (int i = 0; i < n_robots; ++i)
   {
+    // calculate average estimated location
+    VectorXd average = VectorXd::Zero(n_dim);
+    for (int ip = 0; ip < n_particles; ++ip)
+    {
+      average += this->ests[i][ip];
+    }
+    average = average /= n_particles;
+
+    // current location
     for (int j = 0; j < n_dim; ++j)
     {
       std::cout << std::right << std::setw(6) << robots[i](j);
@@ -446,48 +464,46 @@ void SimNonParam::plotImpl()
       else
         std::cout << "|";
     }
+    // average estimation
     for (int j = 0; j < n_dim; ++j)
     {
-      std::cout << std::right << std::setw(6) << means[i](j);
+      std::cout << std::right << std::setw(6) << average(j);
       if (j < n_dim - 1)
         std::cout << ",";
       else
         std::cout << "|";
     }
-    std::cout << std::right << std::setw(8) << std::sqrt(vars[i].determinant()) << "|";
-    std::cout << std::right << std::setw(5) << (robots[i] - means[i]).norm() << "|";
 
+    // error
+    std::cout << std::right << std::setw(5) << (robots[i] - average).norm() << "|";
+
+    // current location
     for (int j = 0; j < n_dim; ++j)
     {
       fout << std::right << std::setw(9) << robots[i](j);
       fout << " ";
     }
+    // average estimation
     for (int j = 0; j < n_dim; ++j)
     {
-      fout << std::right << std::setw(9) << means[i](j);
+      fout << std::right << std::setw(9) << average(j);
       fout << " ";
     }
-    for (int j = 0; j < n_dim; ++j)
-    {
-      for (int k = 0; k < n_dim; ++k)
-      {
-        fout << std::right << std::setw(9) << vars[i](j,k);
-        fout << " ";
-      }
-    }
-    fout << std::setw(8) << std::sqrt(vars[i].determinant()) << " ";
+
+    // error
     fout << std::right << std::setw(8)
-         << (robots[i] - means[i]).norm() << " ";
+         << (robots[i] - average).norm() << " ";
 
     // store data to the buffer to plot
     last_loc[i] = robots[i];
-    last_mean[i] = means[i];
-    last_var[i] = vars[i];
+    for (int ip = 0; ip < n_particles; ++ip)
+    {
+      last_est[i][ip] = this->ests[i][ip];
+    }
   }
 
   std::cout << std::endl;
   fout << std::endl;
-*/
 }
 
 // =============================================================================
