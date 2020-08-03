@@ -105,8 +105,23 @@ void SimNonParam::endLog()
 {
   fout.close();
 
-  // TODO
   // write in the particles at the end
+  if (!fout_pf)
+    fout_pf.close();
+  fout_pf.open("particles.txt");
+  for (int ip = 0; ip < n_particles; ++ip)
+  {
+    for (int irobot = 0; irobot < n_robots; ++irobot)
+    {
+      for (int idim = 0; idim < n_dim; ++idim)
+      {
+        fout_pf << this->last_est[irobot][ip](idim);
+        fout_pf << " ";
+      }
+    }
+    fout_pf << std::endl;
+  }
+  fout_pf.close();
 
 
 /*

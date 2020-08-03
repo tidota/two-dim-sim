@@ -34,8 +34,10 @@ class SimNonParam: public SimBase
   private: std::vector<VectorXd> last_loc;
   private: std::vector< std::vector<VectorXd> > last_est;
 
-  // file for plotting
+  // file for plotting (trajectories)
   private: std::ofstream fout;
+  // file for plotting (particles at the end)
+  private: std::ofstream fout_pf;
 
   public: SimNonParam(const YAML::Node& doc);
   public: virtual ~SimNonParam(){}
