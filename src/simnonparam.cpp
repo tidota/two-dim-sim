@@ -81,7 +81,7 @@ void SimNonParam::printSimInfo()
 // =============================================================================
 bool SimNonParam::startLog(const std::string& fname)
 {
-  // start log from nonparametric
+  // start log for nonparametric
   std::cout << "    t   |";
   for (int i = 0; i < n_robots; ++i)
   {
@@ -105,7 +105,7 @@ void SimNonParam::endLog()
 {
   fout.close();
 
-  // write in the particles at the end
+  // write the particles into a file at the end
   if (!fout_pf)
     fout_pf.close();
   fout_pf.open("particles.txt");
@@ -449,17 +449,18 @@ void SimNonParam::endLog()
 // =============================================================================
 void SimNonParam::plotImpl()
 {
-  // for the terminal,
-  // just print the actual locations and errors
+  // A line contains each robot's information.
+  // - the actual location
+  // - the average estimated location
+  // - errors
 
-  // for the file
-  // print the actual location, the average estimated locations, and errors
-
+  // Time
   std::cout << std::fixed << std::setprecision(2);
   std::cout << std::right << std::setw(8) << t << "|";
   fout << std::fixed << std::setprecision(3);
   fout << std::right << std::setw(8) << t << " ";
 
+  // For each robot
   for (int i = 0; i < n_robots; ++i)
   {
     // calculate average estimated location
@@ -470,6 +471,7 @@ void SimNonParam::plotImpl()
     }
     average = average /= n_particles;
 
+    // --- Terminal Output --- //
     // current location
     for (int j = 0; j < n_dim; ++j)
     {
@@ -488,10 +490,10 @@ void SimNonParam::plotImpl()
       else
         std::cout << "|";
     }
-
     // error
     std::cout << std::right << std::setw(5) << (robots[i] - average).norm() << "|";
 
+    // --- File Output --- //
     // current location
     for (int j = 0; j < n_dim; ++j)
     {
@@ -504,7 +506,6 @@ void SimNonParam::plotImpl()
       fout << std::right << std::setw(9) << average(j);
       fout << " ";
     }
-
     // error
     fout << std::right << std::setw(8)
          << (robots[i] - average).norm() << " ";
@@ -524,6 +525,7 @@ void SimNonParam::plotImpl()
 // =============================================================================
 void SimNonParam::predict()
 {
+  // Prediction based on the motion model.
 /*
   // === prediction ===
   // for all robots
