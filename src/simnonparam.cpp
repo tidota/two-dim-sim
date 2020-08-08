@@ -123,10 +123,10 @@ void SimNonParam::endLog()
   }
   fout_pf.close();
 
-
-/*
   // output of gnuplot command
-  const int off_next_robot = n_dim + n_dim + n_dim*n_dim + 2;
+  // Note: each robot has actual positions, estimated, and error
+  const int off_next_robot = n_dim + n_dim + 1;
+
   std::cout << std::endl;
   std::cout << "~~~ gnuplot command (errors vs determinants) ~~~" << std::endl;
   for (int i = 0; i < n_robots; ++i)
@@ -135,14 +135,12 @@ void SimNonParam::endLog()
     std::cout << "clear" << std::endl;
     std::cout << "unset object" << std::endl;
     std::cout << "plot \"output.dat\" u 1:"
-              << std::to_string(2+(i+1)*off_next_robot-2)
-              << " title \"|Sigma|^0.5 of robot" << std::to_string(1+i) << "\" with line, ";
-    std::cout << "\"output.dat\" u 1:"
               << std::to_string(2+(i+1)*off_next_robot-1)
               << " title \"err of robot" << std::to_string(1+i) << "\" with line";
     std::cout << std::endl;
   }
   std::cout << std::endl;
+
   std::cout << "~~~ gnuplot command (errors as a whole) ~~~" << std::endl;
   std::cout << "clear" << std::endl;
   std::cout << "unset object" << std::endl;
@@ -161,6 +159,7 @@ void SimNonParam::endLog()
   }
   std::cout << std::endl;
 
+  /*
   std::cout << "~~~ trajectories of the robots (ground-truth vs estimation) ~~~"
             << std::endl;
   std::cout << "writing a gnuplot script..." << std::endl;
