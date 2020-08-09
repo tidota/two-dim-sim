@@ -159,13 +159,15 @@ void SimNonParam::endLog()
   }
   std::cout << std::endl;
 
-  /*
   std::cout << "~~~ trajectories of the robots (ground-truth vs estimation) ~~~"
             << std::endl;
   std::cout << "writing a gnuplot script..." << std::endl;
   std::fstream f_gnuplot("gnuplot_traj.plt", std::fstream::out);
   f_gnuplot << "clear" << std::endl;
+
+  // --- particles at the end --- //
   f_gnuplot << "unset object" << std::endl;
+/*
   for (int i = 0; i < n_robots; ++i)
   {
     Eigen::EigenSolver<MatrixXd> s(vars[i]);
@@ -185,6 +187,8 @@ void SimNonParam::endLog()
               << std::to_string(var_ang)
               << " front fillstyle empty border -1" << std::endl;
   }
+  */
+
   f_gnuplot << "h1 = 227/360.0" << std::endl;
   f_gnuplot << "h2 = 40/360.0" << std::endl;
   f_gnuplot << "set palette model HSV functions (1-gray)*(h2-h1)+h1,1,0.68"
@@ -394,8 +398,11 @@ void SimNonParam::endLog()
     "ax.legend(" << std::endl <<
     "    handles=legend_elements," << std::endl <<
     "    loc='best'," << std::endl <<
-    "    fontsize=5)" << std::endl <<
+    "    fontsize=5)" << std::endl;
 
+    // --- add particles at the end --- //
+/*
+  f_pyplot <<
     "# add covariances" << std::endl <<
     "print('adding covariances...')" << std::endl <<
     "def addEllipse(center, r1, r2, deg):" << std::endl <<
@@ -405,7 +412,6 @@ void SimNonParam::endLog()
     "    angle_deg = deg" << std::endl <<
     "    patch = mpatches.Ellipse(center, major_ax, minor_ax, angle_deg, fc='none', ls='solid', ec='k', lw='1', zorder=100)" << std::endl <<
     "    ax.add_patch(patch)" << std::endl;
-
   for (int i = 0; i < n_robots; ++i)
   {
     Eigen::EigenSolver<MatrixXd> s(vars[i]);
@@ -421,6 +427,7 @@ void SimNonParam::endLog()
              << std::to_string(std::sqrt(eigen_val[1].real()) * 2) << ", "
              << std::to_string(var_ang) << ")" << std::endl;
   }
+  */
 
   f_pyplot <<
     "# show the figure" << std::endl <<
@@ -442,7 +449,6 @@ void SimNonParam::endLog()
     total_error += errors[i];
   }
   std::cout << "overall average error: " << (total_error/(max_time*sim_freq)/n_robots) << std::endl;
-*/
 }
 
 // =============================================================================
@@ -490,7 +496,7 @@ void SimNonParam::plotImpl()
         std::cout << "|";
     }
     // error
-    std::cout << std::right << std::setw(5) << (robots[i] - average).norm() << "|";
+    std::cout << std::right << std::setw(5) << errors[i] << "|";
 
     // --- File Output --- //
     // current location
@@ -585,10 +591,15 @@ void SimNonParam::globalLocImpl(const VectorXd& z)
 // =============================================================================
 void SimNonParam::calcErrors()
 {
-  // TODO
-  // // calculate errors
-  // for (int i = 0; i < n_robots; ++i)
-  // {
-  //   errors[i] += (means[i] - robots[i]).norm();
-  // }
+  // calculate errors
+  for (int i = 0; i < n_robots; ++i)
+  {
+    VectorXd mean = VectorXd::Zero(n_dim);
+    for (int ip = 0; ip < n_particles; ++ip)
+    {
+      mean += ests[i][ip];
+    }
+    mean /= n_particles;
+    errors[i] += (mean - robots[i]).norm();
+  }
 }
