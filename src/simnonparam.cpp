@@ -531,15 +531,15 @@ void SimNonParam::plotImpl()
 void SimNonParam::predict()
 {
   // Prediction based on the motion model.
-/*
   // === prediction ===
   // for all robots
   for (int i = 0; i < n_robots; ++i)
   {
-    // motion model
-    means[i] = means[i] + MatrixXd::Identity(n_dim, n_dim) * vels[i] * deltaT;
+    // velocity based on velocity control input
+    VectorXd deltaX = MatrixXd::Identity(n_dim, n_dim) * vels[i] * deltaT;
 
-    MatrixXd FloatEffect = MatrixXd::Identity(2, 2) * betaM;
+    // === motion model === //
+    // calculate eigen vectors and values
     double v = vels[i].norm();
     MatrixXd EigenVecs(2, 2);
     EigenVecs(0, 0) = vels[i](0) / v;
@@ -549,12 +549,31 @@ void SimNonParam::predict()
     MatrixXd EigenVals = MatrixXd::Identity(2, 2);
     EigenVals(0, 0) = alpha1M * v * v;
     EigenVals(1, 1) = alpha2M * v * v;
-    // transpose == inverse because eigen vectors are perpendicular to each other
-    MatrixXd M = EigenVecs * EigenVals * EigenVecs.transpose() + FloatEffect;
-    MatrixXd V = MatrixXd::Identity(n_dim, n_dim) * deltaT;
-    vars[i] = vars[i] + V.transpose() * M * V;
+
+    for (int ip = 0; ip < n_particles; ++ip)
+    {
+      // get a random value based on the first eigen value
+
+      // get a random value based on the second eigen value
+
+      // make a vector of these random values
+
+      // transform it by eigen vectors
+      //EigenVecs * vec
+
+      // get a random vector based on the float effect
+      // VectorXd FloatEffect = VectorXd::Ones(2) * betaM;
+
+      // calculate velocity with the noises
+
+      // add it to the estimation
+      //ests[i][ip]
+    }
+
+    // MatrixXd M = EigenVecs * EigenVals * EigenVecs.transpose() + FloatEffect;
+    // MatrixXd V = MatrixXd::Identity(n_dim, n_dim) * deltaT;
+    // vars[i] = vars[i] + V.transpose() * M * V;
   }
-  */
 }
 
 // =============================================================================
