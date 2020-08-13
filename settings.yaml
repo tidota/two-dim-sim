@@ -112,3 +112,7 @@ prob_update_p: 1
 plot_interval: 10
 # Number of particles
 n_particles: 100
+# use random seed for PF
+use_random_seed_pf: true
+# random seed to give for PF
+random_seed_pf: 3000

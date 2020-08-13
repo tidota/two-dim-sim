@@ -18,7 +18,9 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
   betaM(doc["betaM"].as<double>()),
   n_particles(doc["n_particles"].as<int>()),
   last_loc(n_robots),
-  last_est(n_robots)
+  last_est(n_robots),
+  use_random_seed_pf(doc["use_random_seed_pf"].as<bool>()),
+  random_seed_pf(doc["random_seed_pf"].as<unsigned int>())
 {
   // for all robots
   for(int i = 0; i < n_robots; ++i)
@@ -36,6 +38,19 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
     }
     ests.push_back(est);
   }
+
+  // random value generator
+  unsigned int seed;
+  if (use_random_seed_pf)
+  {
+    seed = random_seed_pf;
+  }
+  else
+  {
+    std::random_device rd{};
+    seed = rd();
+  }
+  gen_pf.seed(seed);
 }
 
 // =============================================================================
@@ -550,24 +565,35 @@ void SimNonParam::predict()
     EigenVals(0, 0) = alpha1M * v * v;
     EigenVals(1, 1) = alpha2M * v * v;
 
+    std::normal_distribution<> rnd1(0, std::sqrt(alpha1M) * v);
+    std::normal_distribution<> rnd2(0, std::sqrt(alpha1M) * v);
+    std::normal_distribution<> rndf(0, std::sqrt(betaM));
+
     for (int ip = 0; ip < n_particles; ++ip)
     {
       // get a random value based on the first eigen value
+      double x1 = rnd1(gen);
 
       // get a random value based on the second eigen value
+      double x2 = rnd2(gen);
 
       // make a vector of these random values
+      VectorXd rnd2D;
+      rnd2D << x1, x2;
 
       // transform it by eigen vectors
       //EigenVecs * vec
+      VectorXd noise1 = EigenVecs * rnd2D;
 
       // get a random vector based on the float effect
       // VectorXd FloatEffect = VectorXd::Ones(2) * betaM;
+      double xf = rndf(gen);
+      VectorXd noise2;
+      noise2 << xf, xf;
 
       // calculate velocity with the noises
-
       // add it to the estimation
-      //ests[i][ip]
+      ests[i][ip] += deltaX + (noise1 + noise2) * deltaT;
     }
 
     // MatrixXd M = EigenVecs * EigenVals * EigenVecs.transpose() + FloatEffect;

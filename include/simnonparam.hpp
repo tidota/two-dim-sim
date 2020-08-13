@@ -34,6 +34,12 @@ class SimNonParam: public SimBase
   private: std::vector<VectorXd> last_loc;
   private: std::vector< std::vector<VectorXd> > last_est;
 
+  // random value generator for sampling
+  protected: std::mt19937 gen_pf;
+  // using random seed?
+  protected: const bool use_random_seed_pf;
+  protected: const unsigned int random_seed_pf;
+
   // file for plotting (trajectories)
   private: std::ofstream fout;
   // file for plotting (particles at the end)
