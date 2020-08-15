@@ -630,8 +630,10 @@ void SimNonParam::globalLocImpl(const VectorXd& z)
     }
 
     // evaluate
-    // Q(0,0) = sigmaGlobalLocR * sigmaGlobalLocR;
-    // Q(1,1) = sigmaGlobalLocT * sigmaGlobalLocT;
+    weights[i]
+      = exp(
+          -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR
+          -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT);
 
     w_sum += weights[i];
   }
@@ -640,13 +642,23 @@ void SimNonParam::globalLocImpl(const VectorXd& z)
   std::vector<VectorXd> new_est;
 
   // resample
+  std::uniform_real_distribution<> dist(0, w_sum);
   for (int i = 0; i < n_particles; ++i)
   {
     // get a random number from a uniform distribution.
+    double val = dist(gen);
 
     // decide the index to pick up
+    int indx = 0;
+    double buff = weights[0];
+    while (indx < n_particles - 1 && val > buff)
+    {
+      ++indx;
+      buff += weights[indx];
+    }
 
     // add the picked one
+    new_est.push_back(this->ests[0][indx]);
   }
 
   // swap
