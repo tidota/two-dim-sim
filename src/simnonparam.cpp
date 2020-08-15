@@ -605,32 +605,52 @@ void SimNonParam::predict()
 // =============================================================================
 void SimNonParam::globalLocImpl(const VectorXd& z)
 {
-  /*
-  // update its location estimate
-  VectorXd z_hat(2);
-  z_hat(0) = means[0].norm();
-  z_hat(1) = std::atan2(means[0](1), means[0](0));
-  double q = means[0].squaredNorm();
-  MatrixXd H(2,n_dim);
-  H(0, 0) = means[0](0)/std::sqrt(q);
-  H(1, 0) = -means[0](1)/q;
-  H(0, 1) = means[0](1)/std::sqrt(q);
-  H(1, 1) = means[0](0)/q;
-  MatrixXd Q = MatrixXd::Zero(2,2);
-  Q(0,0) = sigmaGlobalLocR * sigmaGlobalLocR;
-  Q(1,1) = sigmaGlobalLocT * sigmaGlobalLocT;
-  VectorXd z_diff = z - z_hat;
-  if (z_diff(1) > M_PI)
+  // z[0]: distance from the origin to the first robot
+  // z[1]: driection toward the first robot
+
+  // create weights for resampling
+  std::vector<double> weights(0, n_particles);
+  double w_sum = 0;
+
+  // for all particles of the first robot
+  for (int i = 0; i < n_particles; ++i)
   {
-    z_diff(1) -= 2*M_PI;
-  }
-  else if (z_diff(1) <= -M_PI)
-  {
-    z_diff(1) += 2*M_PI;
+    VectorXd z_hat(2);
+    z_hat(0) = ests[0][i].norm();
+    z_hat(1) = std::atan2(ests[0][i](1), ests[0][i](0));
+
+    VectorXd z_diff = z - z_hat;
+    if (z_diff(1) > M_PI)
+    {
+      z_diff(1) -= 2*M_PI;
+    }
+    else if (z_diff(1) <= -M_PI)
+    {
+      z_diff(1) += 2*M_PI;
+    }
+
+    // evaluate
+    // Q(0,0) = sigmaGlobalLocR * sigmaGlobalLocR;
+    // Q(1,1) = sigmaGlobalLocT * sigmaGlobalLocT;
+
+    w_sum += weights[i];
   }
 
-  globalLocModeImpl(H, Q, z_diff);
-  */
+  // new  population
+  std::vector<VectorXd> new_est;
+
+  // resample
+  for (int i = 0; i < n_particles; ++i)
+  {
+    // get a random number from a uniform distribution.
+
+    // decide the index to pick up
+
+    // add the picked one
+  }
+
+  // swap
+  std::swap(this->ests[0], new_est);
 }
 
 // =============================================================================
