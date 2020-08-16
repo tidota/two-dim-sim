@@ -181,6 +181,7 @@ void SimNonParam::endLog()
   f_gnuplot << "clear" << std::endl;
 
   // --- particles at the end --- //
+  // TODO
   f_gnuplot << "unset object" << std::endl;
 /*
   for (int i = 0; i < n_robots; ++i)
@@ -416,6 +417,7 @@ void SimNonParam::endLog()
     "    fontsize=5)" << std::endl;
 
     // --- add particles at the end --- //
+    // TODO
 /*
   f_pyplot <<
     "# add covariances" << std::endl <<
@@ -595,10 +597,6 @@ void SimNonParam::predict()
       // add it to the estimation
       ests[i][ip] += deltaX + (noise1 + noise2) * deltaT;
     }
-
-    // MatrixXd M = EigenVecs * EigenVals * EigenVecs.transpose() + FloatEffect;
-    // MatrixXd V = MatrixXd::Identity(n_dim, n_dim) * deltaT;
-    // vars[i] = vars[i] + V.transpose() * M * V;
   }
 }
 
