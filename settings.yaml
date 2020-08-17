@@ -33,6 +33,7 @@ ctrl_max: 1.0
 alpha1M: 1.0
 alpha2M: 0.5
 betaM: 0.5
+
 # mode
 # 0: no consideration of uncertainty of the other
 # 1: consideration of uncertainty of the other
@@ -40,6 +41,7 @@ betaM: 0.5
 # 3: biased
 # 4: CI
 # 5: Centralized
+# 6: Particle filter
 mode: 3
 # mode1 rate
 mode1_rateQ: 1.0
@@ -64,6 +66,15 @@ mode4_rateQ: 1.0
 mode4_original: true
 mode4_original_force: false
 mode4_original_omega: 0.95
+# mode6 (pf) settings
+mode6_omega: 0.95
+# Number of particles
+n_particles: 100
+# use random seed for PF
+use_random_seed_pf: true
+# random seed to give for PF
+random_seed_pf: 3000
+
 # enable_update_step
 enable_update_step: true
 # enable bidirectional mutual update
@@ -110,9 +121,3 @@ enable_prob_update: true
 prob_update_p: 1
 # every N time steps to plot
 plot_interval: 10
-# Number of particles
-n_particles: 100
-# use random seed for PF
-use_random_seed_pf: true
-# random seed to give for PF
-random_seed_pf: 3000

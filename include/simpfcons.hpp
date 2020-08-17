@@ -19,17 +19,13 @@ using namespace Eigen;
 
 class SimPfCons: public SimNonParam
 {
-  private: const double mode3_omega_variable;
-  private: double mode3_omega;
-  private: const double mode3_rateQ;
+  private: double mode6_omega;
 
   public: SimPfCons(const YAML::Node& doc);
   public: virtual ~SimPfCons(){}
 
-  protected: virtual void mutualLocModeImpl(
-    const VectorXd& z, const std::pair<int,int>& edge,
-    const MatrixXd& H1, const MatrixXd& H2, const MatrixXd& Q,
-    const VectorXd& z_diff) override;
+  protected: virtual void mutualLocImpl(
+    const VectorXd& z, const std::pair<int,int>& edge) override;
 };
 
 #endif
