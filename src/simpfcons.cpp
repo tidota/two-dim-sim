@@ -115,10 +115,6 @@ void SimPfCons::mutualLocImpl(const VectorXd& z, const std::pair<int,int>& edge)
   const int r1 = edge.first;
   const int r2 = edge.second;
 
-  // if (enable_bidirectional)
-  // {
-  // }
-
   // calcualte confidence reduction weights for each population
   std::vector<double> weights_omega1(0, n_particles);
   double weights_omega1_sum;
@@ -128,22 +124,26 @@ void SimPfCons::mutualLocImpl(const VectorXd& z, const std::pair<int,int>& edge)
   double weights_omega2_sum;
   evalByOmega(ests[r2], weights_omega2, weights_omega2_sum);
 
-  // calculate mutual measurement weights for each population
-  std::vector<double> weights1(0, n_particles);
-  double weights1_sum;
-  evalByZ(
-    ests[r1], weights_omega1, weights_omega1_sum,
-    ests[r2], weights_omega2, weights_omega2_sum,
-    weights1, weights1_sum, -z);
+  if (enable_bidirectional)
+  {
+    // calculate mutual measurement weights for each population
+    std::vector<double> weights1(0, n_particles);
+    double weights1_sum;
+    evalByZ(
+      ests[r1], weights_omega1, weights_omega1_sum,
+      ests[r2], weights_omega2, weights_omega2_sum,
+      weights1, weights1_sum, -z);
+    // resample
+    resample(ests[r1], weights1, weights1_sum);
+  }
 
+  // calculate mutual measurement weights for each population
   std::vector<double> weights2(0, n_particles);
   double weights2_sum;
   evalByZ(
     ests[r2], weights_omega2, weights_omega2_sum,
     ests[r1], weights_omega1, weights_omega1_sum,
     weights2, weights2_sum, z);
-
   // resample
-  resample(ests[r1], weights1, weights1_sum);
   resample(ests[r2], weights2, weights2_sum);
 }
