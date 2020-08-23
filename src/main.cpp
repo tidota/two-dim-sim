@@ -18,6 +18,7 @@ The main part of the simulation.
 #include <simcons.hpp>
 #include <simci.hpp>
 #include <simcent.hpp>
+#include <simpfcons.hpp>
 
 using namespace std;
 using namespace Eigen;
@@ -56,6 +57,8 @@ int main (int argc, char** argv)
     sim = std::make_shared<SimCi>(doc);
   else if (mode == 5)
     sim = std::make_shared<SimCent>(doc);
+  else if (mode == 6)
+    sim = std::make_shared<SimPfCons>(doc);
   else
   {
     std::cout << "Invalid mode number: " << mode << std::endl;
