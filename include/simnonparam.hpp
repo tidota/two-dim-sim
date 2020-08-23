@@ -27,8 +27,8 @@ class SimNonParam: public SimBase
   private: const double betaM;
 
   // means on robot's locations
-  protected: std::vector< std::vector<VectorXd> > ests;
   protected: int n_particles;
+  protected: std::vector< std::vector<VectorXd> > ests;
 
   // buffers for covariances to plot
   private: std::vector<VectorXd> last_loc;

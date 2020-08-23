@@ -17,6 +17,7 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
   alpha2M(doc["alpha2M"].as<double>()),
   betaM(doc["betaM"].as<double>()),
   n_particles(doc["n_particles"].as<int>()),
+  ests(n_robots),
   last_loc(n_robots),
   last_est(n_robots),
   use_random_seed_pf(doc["use_random_seed_pf"].as<bool>()),
@@ -31,12 +32,11 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
     {
       buff(j) = doc["robots"][i][j].as<double>();
     }
-    std::vector<VectorXd> est;
     for (int j = 0; j < n_particles; ++j)
     {
-      est.push_back(buff);
+      ests[i].push_back(buff);
+      last_est[i].push_back(buff);
     }
-    ests.push_back(est);
   }
 
   // random value generator
@@ -580,7 +580,7 @@ void SimNonParam::predict()
       double x2 = rnd2(gen);
 
       // make a vector of these random values
-      VectorXd rnd2D;
+      VectorXd rnd2D(n_dim);
       rnd2D << x1, x2;
 
       // transform it by eigen vectors
@@ -590,7 +590,7 @@ void SimNonParam::predict()
       // get a random vector based on the float effect
       // VectorXd FloatEffect = VectorXd::Ones(2) * betaM;
       double xf = rndf(gen);
-      VectorXd noise2;
+      VectorXd noise2(n_dim);
       noise2 << xf, xf;
 
       // calculate velocity with the noises
