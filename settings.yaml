@@ -42,7 +42,7 @@ betaM: 0.5
 # 4: CI
 # 5: Centralized
 # 6: Particle filter
-mode: 3
+mode: 6
 # mode1 rate
 mode1_rateQ: 1.0
 # mode2 rate

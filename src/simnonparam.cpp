@@ -607,7 +607,7 @@ void SimNonParam::globalLocImpl(const VectorXd& z)
   // z[1]: driection toward the first robot
 
   // create weights for resampling
-  std::vector<double> weights(0, n_particles);
+  std::vector<double> weights(n_particles, 0);
   double w_sum = 0;
 
   // for all particles of the first robot
