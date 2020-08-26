@@ -58,7 +58,6 @@ void SimNonParam::printSimInfo()
 {
   SimBase::printSimInfo();
 
-  // TODO
   for (int i = 0; i < n_robots; ++i)
   {
     std::cout << "average[" << i << "]: ";
@@ -101,6 +100,7 @@ bool SimNonParam::startLog(const std::string& fname)
   for (int i = 0; i < n_robots; ++i)
   {
     std::cout << "R[" << setw(7 * n_dim - 7) << i << "].x |";
+    std::cout << "Est[" << setw(7 * n_dim - 7 - 2) << i << "].x |";
     // std::cout << "R[" << setw(7 * n_dim - 7) << i << "].m |";
     // std::cout << " det(v) |";
     std::cout << " err |";
