@@ -675,6 +675,6 @@ void SimNonParam::calcErrors()
       mean += ests[i][ip];
     }
     mean /= n_particles;
-    errors[i] += (mean - robots[i]).norm();
+    errors[i] = (mean - robots[i]).norm();
   }
 }
