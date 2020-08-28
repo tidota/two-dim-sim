@@ -90,7 +90,7 @@ void SimPfCons::resample(
   for (int i = 0; i < n_particles; ++i)
   {
     // get a random number from a uniform distribution.
-    double val = dist(gen);
+    double val = dist(gen_pf);
 
     // decide the index to pick up
     int indx = 0;

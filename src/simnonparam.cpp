@@ -574,10 +574,10 @@ void SimNonParam::predict()
     for (int ip = 0; ip < n_particles; ++ip)
     {
       // get a random value based on the first eigen value
-      double x1 = rnd1(gen);
+      double x1 = rnd1(gen_pf);
 
       // get a random value based on the second eigen value
-      double x2 = rnd2(gen);
+      double x2 = rnd2(gen_pf);
 
       // make a vector of these random values
       VectorXd rnd2D(n_dim);
@@ -589,7 +589,7 @@ void SimNonParam::predict()
 
       // get a random vector based on the float effect
       // VectorXd FloatEffect = VectorXd::Ones(2) * betaM;
-      double xf = rndf(gen);
+      double xf = rndf(gen_pf);
       VectorXd noise2(n_dim);
       noise2 << xf, xf;
 
@@ -644,7 +644,7 @@ void SimNonParam::globalLocImpl(const VectorXd& z)
   for (int i = 0; i < n_particles; ++i)
   {
     // get a random number from a uniform distribution.
-    double val = dist(gen);
+    double val = dist(gen_pf);
 
     // decide the index to pick up
     int indx = 0;
