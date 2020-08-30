@@ -25,17 +25,15 @@ class SimPfCons: public SimNonParam
   public: virtual ~SimPfCons(){}
 
   private: void evalByOmega(
-    const std::vector<VectorXd>& est, std::vector<double>& weights,
-    double& w_sum);
+    const std::vector<VectorXd>& est, std::vector<double>& cumul_weights);
   private: void evalByZ(
     const std::vector<VectorXd>& est_target,
-    const std::vector<double>& weights_target, const double& w_target_sum,
+    const std::vector<double>& cumul_weights_target,
     const std::vector<VectorXd>& est_ref,
-    const std::vector<double>& weights_ref, const double& w_ref_sum,
-    std::vector<double>& weights, double& w_sum, const VectorXd& z);
+    const std::vector<double>& cumul_weights_ref,
+    std::vector<double>& cumul_weights, const VectorXd& z);
   private: void resample(
-    std::vector<VectorXd>& est, const std::vector<double>& weights,
-    const double& w_sum);
+    std::vector<VectorXd>& est, const std::vector<double>& cumul_weights);
 
   protected: virtual void mutualLocImpl(
     const VectorXd& z, const std::pair<int,int>& edge) override;

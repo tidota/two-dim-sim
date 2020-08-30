@@ -15,9 +15,8 @@ SimPfCons::SimPfCons(const YAML::Node& doc): SimNonParam(doc),
 
 // =============================================================================
 void SimPfCons::evalByOmega(
-  const std::vector<VectorXd>& est, std::vector<double>& weights, double& w_sum)
+  const std::vector<VectorXd>& est, std::vector<double>& cumul_weights)
 {
-  w_sum = 0;
   for (int i = 0; i < n_particles; ++i)
   {
     // estimate the value on the point of the probability distribution
@@ -30,24 +29,21 @@ void SimPfCons::evalByOmega(
     // this->mode6_omega
 
     // calculate weight
-    // weights[i]
+    // cumul_weights[i]
     //   = exp(
     //       -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR
     //       -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT);
-
-    w_sum += weights[i];
   }
 }
 
 // =============================================================================
 void SimPfCons::evalByZ(
   const std::vector<VectorXd>& est_target,
-  const std::vector<double>& weights_target, const double& w_target_sum,
+  const std::vector<double>& cumul_weights_target,
   const std::vector<VectorXd>& est_ref,
-  const std::vector<double>& weights_ref, const double& w_ref_sum,
-  std::vector<double>& weights, double& w_sum, const VectorXd& z)
+  const std::vector<double>& cumul_weights_ref,
+  std::vector<double>& weights, const VectorXd& z)
 {
-  w_sum = 0;
   for (int i = 0; i < n_particles; ++i)
   {
     for (int j = 0; j < n_particles; ++j)
@@ -73,20 +69,18 @@ void SimPfCons::evalByZ(
     //   = exp(
     //       -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR
     //       -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT);
-
-    w_sum += weights[i];
   }
 }
 
 // =============================================================================
 void SimPfCons::resample(
-  std::vector<VectorXd>& est, const std::vector<double>& weights,
-  const double& w_sum)
+  std::vector<VectorXd>& est, const std::vector<double>& cumul_weights)
 {
   // new  population
   std::vector<VectorXd> new_est;
 
-  std::uniform_real_distribution<> dist(0, w_sum);
+  std::uniform_real_distribution<>
+    dist(0, cumul_weights[cumul_weights.size() - 1]);
   for (int i = 0; i < n_particles; ++i)
   {
     // get a random number from a uniform distribution.
@@ -94,11 +88,11 @@ void SimPfCons::resample(
 
     // decide the index to pick up
     int indx = 0;
-    double buff = weights[0];
+    double buff = cumul_weights[0];
     while (indx < n_particles - 1 && val > buff)
     {
       ++indx;
-      buff += weights[indx];
+      buff += cumul_weights[indx];
     }
 
     // add the picked one
@@ -115,35 +109,29 @@ void SimPfCons::mutualLocImpl(const VectorXd& z, const std::pair<int,int>& edge)
   const int r1 = edge.first;
   const int r2 = edge.second;
 
-  // calcualte confidence reduction weights for each population
-  std::vector<double> weights_omega1(n_particles, 0);
-  double weights_omega1_sum;
-  evalByOmega(ests[r1], weights_omega1, weights_omega1_sum);
+  // calcualte cumulative confidence reduction weights for each population
+  std::vector<double> cumul_weights_omega1(n_particles, 0);
+  evalByOmega(ests[r1], cumul_weights_omega1);
 
-  std::vector<double> weights_omega2(n_particles, 0);
-  double weights_omega2_sum;
-  evalByOmega(ests[r2], weights_omega2, weights_omega2_sum);
+  std::vector<double> cumul_weights_omega2(n_particles, 0);
+  evalByOmega(ests[r2], cumul_weights_omega2);
 
   if (enable_bidirectional)
   {
-    // calculate mutual measurement weights for each population
-    std::vector<double> weights1(n_particles, 0);
-    double weights1_sum;
+    // calculate cumulative mutual measurement weights for each population
+    std::vector<double> cumul_weights1(n_particles, 0);
     evalByZ(
-      ests[r1], weights_omega1, weights_omega1_sum,
-      ests[r2], weights_omega2, weights_omega2_sum,
-      weights1, weights1_sum, -z);
+      ests[r1], cumul_weights_omega1, ests[r2], cumul_weights_omega2,
+      cumul_weights1, -z);
     // resample
-    resample(ests[r1], weights1, weights1_sum);
+    resample(ests[r1], cumul_weights1);
   }
 
   // calculate mutual measurement weights for each population
-  std::vector<double> weights2(n_particles, 0);
-  double weights2_sum;
+  std::vector<double> cumul_weights2(n_particles, 0);
   evalByZ(
-    ests[r2], weights_omega2, weights_omega2_sum,
-    ests[r1], weights_omega1, weights_omega1_sum,
-    weights2, weights2_sum, z);
+    ests[r2], cumul_weights_omega2, ests[r1], cumul_weights_omega1,
+    cumul_weights2, z);
   // resample
-  resample(ests[r2], weights2, weights2_sum);
+  resample(ests[r2], cumul_weights2);
 }
