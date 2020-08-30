@@ -359,8 +359,8 @@ void SimNonParam::endLog()
     "    print('plotting ground-truth of robot ' + str(i+1) + '...')" << std::endl <<
     "    plotPath(" << std::endl <<
     "        np.concatenate(" << std::endl <<
-    "            (data[:,1+10*i:2+10*i]," << std::endl <<
-    "             data[:,2+10*i:3+10*i]," << std::endl <<
+    "            (data[:,1+" << off_next_robot << "*i:2+" << off_next_robot << "*i]," << std::endl <<
+    "             data[:,2+" << off_next_robot << "*i:3+" << off_next_robot << "*i]," << std::endl <<
     "             data[:,0:1]),axis=1).tolist()," << std::endl <<
     "        markers[i]+'--', cmf_s, lw=1, ms=4)" << std::endl <<
     "# plot estimated trajectories" << std::endl <<
@@ -368,8 +368,8 @@ void SimNonParam::endLog()
     "    print('plotting estimation of robot ' + str(i+1) + '...')" << std::endl <<
     "    plotPath(" << std::endl <<
     "        np.concatenate(" << std::endl <<
-    "            (data[:,3+10*i:4+10*i]," << std::endl <<
-    "             data[:,4+10*i:5+10*i]," << std::endl <<
+    "            (data[:,3+" << off_next_robot << "*i:4+" << off_next_robot << "*i]," << std::endl <<
+    "             data[:,4+" << off_next_robot << "*i:5+" << off_next_robot << "*i]," << std::endl <<
     "             data[:,0:1]),axis=1).tolist()," << std::endl <<
     "        markers[i], cmf, lw=1, ms=4)" << std::endl <<
 
