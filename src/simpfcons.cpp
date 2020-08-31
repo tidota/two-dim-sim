@@ -17,22 +17,19 @@ SimPfCons::SimPfCons(const YAML::Node& doc): SimNonParam(doc),
 void SimPfCons::evalByOmega(
   const std::vector<VectorXd>& est, std::vector<double>& cumul_weights)
 {
+  const double sigma = 0.1;
   for (int i = 0; i < n_particles; ++i)
   {
+    cumul_weights[i] = 0;
     // estimate the value on the point of the probability distribution
     for (int j = 0; j < n_particles; ++j)
     {
-
+      VectorXd diff = est[i] - est[j];
+      cumul_weights[i] += exp(-diff.squaredNorm()/sigma/sigma);
     }
-
-    // apply omega
-    // this->mode6_omega
-
-    // calculate weight
-    // cumul_weights[i]
-    //   = exp(
-    //       -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR
-    //       -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT);
+    cumul_weights[i] = pow(cumul_weights[i], mode6_omega - 1);
+    if (i > 0)
+      cumul_weights[i] += cumul_weights[i-1];
   }
 }
 
