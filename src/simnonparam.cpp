@@ -678,3 +678,32 @@ void SimNonParam::calcErrors()
     errors[i] = (mean - robots[i]).norm();
   }
 }
+
+// =============================================================================
+int SimNonParam::drawRandIndx(std::vector<double>& cumul_weights)
+{
+  std::uniform_real_distribution<>
+    dist(0, cumul_weights[cumul_weights.size() - 1]);
+
+  double val = dist(gen_pf);
+  int lo = 0;
+  int hi = cumul_weights.size() - 1;
+
+  while (lo < hi - 1)
+  {
+    int mid = (hi + lo)/2;
+
+    if (val > cumul_weights[mid])
+    {
+      lo = mid;
+    }
+    else
+    {
+      hi = mid;
+    }
+  }
+  int ans = hi;
+  if (val <= cumul_weights[lo])
+    ans = lo;
+  return ans;
+}

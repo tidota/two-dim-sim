@@ -62,6 +62,8 @@ class SimNonParam: public SimBase
   protected: virtual void mutualLocImpl(
     const VectorXd& z, const std::pair<int,int>& edge) = 0;
   public: void calcErrors() override final;
+
+  private: int drawRandIndx(std::vector<double>& cumul_weights);
 };
 
 #endif
