@@ -606,9 +606,8 @@ void SimNonParam::globalLocImpl(const VectorXd& z)
   // z[0]: distance from the origin to the first robot
   // z[1]: driection toward the first robot
 
-  // create weights for resampling
-  std::vector<double> weights(n_particles, 0);
-  double w_sum = 0;
+  // create cumulative weights for resampling
+  std::vector<double> cumul_weights(n_particles, 0);
 
   // for all particles of the first robot
   for (int i = 0; i < n_particles; ++i)
@@ -628,32 +627,23 @@ void SimNonParam::globalLocImpl(const VectorXd& z)
     }
 
     // evaluate
-    weights[i]
+    cumul_weights[i]
       = exp(
           -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR
           -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT);
 
-    w_sum += weights[i];
+    if (i > 0)
+      cumul_weights[i] += cumul_weights[i - 1];
   }
 
   // new  population
   std::vector<VectorXd> new_est;
 
   // resample
-  std::uniform_real_distribution<> dist(0, w_sum);
   for (int i = 0; i < n_particles; ++i)
   {
-    // get a random number from a uniform distribution.
-    double val = dist(gen_pf);
-
     // decide the index to pick up
-    int indx = 0;
-    double buff = weights[0];
-    while (indx < n_particles - 1 && val > buff)
-    {
-      ++indx;
-      buff += weights[indx];
-    }
+    int indx = drawRandIndx(cumul_weights);
 
     // add the picked one
     new_est.push_back(this->ests[0][indx]);
