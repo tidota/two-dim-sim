@@ -19,7 +19,7 @@ void SimPfCons::evalByOmega(
   const std::vector<VectorXd>& est, std::vector<double>& cumul_weights)
 {
   for (int i = 0; i < n_particles; ++i)
-    cumul_weights[i] = 0;
+    cumul_weights[i] = 1.0; // exp(-0/mode6_sigma/mode6_sigma)
   for (int i = 0; i < n_particles; ++i)
   {
     // estimate the value on the point of the probability distribution
