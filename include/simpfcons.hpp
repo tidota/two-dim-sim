@@ -20,6 +20,7 @@ using namespace Eigen;
 class SimPfCons: public SimNonParam
 {
   private: double mode6_omega;
+  private: double mode6_sigma;
 
   public: SimPfCons(const YAML::Node& doc);
   public: virtual ~SimPfCons(){}

@@ -68,6 +68,7 @@ mode4_original_force: false
 mode4_original_omega: 0.95
 # mode6 (pf) settings
 mode6_omega: 0.95
+mode6_sigma: 0.1
 # Number of particles
 n_particles: 100
 # use random seed for PF
@@ -75,7 +76,7 @@ use_random_seed_pf: true
 # random seed to give for PF
 random_seed_pf: 3000
 
-# enable_update_step
+# enable_update_step for mutual localization
 enable_update_step: true
 # enable bidirectional mutual update
 enable_bidirectional: true

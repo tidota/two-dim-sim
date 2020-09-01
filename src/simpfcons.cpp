@@ -10,14 +10,14 @@ using namespace Eigen;
 
 // =============================================================================
 SimPfCons::SimPfCons(const YAML::Node& doc): SimNonParam(doc),
-  mode6_omega(doc["mode6_omega"].as<double>())
+  mode6_omega(doc["mode6_omega"].as<double>()),
+  mode6_sigma(doc["mode6_sigma"].as<double>())
 {}
 
 // =============================================================================
 void SimPfCons::evalByOmega(
   const std::vector<VectorXd>& est, std::vector<double>& cumul_weights)
 {
-  const double sigma = 0.05;
   for (int i = 0; i < n_particles; ++i)
     cumul_weights[i] = 0;
   for (int i = 0; i < n_particles; ++i)
@@ -26,7 +26,7 @@ void SimPfCons::evalByOmega(
     for (int j = i + 1; j < n_particles; ++j)
     {
       VectorXd diff = est[i] - est[j];
-      double val = exp(-diff.squaredNorm()/sigma/sigma);
+      double val = exp(-diff.squaredNorm()/mode6_sigma/mode6_sigma);
       cumul_weights[i] += val;
       cumul_weights[j] += val;
     }
