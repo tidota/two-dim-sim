@@ -87,7 +87,7 @@ void SimPfCons::resample(
   std::vector<VectorXd>& est, const std::vector<double>& cumul_weights)
 {
   // new  population
-  std::vector<VectorXd> new_est(n_particles);
+  std::vector<VectorXd> new_est(n_particles, VectorXd(n_dim));
 
   for (int i = 0; i < n_particles; ++i)
   {
