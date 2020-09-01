@@ -637,7 +637,7 @@ void SimNonParam::globalLocImpl(const VectorXd& z)
   }
 
   // new  population
-  std::vector<VectorXd> new_est;
+  std::vector<VectorXd> new_est(n_particles);
 
   // resample
   for (int i = 0; i < n_particles; ++i)
@@ -646,7 +646,7 @@ void SimNonParam::globalLocImpl(const VectorXd& z)
     int indx = drawRandIndx(cumul_weights);
 
     // add the picked one
-    new_est.push_back(this->ests[0][indx]);
+    new_est[i] = this->ests[0][indx];
   }
 
   // swap

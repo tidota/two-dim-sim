@@ -20,7 +20,7 @@ void SimPfCons::evalByOmega(
   const double sigma = 0.05;
   for (int i = 0; i < n_particles; ++i)
     cumul_weights[i] = 0;
-  for (int i = 0; i < n_particles - 1; ++i)
+  for (int i = 0; i < n_particles; ++i)
   {
     // estimate the value on the point of the probability distribution
     for (int j = i + 1; j < n_particles; ++j)
@@ -87,7 +87,7 @@ void SimPfCons::resample(
   std::vector<VectorXd>& est, const std::vector<double>& cumul_weights)
 {
   // new  population
-  std::vector<VectorXd> new_est;
+  std::vector<VectorXd> new_est(n_particles);
 
   for (int i = 0; i < n_particles; ++i)
   {
@@ -95,7 +95,7 @@ void SimPfCons::resample(
     int indx = drawRandIndx(cumul_weights);
 
     // add the picked one
-    new_est.push_back(est[indx]);
+    new_est[i] = est[indx];
   }
 
   // swap
