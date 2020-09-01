@@ -115,22 +115,23 @@ void SimPfCons::mutualLocImpl(const VectorXd& z, const std::pair<int,int>& edge)
   std::vector<double> cumul_weights_omega2(n_particles);
   evalByOmega(ests[r2], cumul_weights_omega2);
 
+  // calculate cumulative mutual measurement weights for each population
+  std::vector<double> cumul_weights1(n_particles);
   if (enable_bidirectional)
   {
-    // calculate cumulative mutual measurement weights for each population
-    std::vector<double> cumul_weights1(n_particles);
     evalByZ(
       ests[r1], cumul_weights_omega1, ests[r2], cumul_weights_omega2,
       cumul_weights1, -z);
-    // resample
-    resample(ests[r1], cumul_weights1);
   }
-
-  // calculate mutual measurement weights for each population
   std::vector<double> cumul_weights2(n_particles);
   evalByZ(
     ests[r2], cumul_weights_omega2, ests[r1], cumul_weights_omega1,
     cumul_weights2, z);
+
   // resample
+  if (enable_bidirectional)
+  {
+    resample(ests[r1], cumul_weights1);
+  }
   resample(ests[r2], cumul_weights2);
 }
