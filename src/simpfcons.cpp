@@ -39,33 +39,43 @@ void SimPfCons::evalByZ(
   const std::vector<double>& cumul_weights_target,
   const std::vector<VectorXd>& est_ref,
   const std::vector<double>& cumul_weights_ref,
-  std::vector<double>& weights, const VectorXd& z)
+  std::vector<double>& cumul_weights, const VectorXd& z)
 {
   for (int i = 0; i < n_particles; ++i)
   {
-    for (int j = 0; j < n_particles; ++j)
-    {
-      VectorXd diff = est_target[i] - est_ref[j];
-      VectorXd z_hat(2);
-      z_hat(0) = diff.norm();
-      z_hat(1) = std::atan2(diff(1), diff(0));
+    // draw a sample from the reference population
+    int indx = drawRandIndx(cumul_weights_ref);
 
-      VectorXd z_diff = z - z_hat;
-      if (z_diff(1) > M_PI)
-      {
-        z_diff(1) -= 2*M_PI;
-      }
-      else if (z_diff(1) <= -M_PI)
-      {
-        z_diff(1) += 2*M_PI;
-      }
+    VectorXd diff = est_target[i] - est_ref[indx];
+    VectorXd z_hat(2);
+    z_hat(0) = diff.norm();
+    z_hat(1) = std::atan2(diff(1), diff(0));
+
+    VectorXd z_diff = z - z_hat;
+    if (z_diff(1) > M_PI)
+    {
+      z_diff(1) -= 2*M_PI;
+    }
+    else if (z_diff(1) <= -M_PI)
+    {
+      z_diff(1) += 2*M_PI;
     }
 
     // evaluate
-    // weights[i]
-    //   = exp(
-    //       -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR
-    //       -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT);
+    cumul_weights[i]
+      = exp(
+          -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR
+          -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT);
+    double omega_weight = cumul_weights_target[i];
+    if (i > 0)
+    {
+      omega_weight -= cumul_weights_target[i - 1];
+    }
+    cumul_weights[i] *= omega_weight;
+    if (i > 0)
+    {
+      cumul_weights[i] += cumul_weights[i - 1];
+    }
   }
 }
 
@@ -76,21 +86,10 @@ void SimPfCons::resample(
   // new  population
   std::vector<VectorXd> new_est;
 
-  std::uniform_real_distribution<>
-    dist(0, cumul_weights[cumul_weights.size() - 1]);
   for (int i = 0; i < n_particles; ++i)
   {
-    // get a random number from a uniform distribution.
-    double val = dist(gen_pf);
-
     // decide the index to pick up
-    int indx = 0;
-    double buff = cumul_weights[0];
-    while (indx < n_particles - 1 && val > buff)
-    {
-      ++indx;
-      buff += cumul_weights[indx];
-    }
+    int indx = drawRandIndx(cumul_weights);
 
     // add the picked one
     new_est.push_back(est[indx]);

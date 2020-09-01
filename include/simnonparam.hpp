@@ -63,7 +63,7 @@ class SimNonParam: public SimBase
     const VectorXd& z, const std::pair<int,int>& edge) = 0;
   public: void calcErrors() override final;
 
-  private: int drawRandIndx(std::vector<double>& cumul_weights);
+  protected: int drawRandIndx(const std::vector<double>& cumul_weights);
 };
 
 #endif

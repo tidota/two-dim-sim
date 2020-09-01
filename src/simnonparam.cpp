@@ -670,7 +670,7 @@ void SimNonParam::calcErrors()
 }
 
 // =============================================================================
-int SimNonParam::drawRandIndx(std::vector<double>& cumul_weights)
+int SimNonParam::drawRandIndx(const std::vector<double>& cumul_weights)
 {
   std::uniform_real_distribution<>
     dist(0, cumul_weights[cumul_weights.size() - 1]);
