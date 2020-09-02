@@ -126,7 +126,7 @@ void SimPfCons::mutualLocImpl(const VectorXd& z, const std::pair<int,int>& edge)
       z_reversed(1) += M_PI;
     evalByZ(
       ests[r1], cumul_weights_omega1, ests[r2], cumul_weights_omega2,
-      cumul_weights1, z);
+      cumul_weights1, z_reversed);
   }
   std::vector<double> cumul_weights2(n_particles);
   evalByZ(
