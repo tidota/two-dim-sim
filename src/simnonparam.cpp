@@ -20,6 +20,7 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
   ests(n_robots),
   last_loc(n_robots),
   last_est(n_robots),
+  cumul_errors(n_robots, 0),
   use_random_seed_pf(doc["use_random_seed_pf"].as<bool>()),
   random_seed_pf(doc["random_seed_pf"].as<unsigned int>())
 {
@@ -462,8 +463,8 @@ void SimNonParam::endLog()
   double total_error = 0;
   for (int i = 0; i < n_robots; ++i)
   {
-    std::cout << "robot[" << i << "]'s average error:" << (errors[i]/(max_time*sim_freq)) << std::endl;
-    total_error += errors[i];
+    std::cout << "robot[" << i << "]'s average error:" << (cumul_errors[i]/(max_time*sim_freq)) << std::endl;
+    total_error += cumul_errors[i];
   }
   std::cout << "overall average error: " << (total_error/(max_time*sim_freq)/n_robots) << std::endl;
 }
@@ -666,6 +667,7 @@ void SimNonParam::calcErrors()
     }
     mean /= n_particles;
     errors[i] = (mean - robots[i]).norm();
+    cumul_errors[i] += errors[i];
   }
 }
 

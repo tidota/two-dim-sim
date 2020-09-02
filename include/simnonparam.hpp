@@ -34,6 +34,9 @@ class SimNonParam: public SimBase
   private: std::vector<VectorXd> last_loc;
   private: std::vector< std::vector<VectorXd> > last_est;
 
+  // buffer for calculation of average errors
+  private: std::vector<double> cumul_errors;
+
   // random value generator for sampling
   protected: std::mt19937 gen_pf;
   // using random seed?
