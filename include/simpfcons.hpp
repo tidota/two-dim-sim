@@ -21,12 +21,14 @@ class SimPfCons: public SimNonParam
 {
   private: double mode6_omega;
   private: double mode6_sigma;
+  private: int mode6_Nref;
 
   public: SimPfCons(const YAML::Node& doc);
   public: virtual ~SimPfCons(){}
 
   private: void evalByOmega(
-    const std::vector<VectorXd>& est, std::vector<double>& cumul_weights);
+    const std::vector<VectorXd>& est, std::vector<double>& cumul_weights,
+    std::vector<double>& cumul_weights_comp);
   private: void evalByZ(
     const std::vector<VectorXd>& est_target,
     const std::vector<double>& cumul_weights_target,
