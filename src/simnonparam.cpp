@@ -124,7 +124,7 @@ void SimNonParam::endLog()
   // write the particles into a file at the end
   if (!fout_pf)
     fout_pf.close();
-  fout_pf.open("particles.txt");
+  fout_pf.open("particles.dat");
   for (int ip = 0; ip < n_particles; ++ip)
   {
     for (int irobot = 0; irobot < n_robots; ++irobot)
@@ -182,30 +182,7 @@ void SimNonParam::endLog()
   f_gnuplot << "clear" << std::endl;
 
   // --- particles at the end --- //
-  // TODO
   f_gnuplot << "unset object" << std::endl;
-/*
-  for (int i = 0; i < n_robots; ++i)
-  {
-    Eigen::EigenSolver<MatrixXd> s(vars[i]);
-    auto eigen_val = s.eigenvalues();
-    auto eigen_vec = s.eigenvectors();
-    double var_ang
-      = std::atan2(eigen_vec.col(0)[1].real(), eigen_vec.col(0)[0].real())
-        / M_PI*180.0;
-    f_gnuplot << "set object " << std::to_string(i + 1)
-              << " ellipse center "
-              << std::to_string(last_mean[i](0)) << ","
-              << std::to_string(last_mean[i](1))
-              << " size "
-              << std::to_string(std::sqrt(eigen_val[0].real()) * 2) << ","
-              << std::to_string(std::sqrt(eigen_val[1].real()) * 2)
-              << " angle "
-              << std::to_string(var_ang)
-              << " front fillstyle empty border -1" << std::endl;
-  }
-  */
-
   f_gnuplot << "h1 = 227/360.0" << std::endl;
   f_gnuplot << "h2 = 40/360.0" << std::endl;
   f_gnuplot << "set palette model HSV functions (1-gray)*(h2-h1)+h1,1,0.68"
@@ -247,6 +224,20 @@ void SimNonParam::endLog()
               << " with linespoints lt 1 lw 3.0 ps 3.0"
               << " pt " << std::to_string(i + 1)
               << " lc palette" << std::endl;
+  }
+  for (int i = 0; i < n_robots; ++i)
+  {
+    f_gnuplot << "replot ";
+    f_gnuplot << "\"particles.dat\" u ";
+    for (int j = 0; j < n_dim; ++j)
+    {
+      f_gnuplot << std::to_string(1+i*n_dim+j);
+      if (j < n_dim - 1)
+        f_gnuplot << ":";
+    }
+    f_gnuplot << " ps 1.0 "
+              << " pt " << std::to_string(i + 1)
+              << " lc black" << std::endl;
   }
   f_gnuplot << "pause -1 \"Hit any key to continue\"" << std::endl;
   f_gnuplot.close();
