@@ -365,6 +365,16 @@ void SimNonParam::endLog()
     "             data[:,0:1]),axis=1).tolist()," << std::endl <<
     "        markers[i], cmf, lw=1, ms=4)" << std::endl <<
 
+    "#plot particles" << std::endl <<
+    "f = open('particles.dat', 'r')" << std::endl <<
+    "pdata = np.array([[float(v) for v in line.split()] for line in f])" << std::endl <<
+    "f.close()" << std::endl <<
+    "for i in range(" << n_robots << "):" << std::endl <<
+    "    print('plotting particles of robot ' + str(i+1) + '...')" << std::endl <<
+    "    plt.plot(" << std::endl <<
+    "        pdata[:,0+2*i:1+2*i].tolist(), pdata[:,1+2*i:2+2*i].tolist()," << std::endl <<
+    "        markers[i], color='black', linewidth=0.5, markersize=1)" << std::endl <<
+
     "# fix the ratio" << std::endl <<
     "xleft, xright = ax.get_xlim()" << std::endl <<
     "ybottom, ytop = ax.get_ylim()" << std::endl <<
