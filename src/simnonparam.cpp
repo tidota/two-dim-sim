@@ -418,36 +418,6 @@ void SimNonParam::endLog()
     "    loc='best'," << std::endl <<
     "    fontsize=5)" << std::endl;
 
-    // --- add particles at the end --- //
-    // TODO
-/*
-  f_pyplot <<
-    "# add covariances" << std::endl <<
-    "print('adding covariances...')" << std::endl <<
-    "def addEllipse(center, r1, r2, deg):" << std::endl <<
-    "    center = np.array(center)" << std::endl <<
-    "    major_ax = r1" << std::endl <<
-    "    minor_ax = r2" << std::endl <<
-    "    angle_deg = deg" << std::endl <<
-    "    patch = mpatches.Ellipse(center, major_ax, minor_ax, angle_deg, fc='none', ls='solid', ec='k', lw='1', zorder=100)" << std::endl <<
-    "    ax.add_patch(patch)" << std::endl;
-  for (int i = 0; i < n_robots; ++i)
-  {
-    Eigen::EigenSolver<MatrixXd> s(vars[i]);
-    auto eigen_val = s.eigenvalues();
-    auto eigen_vec = s.eigenvectors();
-    double var_ang
-      = std::atan2(eigen_vec.col(0)[1].real(), eigen_vec.col(0)[0].real())
-        / M_PI*180.0;
-    f_pyplot << "addEllipse(["
-             << std::to_string(last_mean[i](0)) << ", "
-             << std::to_string(last_mean[i](1)) << "], "
-             << std::to_string(std::sqrt(eigen_val[0].real()) * 2) << ", "
-             << std::to_string(std::sqrt(eigen_val[1].real()) * 2) << ", "
-             << std::to_string(var_ang) << ")" << std::endl;
-  }
-  */
-
   f_pyplot <<
     "# show the figure" << std::endl <<
     "print('showing the figure...')" << std::endl <<
