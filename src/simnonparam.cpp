@@ -235,7 +235,7 @@ void SimNonParam::endLog()
       if (j < n_dim - 1)
         f_gnuplot << ":";
     }
-    f_gnuplot << " ps 1.0 "
+    f_gnuplot << " notitle ps 1.0 "
               << " pt " << std::to_string(i + 1)
               << " lc black" << std::endl;
   }
