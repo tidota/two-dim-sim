@@ -561,9 +561,10 @@ void SimNonParam::predict()
 
       // get a random vector based on the float effect
       // VectorXd FloatEffect = VectorXd::Ones(2) * betaM;
-      double xf = rndf(gen_pf);
+      double x1f = rndf(gen_pf);
+      double x2f = rndf(gen_pf);
       VectorXd noise2(n_dim);
-      noise2 << xf, xf;
+      noise2 << x1f, x2f;
 
       // calculate velocity with the noises
       // add it to the estimation
