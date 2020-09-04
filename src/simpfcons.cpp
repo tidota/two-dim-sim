@@ -12,7 +12,8 @@ using namespace Eigen;
 SimPfCons::SimPfCons(const YAML::Node& doc): SimNonParam(doc),
   mode6_omega(doc["mode6_omega"].as<double>()),
   mode6_sigma(doc["mode6_sigma"].as<double>()),
-  mode6_Nref(doc["mode6_Nref"].as<int>())
+  mode6_Nref(doc["mode6_Nref"].as<int>()),
+  mode6_no_frac_exp(doc["mode6_no_frac_exp"].as<bool>())
 {}
 
 // =============================================================================
@@ -126,11 +127,33 @@ void SimPfCons::mutualLocImpl(const VectorXd& z, const std::pair<int,int>& edge)
   // calcualte cumulative confidence reduction weights for each population
   std::vector<double> cumul_weights_omega1(n_particles);
   std::vector<double> cumul_weights_omega1_comp(n_particles);
-  evalByOmega(ests[r1], cumul_weights_omega1, cumul_weights_omega1_comp);
+  if (mode6_no_frac_exp)
+  {
+    for (int i = 0; i < n_particles; ++i)
+    {
+      cumul_weights_omega1[i] = (i + 1) * (i + 2) / 2;
+      cumul_weights_omega1_comp[i] = (i + 1) * (i + 2) / 2;
+    }
+  }
+  else
+  {
+    evalByOmega(ests[r1], cumul_weights_omega1, cumul_weights_omega1_comp);
+  }
 
   std::vector<double> cumul_weights_omega2(n_particles);
   std::vector<double> cumul_weights_omega2_comp(n_particles);
-  evalByOmega(ests[r2], cumul_weights_omega2, cumul_weights_omega2_comp);
+  if (mode6_no_frac_exp)
+  {
+    for (int i = 0; i < n_particles; ++i)
+    {
+      cumul_weights_omega2[i] = (i + 1) * (i + 2) / 2;
+      cumul_weights_omega2_comp[i] = (i + 1) * (i + 2) / 2;
+    }
+  }
+  else
+  {
+    evalByOmega(ests[r2], cumul_weights_omega2, cumul_weights_omega2_comp);
+  }
 
   // calculate cumulative mutual measurement weights for each population
   std::vector<double> cumul_weights1(n_particles);
