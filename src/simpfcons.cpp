@@ -25,13 +25,14 @@ void SimPfCons::evalByOmega(
   {
     cumul_weights[i] = 1.0; // exp(-0/mode6_sigma/mode6_sigma)
   }
+  const double sigma_squared_x2 = mode6_sigma * mode6_sigma * 2;
   for (int i = 0; i < n_particles; ++i)
   {
     // estimate the value on the point of the probability distribution
     for (int j = i + 1; j < n_particles; ++j)
     {
       VectorXd diff = est[i] - est[j];
-      double val = exp(-diff.squaredNorm()/mode6_sigma/mode6_sigma);
+      double val = exp(-diff.squaredNorm()/sigma_squared_x2);
       cumul_weights[i] += val;
       cumul_weights[j] += val;
     }

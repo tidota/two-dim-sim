@@ -68,7 +68,7 @@ mode4_original_force: false
 mode4_original_omega: 0.95
 # mode6 (pf) settings
 mode6_omega: 0.6
-mode6_sigma: 0.1
+mode6_sigma: 0.085
 mode6_Nref: 5
 mode6_no_frac_exp: false
 # Number of particles
