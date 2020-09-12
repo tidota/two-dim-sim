@@ -17,8 +17,9 @@
 SimBase::SimBase(const YAML::Node& doc):
   n_robots(doc["robots"].size()),
   errors(n_robots, 0),
-  n_dim(
-    (doc["mode"].as<int>() == 6 && doc["use_orientation"].as<bool>())? 3: 2),
+  mode(doc["mode"].as<int>()),
+  use_orientation(doc["use_orientation"].as<bool>()),
+  n_dim((mode == 6 && use_orientation)? 3: 2),
   max_time(doc["max_time"].as<double>()),
   sim_freq(doc["sim_freq"].as<double>()),
   deltaT(1.0/doc["sim_freq"].as<double>()),

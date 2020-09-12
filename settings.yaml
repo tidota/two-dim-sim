@@ -99,7 +99,7 @@ topology: complete
 # radius of communication area (used when topology is set to dynamic)
 comm_radius: 10.0
 # use orientation? (only affects when mode = 6 (Particle filter))
-use_orientation: false
+use_orientation: true
 # robot's locations (x, y, orientation)
 robots:
   -

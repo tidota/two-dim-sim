@@ -28,6 +28,10 @@ class SimBase
   protected: std::vector<VectorXd> accs;
   // errors
   protected: std::vector<double> errors;
+  // mode of estimation
+  protected: const int mode;
+  // use orientation
+  protected: const bool use_orientation;
   // number of dimensions
   protected: const int n_dim;
 

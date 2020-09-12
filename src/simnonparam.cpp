@@ -70,7 +70,7 @@ void SimNonParam::printSimInfo()
     mean = mean / n_particles;
     for (int idim = 0; idim < n_dim; ++idim)
     {
-      std::cout << mean(idim) << ((idim == (2 - 1))? "": ", ");
+      std::cout << mean(idim) << ((idim == (n_dim - 1))? "": ", ");
     }
     std::cout << "| ";
     VectorXd var = VectorXd::Zero(n_dim);
@@ -87,7 +87,7 @@ void SimNonParam::printSimInfo()
     std::cout << "variance[" << i << "]: ";
     for (int idim = 0; idim < n_dim; ++idim)
     {
-      std::cout << var(idim) << ((idim == (2 - 1))? "": ", ");
+      std::cout << var(idim) << ((idim == (n_dim - 1))? "": ", ");
     }
     std::cout << std::endl;
   }
@@ -97,11 +97,15 @@ void SimNonParam::printSimInfo()
 bool SimNonParam::startLog(const std::string& fname)
 {
   // start log for nonparametric
-  std::cout << "    t   |";
+  std::cout << "  t  |";
   for (int i = 0; i < n_robots; ++i)
   {
-    std::cout << "R[" << setw(7 * n_dim - 7) << i << "].x |";
-    std::cout << "Est[" << setw(7 * n_dim - 7 - 2) << i << "].x |";
+    std::cout << "     R["
+              << setw(2) << i
+              << ((n_dim == 2)? "].x |": "].x       |");
+    std::cout << "   Est["
+              << setw(2) << i
+              << ((n_dim == 2)? "].x |": "].x       |");
     // std::cout << "R[" << setw(7 * n_dim - 7) << i << "].m |";
     // std::cout << " det(v) |";
     std::cout << " err |";
@@ -478,7 +482,7 @@ void SimNonParam::plotImpl()
 
   // Time
   std::cout << std::fixed << std::setprecision(2);
-  std::cout << std::right << std::setw(8) << t << "|";
+  std::cout << std::right << std::setw(5) << t << "|";
   fout << std::fixed << std::setprecision(3);
   fout << std::right << std::setw(8) << t << " ";
 
@@ -545,7 +549,9 @@ void SimNonParam::plotImpl()
     // current location
     for (int j = 0; j < n_dim; ++j)
     {
-      std::cout << std::right << std::setw(6) << robots[i](j);
+      std::cout << std::right
+                << std::setw((use_orientation && j == n_dim - 1)? 5: 6)
+                << robots[i](j);
       if (j < n_dim - 1)
         std::cout << ",";
       else
@@ -554,7 +560,9 @@ void SimNonParam::plotImpl()
     // average estimation
     for (int j = 0; j < n_dim; ++j)
     {
-      std::cout << std::right << std::setw(6) << average(j);
+      std::cout << std::right
+                << std::setw((use_orientation && j == n_dim - 1)? 5: 6)
+                << average(j);
       if (j < n_dim - 1)
         std::cout << ",";
       else
