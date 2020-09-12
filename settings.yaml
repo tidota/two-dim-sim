@@ -98,32 +98,42 @@ global_loc_steps: 1
 topology: complete
 # radius of communication area (used when topology is set to dynamic)
 comm_radius: 10.0
-# robot's locations
+# use orientation? (only affects when mode = 6 (Particle filter))
+use_orientation: false
+# robot's locations (x, y, orientation)
 robots:
   -
     - 0.0
     - 0.0
+    - 0.0
   -
     - 1.0
+    - 0.0
     - 0.0
   -
     - 2.0
     - 0.0
+    - 0.0
   -
     - 2.0
     - 1.0
+    - 0.0
   -
     - 2.0
     - 2.0
+    - 0.0
   -
     - 1.0
     - 2.0
+    - 0.0
   -
     - 0.0
     - 2.0
+    - 0.0
   -
     - 0.0
     - 1.0
+    - 0.0
 # random order to update estimates?
 enable_random_order: true
 # probabilistically update?
