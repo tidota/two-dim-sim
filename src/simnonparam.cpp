@@ -18,6 +18,7 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
   betaM(doc["betaM"].as<double>()),
   n_particles(doc["n_particles"].as<int>()),
   ests(n_robots),
+  est_oris(n_robots),
   last_loc(n_robots),
   last_est(n_robots),
   cumul_errors(n_robots, 0),
@@ -37,6 +38,8 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
     {
       ests[i].push_back(buff);
       last_est[i].push_back(buff);
+      if (use_orientation)
+        est_oris[i].push_back(doc["robots"][i][n_dim].as<double>());
     }
   }
 
@@ -102,10 +105,10 @@ bool SimNonParam::startLog(const std::string& fname)
   {
     std::cout << "     R["
               << setw(2) << i
-              << ((n_dim == 2)? "].x |": "].x       |");
+              << ((use_orientation)? "].x       |": "].x |");
     std::cout << "   Est["
               << setw(2) << i
-              << ((n_dim == 2)? "].x |": "].x       |");
+              << ((use_orientation)? "].x       |": "].x |");
     // std::cout << "R[" << setw(7 * n_dim - 7) << i << "].m |";
     // std::cout << " det(v) |";
     std::cout << " err |";
@@ -492,11 +495,26 @@ void SimNonParam::plotImpl()
   {
     // calculate average estimated location
     VectorXd average = VectorXd::Zero(n_dim);
+    double ave_ori = 0;
     VectorXd squared_average = VectorXd::Zero(n_dim);
     double mix_average = 0;
     for (int ip = 0; ip < n_particles; ++ip)
     {
       average += this->ests[i][ip];
+      if (ave_ori >= this->est_oris[i][ip])
+      {
+        if (ave_ori - this->est_oris[i][ip] <= M_PI)
+          ave_ori = (ip * ave_ori + this->est_oris[i][ip])/(ip + 1);
+        else
+          ave_ori = (ip * (ave_ori - 2*M_PI) + this->est_oris[i][ip])/(ip + 1);
+      }
+      else
+      {
+        if (this->est_oris[i][ip] - ave_ori <= M_PI)
+          ave_ori = (this->est_oris[i][ip] + ip * ave_ori)/(ip + 1);
+        else
+          ave_ori = ((this->est_oris[i][ip] - 2*M_PI) + ip * ave_ori)/(ip + 1);
+      }
       if (show_covs)
       {
         VectorXd sqrd(2);
@@ -549,24 +567,28 @@ void SimNonParam::plotImpl()
     // current location
     for (int j = 0; j < n_dim; ++j)
     {
-      std::cout << std::right
-                << std::setw((use_orientation && j == n_dim - 1)? 5: 6)
-                << robots[i](j);
-      if (j < n_dim - 1)
+      std::cout << std::right << std::setw(6) << robots[i](j);
+      if (j < n_dim - 1 || use_orientation)
         std::cout << ",";
       else
         std::cout << "|";
     }
+    if (use_orientation)
+    {
+      std::cout << std::right << std::setw(5) << oris[i] << "|";
+    }
     // average estimation
     for (int j = 0; j < n_dim; ++j)
     {
-      std::cout << std::right
-                << std::setw((use_orientation && j == n_dim - 1)? 5: 6)
-                << average(j);
-      if (j < n_dim - 1)
+      std::cout << std::right << std::setw(6) << average(j);
+      if (j < n_dim - 1 || use_orientation)
         std::cout << ",";
       else
         std::cout << "|";
+    }
+    if (use_orientation)
+    {
+      std::cout << std::right << std::setw(5) << ave_ori << "|";
     }
     // error
     std::cout << std::right << std::setw(5) << errors[i] << "|";
@@ -578,10 +600,20 @@ void SimNonParam::plotImpl()
       fout << std::right << std::setw(9) << robots[i](j);
       fout << " ";
     }
+    if (use_orientation)
+    {
+      fout << std::right << std::setw(9) << oris[i];
+      fout << " ";
+    }
     // average estimation
     for (int j = 0; j < n_dim; ++j)
     {
       fout << std::right << std::setw(9) << average(j);
+      fout << " ";
+    }
+    if (use_orientation)
+    {
+      fout << std::right << std::setw(9) << ave_ori;
       fout << " ";
     }
     // error

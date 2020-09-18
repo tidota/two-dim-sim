@@ -19,7 +19,7 @@ SimBase::SimBase(const YAML::Node& doc):
   errors(n_robots, 0),
   mode(doc["mode"].as<int>()),
   use_orientation(doc["use_orientation"].as<bool>()),
-  n_dim((mode == 6 && use_orientation)? 3: 2),
+  n_dim(2),
   max_time(doc["max_time"].as<double>()),
   sim_freq(doc["sim_freq"].as<double>()),
   deltaT(1.0/doc["sim_freq"].as<double>()),
@@ -60,6 +60,15 @@ SimBase::SimBase(const YAML::Node& doc):
     robots.push_back(buff);
     vels.push_back(VectorXd::Zero(n_dim));
     accs.push_back(VectorXd::Zero(n_dim));
+  }
+
+  if (use_orientation)
+  {
+    oris = std::vector<double>(n_robots, 0);
+    for (int i = 0; i < n_robots; ++i)
+    {
+      oris[i] = doc["robots"][i][n_dim].as<double>();
+    }
   }
 
   if (topology == "star")

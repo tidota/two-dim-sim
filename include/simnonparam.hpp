@@ -29,6 +29,7 @@ class SimNonParam: public SimBase
   // means on robot's locations
   protected: int n_particles;
   protected: std::vector< std::vector<VectorXd> > ests;
+  protected: std::vector< std::vector<double> > est_oris;
 
   // buffers for covariances to plot
   private: std::vector<VectorXd> last_loc;
