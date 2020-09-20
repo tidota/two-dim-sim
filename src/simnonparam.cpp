@@ -501,19 +501,24 @@ void SimNonParam::plotImpl()
     for (int ip = 0; ip < n_particles; ++ip)
     {
       average += this->ests[i][ip];
-      if (ave_ori >= this->est_oris[i][ip])
+      if (use_orientation)
       {
-        if (ave_ori - this->est_oris[i][ip] <= M_PI)
-          ave_ori = (ip * ave_ori + this->est_oris[i][ip])/(ip + 1);
+        if (ave_ori >= this->est_oris[i][ip])
+        {
+          if (ave_ori - this->est_oris[i][ip] <= M_PI)
+            ave_ori = (ip * ave_ori + this->est_oris[i][ip])/(ip + 1);
+          else
+            ave_ori
+              = (ip * (ave_ori - 2*M_PI) + this->est_oris[i][ip])/(ip + 1);
+        }
         else
-          ave_ori = (ip * (ave_ori - 2*M_PI) + this->est_oris[i][ip])/(ip + 1);
-      }
-      else
-      {
-        if (this->est_oris[i][ip] - ave_ori <= M_PI)
-          ave_ori = (this->est_oris[i][ip] + ip * ave_ori)/(ip + 1);
-        else
-          ave_ori = ((this->est_oris[i][ip] - 2*M_PI) + ip * ave_ori)/(ip + 1);
+        {
+          if (this->est_oris[i][ip] - ave_ori <= M_PI)
+            ave_ori = (this->est_oris[i][ip] + ip * ave_ori)/(ip + 1);
+          else
+            ave_ori
+              = ((this->est_oris[i][ip] - 2*M_PI) + ip * ave_ori)/(ip + 1);
+        }
       }
       if (show_covs)
       {
