@@ -148,7 +148,9 @@ void SimNonParam::endLog()
 
   // output of gnuplot command
   // Note: each robot has actual positions, estimated, and error+dist of contour
-  const int off_next_robot = n_dim + n_dim + 2;
+  const int off_next_robot
+    = (use_orientation)? n_dim + n_dim + 4: n_dim + n_dim + 2;
+  const int off_next_column = (use_orientation)? n_dim + 1: n_dim;
 
   std::cout << std::endl;
   std::cout << "~~~ gnuplot command (errors vs uncertrainty) ~~~" << std::endl;
@@ -249,7 +251,7 @@ void SimNonParam::endLog()
     f_gnuplot << "\"output.dat\" u ";
     for (int j = 0; j < n_dim; ++j)
     {
-      f_gnuplot << std::to_string(2+n_dim+i*off_next_robot+j);
+      f_gnuplot << std::to_string(2+off_next_column+i*off_next_robot+j);
       if (j < n_dim - 1)
         f_gnuplot << ":";
       else
@@ -266,7 +268,7 @@ void SimNonParam::endLog()
     f_gnuplot << "\"particles.dat\" u ";
     for (int j = 0; j < n_dim; ++j)
     {
-      f_gnuplot << std::to_string(1+i*n_dim+j);
+      f_gnuplot << std::to_string(1+i*off_next_column+j);
       if (j < n_dim - 1)
         f_gnuplot << ":";
     }
@@ -395,8 +397,10 @@ void SimNonParam::endLog()
     "    print('plotting estimation of robot ' + str(i+1) + '...')" << std::endl <<
     "    plotPath(" << std::endl <<
     "        np.concatenate(" << std::endl <<
-    "            (data[:,3+" << off_next_robot << "*i:4+" << off_next_robot << "*i]," << std::endl <<
-    "             data[:,4+" << off_next_robot << "*i:5+" << off_next_robot << "*i]," << std::endl <<
+    "            (data[:,1+" << off_next_column << "+" << off_next_robot << "*i:2+"
+                             << off_next_column << "+" << off_next_robot << "*i]," << std::endl <<
+    "             data[:,2+" << off_next_column << "+" << off_next_robot << "*i:3+"
+                             << off_next_column << "+" << off_next_robot << "*i]," << std::endl <<
     "             data[:,0:1]),axis=1).tolist()," << std::endl <<
     "        markers[i], cmf, lw=1, ms=4)" << std::endl <<
 

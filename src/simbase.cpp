@@ -19,6 +19,8 @@ SimBase::SimBase(const YAML::Node& doc):
   errors(n_robots, 0),
   mode(doc["mode"].as<int>()),
   use_orientation(doc["use_orientation"].as<bool>()),
+  sigmaMOri(doc["sigmaMOri"].as<double>()),
+  rot_dwn_rate(doc["rot_dwn_rate"].as<double>()),
   n_dim(2),
   max_time(doc["max_time"].as<double>()),
   sim_freq(doc["sim_freq"].as<double>()),
@@ -227,19 +229,81 @@ void SimBase::updateSim()
   // Friction
   for (int i = 0; i < n_robots; ++i)
   {
-    accs[i] -= fric_rate * vels[i];
+    if (use_orientation)
+    {
+      double v = fric_rate * vels[i](0);
+      VectorXd fric_force(n_dim);
+      fric_force(0) = v * std::cos(vels[i](1));
+      fric_force(1) = v * std::sin(vels[i](1));
+      accs[i] -= fric_force;
+    }
+    else
+    {
+      accs[i] -= fric_rate * vels[i];
+    }
   }
 
-  // for all robots, apply the resulted accelerations
-  for (int i = 0; i < n_robots; ++i)
+  if (use_orientation)
   {
-    std::normal_distribution<> motion_noise(0, sigmaM*std::fabs(vels[i].norm()));
+    // for all robots, apply the resulted accelerations
+    for (int i = 0; i < n_robots; ++i)
+    {
+      std::normal_distribution<>
+        motion_noise(0, sigmaM*std::fabs(vels[i](0)));
+      std::normal_distribution<>
+        motion_noise_ori(0, sigmaMOri*std::fabs(vels[i](1)));
+      // Convert acceleration to rotation-base
+      VectorXd unit_vec(2);
+      unit_vec(0) = std::cos(oris[i]);
+      unit_vec(1) = std::sin(oris[i]);
+      VectorXd unit_vec_ortho(2);
+      unit_vec_ortho(0) = std::cos(oris[i] + M_PI/2);
+      unit_vec_ortho(1) = std::sin(oris[i] + M_PI/2);
+      double acc_rng = unit_vec.transpose() * accs[i];
+      double acc_ori = 0;
+      double direct = unit_vec_ortho.transpose() * accs[i];
+      if (acc_rng < 0)
+      {
+        acc_ori = (direct >= 0)? M_PI/rot_dwn_rate: -M_PI/rot_dwn_rate;
+      }
+      else if (acc_rng > 0)
+      {
+        acc_ori = std::atan2(acc_rng, direct)/rot_dwn_rate;
+      }
+      if (acc_rng < 0)
+        acc_rng = 0;
 
-    // update the position by the current velocity.
-    robots[i] += deltaT * (vels[i] + motion_noise(gen) * VectorXd::Ones(n_dim));
+      // update the position by the current velocity.
+      double diff_rng = deltaT * (vels[i](0) + motion_noise(gen));
+      robots[i](0) += diff_rng * std::cos(oris[i]);
+      robots[i](1) += diff_rng * std::sin(oris[i]);
+      double diff_ori = deltaT * (vels[i](1) + motion_noise_ori(gen));
+      //oris[i] += diff_ori;
+      if (oris[i] < -M_PI)
+        oris[i] += 2*M_PI;
+      else if (oris[i] >= M_PI)
+        oris[i] -= 2*M_PI;
 
-    // update the velocity by the resulted acceleration.
-    vels[i] += deltaT * accs[i];
+      // update the velocity by the resulted acceleration.
+      vels[i](0) += deltaT * acc_rng;
+      vels[i](1) += deltaT * acc_ori;
+    }
+  }
+  else
+  {
+    // without orientation, each robot performs like a point.
+    // for all robots, apply the resulted accelerations
+    for (int i = 0; i < n_robots; ++i)
+    {
+      std::normal_distribution<>
+        motion_noise(0, sigmaM*std::fabs(vels[i].norm()));
+      // update the position by the current velocity.
+      robots[i]
+        += deltaT * (vels[i] + motion_noise(gen) * VectorXd::Ones(n_dim));
+
+      // update the velocity by the resulted acceleration.
+      vels[i] += deltaT * accs[i];
+    }
   }
 
   // update connectivity based on the topology mode

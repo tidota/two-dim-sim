@@ -100,6 +100,10 @@ topology: complete
 comm_radius: 10.0
 # use orientation? (only affects when mode = 6 (Particle filter))
 use_orientation: true
+# motion noise in the rotation rate
+sigmaMOri: 0.1
+# down rate for rotation force
+rot_dwn_rate: 10.0
 # robot's locations (x, y, orientation)
 robots:
   -

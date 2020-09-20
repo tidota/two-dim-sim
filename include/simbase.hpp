@@ -34,6 +34,10 @@ class SimBase
   protected: const bool use_orientation;
   // orientations
   protected: std::vector<double> oris;
+  // sigmaMOri
+  protected: const double sigmaMOri;
+  // rot_dwn_rate
+  protected: const double rot_dwn_rate;
   // number of dimensions
   protected: const int n_dim;
 
