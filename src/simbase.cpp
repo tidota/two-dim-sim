@@ -232,18 +232,19 @@ void SimBase::updateSim()
   // Friction
   for (int i = 0; i < n_robots; ++i)
   {
-    if (use_orientation && use_vel_ctrl)
-    {
-      double v = fric_rate * vels[i](0);
-      VectorXd fric_force(n_dim);
-      fric_force(0) = v * std::cos(vels[i](1));
-      fric_force(1) = v * std::sin(vels[i](1));
-      accs[i] -= fric_force;
-    }
-    else
-    {
-      accs[i] -= fric_rate * vels[i];
-    }
+    // if (use_orientation )
+    // {
+    //   double v = fric_rate * vels[i](0);
+    //   VectorXd fric_force(n_dim);
+    //   fric_force(0) = v * std::cos(vels[i](1));
+    //   fric_force(1) = v * std::sin(vels[i](1));
+    //   accs[i] -= fric_force;
+    // }
+    // else
+    // {
+    //   accs[i] -= fric_rate * vels[i];
+    // }
+    accs[i] -= fric_rate * vels[i];
   }
 
   if (use_orientation && use_vel_ctrl)
@@ -251,10 +252,6 @@ void SimBase::updateSim()
     // for all robots, apply the resulted accelerations
     for (int i = 0; i < n_robots; ++i)
     {
-      std::normal_distribution<>
-        motion_noise(0, sigmaM*std::fabs(vels[i](0)));
-      std::normal_distribution<>
-        motion_noise_ori(0, sigmaMOri*std::fabs(vels[i](1)));
       // Convert acceleration to rotation-base
       VectorXd unit_vec(2);
       unit_vec(0) = std::cos(oris[i]);
@@ -274,6 +271,11 @@ void SimBase::updateSim()
         rot_rate = std::atan2(direct, vel_rng)/rot_dwn_rate;
       }
 
+      std::normal_distribution<>
+        motion_noise(0, sigmaM*std::fabs(vel_rng));
+      std::normal_distribution<>
+        motion_noise_ori(0, sigmaMOri*std::fabs(rot_rate));
+
       // update the position by the current velocity.
       double diff_rng = deltaT * (vel_rng + motion_noise(gen_ori));
       robots[i](0) += diff_rng * std::cos(oris[i]);
@@ -286,8 +288,8 @@ void SimBase::updateSim()
         oris[i] -= 2*M_PI;
 
       // update the velocity by the resulted acceleration.
-      vels[i](0) = vel_rng;
-      vels[i](1) = rot_rate;
+      vels[i](0) = vel_rng*cos(rot_rate);
+      vels[i](1) = vel_rng*sin(rot_rate);
     }
   }
   else

@@ -101,11 +101,11 @@ comm_radius: 10.0
 # use orientation? (only affects when mode = 6 (Particle filter))
 use_orientation: true
 # use velocity control by orientation
-use_vel_ctrl: false
+use_vel_ctrl: true
 # motion noise in the rotation rate
-sigmaMOri: 0.1
+sigmaMOri: 0.01
 # down rate for rotation force
-rot_dwn_rate: 2.0
+rot_dwn_rate: 10.0
 # robot's locations (x, y, orientation)
 robots:
   -
