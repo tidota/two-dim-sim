@@ -259,34 +259,32 @@ void SimBase::updateSim()
       VectorXd unit_vec_ortho(2);
       unit_vec_ortho(0) = std::cos(oris[i] + M_PI/2);
       unit_vec_ortho(1) = std::sin(oris[i] + M_PI/2);
-      double acc_rng = unit_vec.transpose() * accs[i];
-      double acc_ori = 0;
+      double vel_rng = unit_vec.transpose() * accs[i];
+      double rot_rate = 0;
       double direct = unit_vec_ortho.transpose() * accs[i];
-      if (acc_rng < 0)
+      if (vel_rng < 0)
       {
-        acc_ori = (direct >= 0)? M_PI/rot_dwn_rate: -M_PI/rot_dwn_rate;
+        rot_rate = (direct >= 0)? M_PI/rot_dwn_rate: -M_PI/rot_dwn_rate;
       }
-      else if (acc_rng > 0)
+      else if (vel_rng > 0)
       {
-        acc_ori = std::atan2(acc_rng, direct)/rot_dwn_rate;
+        rot_rate = std::atan2(direct, vel_rng)/rot_dwn_rate;
       }
-      if (acc_rng < 0)
-        acc_rng = 0;
 
       // update the position by the current velocity.
-      double diff_rng = deltaT * (vels[i](0) + motion_noise(gen));
+      double diff_rng = deltaT * (vel_rng + motion_noise(gen));
       robots[i](0) += diff_rng * std::cos(oris[i]);
       robots[i](1) += diff_rng * std::sin(oris[i]);
-      double diff_ori = deltaT * (vels[i](1) + motion_noise_ori(gen));
-      //oris[i] += diff_ori;
+      double diff_ori = deltaT * (rot_rate + motion_noise_ori(gen));
+      oris[i] += diff_ori;
       if (oris[i] < -M_PI)
         oris[i] += 2*M_PI;
       else if (oris[i] >= M_PI)
         oris[i] -= 2*M_PI;
 
       // update the velocity by the resulted acceleration.
-      vels[i](0) += deltaT * acc_rng;
-      vels[i](1) += deltaT * acc_ori;
+      vels[i](0) = vel_rng;
+      vels[i](1) = rot_rate;
     }
   }
   else
