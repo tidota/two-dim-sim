@@ -21,6 +21,7 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
   est_oris(n_robots),
   last_loc(n_robots),
   last_est(n_robots),
+  last_est_ori(n_robots),
   cumul_errors(n_robots, 0),
   use_random_seed_pf(doc["use_random_seed_pf"].as<bool>()),
   random_seed_pf(doc["random_seed_pf"].as<unsigned int>())
@@ -39,7 +40,10 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
       ests[i].push_back(buff);
       last_est[i].push_back(buff);
       if (use_orientation)
+      {
         est_oris[i].push_back(doc["robots"][i][n_dim].as<double>());
+        last_est_ori[i].push_back(doc["robots"][i][n_dim].as<double>());
+      }
     }
   }
 
@@ -139,6 +143,11 @@ void SimNonParam::endLog()
       for (int idim = 0; idim < n_dim; ++idim)
       {
         fout_pf << this->last_est[irobot][ip](idim);
+        fout_pf << " ";
+      }
+      if (use_orientation)
+      {
+        fout_pf << this->last_est_ori[irobot][ip];
         fout_pf << " ";
       }
     }
@@ -637,6 +646,8 @@ void SimNonParam::plotImpl()
     for (int ip = 0; ip < n_particles; ++ip)
     {
       last_est[i][ip] = this->ests[i][ip];
+      if (use_orientation)
+        last_est_ori[i][ip] = this->est_oris[i][ip];
     }
   }
   cov_buff.push_back(std::move(covs_at_time));

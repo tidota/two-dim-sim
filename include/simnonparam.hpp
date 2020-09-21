@@ -34,6 +34,7 @@ class SimNonParam: public SimBase
   // buffers for covariances to plot
   private: std::vector<VectorXd> last_loc;
   private: std::vector< std::vector<VectorXd> > last_est;
+  private: std::vector< std::vector<double> > last_est_ori;
 
   // buffer for calculation of average errors
   private: std::vector<double> cumul_errors;
