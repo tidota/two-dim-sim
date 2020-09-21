@@ -100,6 +100,8 @@ topology: complete
 comm_radius: 10.0
 # use orientation? (only affects when mode = 6 (Particle filter))
 use_orientation: true
+# use velocity control by orientation
+use_vel_ctrl: false
 # motion noise in the rotation rate
 sigmaMOri: 0.1
 # down rate for rotation force

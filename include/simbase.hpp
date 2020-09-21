@@ -32,6 +32,10 @@ class SimBase
   protected: const int mode;
   // use orientation
   protected: const bool use_orientation;
+  // use vel control by orientation
+  protected: const bool use_vel_ctrl;
+  // random number generator for orientation proc
+  protected: std::mt19937 gen_ori;
   // orientations
   protected: std::vector<double> oris;
   // sigmaMOri

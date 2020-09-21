@@ -19,6 +19,7 @@ SimBase::SimBase(const YAML::Node& doc):
   errors(n_robots, 0),
   mode(doc["mode"].as<int>()),
   use_orientation(doc["use_orientation"].as<bool>()),
+  use_vel_ctrl(doc["use_vel_ctrl"].as<bool>()),
   sigmaMOri(doc["sigmaMOri"].as<double>()),
   rot_dwn_rate(doc["rot_dwn_rate"].as<double>()),
   n_dim(2),
@@ -129,6 +130,8 @@ SimBase::SimBase(const YAML::Node& doc):
   }
   gen.seed(seed);
 
+  gen_ori.seed(seed + 1000);
+
   t_step = 0;
   t = 0;
 }
@@ -229,7 +232,7 @@ void SimBase::updateSim()
   // Friction
   for (int i = 0; i < n_robots; ++i)
   {
-    if (use_orientation)
+    if (use_orientation && use_vel_ctrl)
     {
       double v = fric_rate * vels[i](0);
       VectorXd fric_force(n_dim);
@@ -243,7 +246,7 @@ void SimBase::updateSim()
     }
   }
 
-  if (use_orientation)
+  if (use_orientation && use_vel_ctrl)
   {
     // for all robots, apply the resulted accelerations
     for (int i = 0; i < n_robots; ++i)
@@ -272,10 +275,10 @@ void SimBase::updateSim()
       }
 
       // update the position by the current velocity.
-      double diff_rng = deltaT * (vel_rng + motion_noise(gen));
+      double diff_rng = deltaT * (vel_rng + motion_noise(gen_ori));
       robots[i](0) += diff_rng * std::cos(oris[i]);
       robots[i](1) += diff_rng * std::sin(oris[i]);
-      double diff_ori = deltaT * (rot_rate + motion_noise_ori(gen));
+      double diff_ori = deltaT * (rot_rate + motion_noise_ori(gen_ori));
       oris[i] += diff_ori;
       if (oris[i] < -M_PI)
         oris[i] += 2*M_PI;
@@ -301,6 +304,38 @@ void SimBase::updateSim()
 
       // update the velocity by the resulted acceleration.
       vels[i] += deltaT * accs[i];
+
+      // update orientation
+      if (use_orientation)
+      {
+        std::normal_distribution<>
+          motion_noise_ori(0, sigmaMOri*std::fabs(vels[i](1)));
+        // Convert acceleration to rotation-base
+        VectorXd unit_vec(2);
+        unit_vec(0) = std::cos(oris[i]);
+        unit_vec(1) = std::sin(oris[i]);
+        VectorXd unit_vec_ortho(2);
+        unit_vec_ortho(0) = std::cos(oris[i] + M_PI/2);
+        unit_vec_ortho(1) = std::sin(oris[i] + M_PI/2);
+        double vel_rng = unit_vec.transpose() * accs[i];
+        double rot_rate = 0;
+        double direct = unit_vec_ortho.transpose() * accs[i];
+        if (vel_rng < 0)
+        {
+          rot_rate = (direct >= 0)? M_PI/rot_dwn_rate: -M_PI/rot_dwn_rate;
+        }
+        else if (vel_rng > 0)
+        {
+          rot_rate = std::atan2(direct, vel_rng)/rot_dwn_rate;
+        }
+
+        double diff_ori = deltaT * (rot_rate + motion_noise_ori(gen_ori));
+        oris[i] += diff_ori;
+        if (oris[i] < -M_PI)
+          oris[i] += 2*M_PI;
+        else if (oris[i] >= M_PI)
+          oris[i] -= 2*M_PI;
+      }
     }
   }
 
