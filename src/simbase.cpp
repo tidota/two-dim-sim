@@ -252,6 +252,8 @@ void SimBase::updateSim()
     // for all robots, apply the resulted accelerations
     for (int i = 0; i < n_robots; ++i)
     {
+      VectorXd obj_vel = vels[i] + deltaT * accs[i];
+
       // Convert acceleration to rotation-base
       VectorXd unit_vec(2);
       unit_vec(0) = std::cos(oris[i]);
@@ -259,17 +261,11 @@ void SimBase::updateSim()
       VectorXd unit_vec_ortho(2);
       unit_vec_ortho(0) = std::cos(oris[i] + M_PI/2);
       unit_vec_ortho(1) = std::sin(oris[i] + M_PI/2);
-      double vel_rng = unit_vec.transpose() * accs[i];
+
+      double vel_rng = unit_vec.transpose() * obj_vel;
       double rot_rate = 0;
-      double direct = unit_vec_ortho.transpose() * accs[i];
-      if (vel_rng < 0)
-      {
-        rot_rate = (direct >= 0)? M_PI/rot_dwn_rate: -M_PI/rot_dwn_rate;
-      }
-      else if (vel_rng > 0)
-      {
-        rot_rate = std::atan2(direct, vel_rng)/rot_dwn_rate;
-      }
+      double direct = unit_vec_ortho.transpose() * obj_vel;
+      rot_rate = std::atan2(direct, vel_rng)/rot_dwn_rate;
 
       std::normal_distribution<>
         motion_noise(0, sigmaM*std::fabs(vel_rng));
@@ -288,8 +284,8 @@ void SimBase::updateSim()
         oris[i] -= 2*M_PI;
 
       // update the velocity by the resulted acceleration.
-      vels[i](0) = vel_rng*cos(rot_rate);
-      vels[i](1) = vel_rng*sin(rot_rate);
+      vels[i](0) = vel_rng*cos(oris[i]);
+      vels[i](1) = vel_rng*sin(oris[i]);
     }
   }
   else

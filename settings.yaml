@@ -105,7 +105,7 @@ use_vel_ctrl: true
 # motion noise in the rotation rate
 sigmaMOri: 0.01
 # down rate for rotation force
-rot_dwn_rate: 10.0
+rot_dwn_rate: 1.0
 # robot's locations (x, y, orientation)
 robots:
   -
