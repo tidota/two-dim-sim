@@ -321,6 +321,7 @@ void SimNonParam::endLog()
     "from mpl_toolkits.axes_grid1 import make_axes_locatable" << std::endl <<
     "import copy" << std::endl <<
     "import matplotlib.patches as mpatches" << std::endl <<
+    "import math" << std::endl <<
 
     "mpl.rcParams['text.usetex'] = True" << std::endl <<
 
@@ -440,9 +441,23 @@ void SimNonParam::endLog()
     "for i in range(" << n_robots << "):" << std::endl <<
     "    print('plotting particles of robot ' + str(i+1) + '...')" << std::endl <<
     "    plt.plot(" << std::endl <<
-    "        pdata[:,0+2*i:1+2*i].tolist(), pdata[:,1+2*i:2+2*i].tolist()," << std::endl <<
-    "        markers[i], color='black', linewidth=0.5, markersize=1)" << std::endl <<
+    "        pdata[:,0+" << off_next_column << "*i:1+" << off_next_column << "*i].tolist(), pdata[:,1+" << off_next_column << "*i:2+" << off_next_column << "*i].tolist()," << std::endl <<
+    "        markers[i], color='black', linewidth=0.5, markersize=2)" << std::endl;
 
+  if(use_orientation)
+  {
+    f_pyplot <<
+      "n_particles = len(pdata[:,0:1].tolist())" << std::endl <<
+      "for i in range(" << n_robots << "):" << std::endl <<
+      "    print('plotting arrows of robot ' + str(i+1) + '...')" << std::endl <<
+      "    for j in range(n_particles):" << std::endl <<
+      "        plt.arrow(" << std::endl <<
+      "            pdata[j," << off_next_column << "*i], pdata[j,1+" << off_next_column << "*i]," << std::endl <<
+      "            0.1*math.cos(pdata[j,2+" << off_next_column << "*i]), 0.1*math.sin(pdata[j,2+" << off_next_column << "*i])," <<
+      "            head_width=0.01, head_length=0.03, fill=True, color='black')" << std::endl;
+  }
+
+  f_pyplot <<
     "# fix the ratio" << std::endl <<
     "xleft, xright = ax.get_xlim()" << std::endl <<
     "ybottom, ytop = ax.get_ylim()" << std::endl <<
