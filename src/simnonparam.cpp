@@ -285,6 +285,26 @@ void SimNonParam::endLog()
               << " pt " << std::to_string(i + 1)
               << " lc black" << std::endl;
   }
+  if (use_orientation)
+  {
+    f_gnuplot << "xf(phi)=0.2*cos(phi)" << std::endl;
+    f_gnuplot << "yf(phi)=0.2*sin(phi)" << std::endl;
+    for (int i = 0; i < n_robots; ++i)
+    {
+      f_gnuplot << "replot ";
+      f_gnuplot << "\"particles.dat\" u ";
+      for (int j = 0; j < n_dim; ++j)
+      {
+        f_gnuplot << std::to_string(1+i*off_next_column+j);
+        if (j < n_dim - 1)
+          f_gnuplot << ":";
+      }
+      f_gnuplot << ":(xf($" << std::to_string(1+i*off_next_column+n_dim) << "))"
+                << ":(yf($" << std::to_string(1+i*off_next_column+n_dim) << "))"
+                << " notitle with vectors head size 0.1,20,60 filled"
+                << " lc black" << std::endl;
+    }
+  }
   f_gnuplot << "pause -1 \"Hit any key to continue\"" << std::endl;
   f_gnuplot.close();
   std::cout << "To run the gnuplot script:" << std::endl << std::endl;
