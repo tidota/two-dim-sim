@@ -42,6 +42,8 @@ class SimBase
   protected: const double sigmaMOri;
   // rot_dwn_rate
   protected: const double rot_dwn_rate;
+  // velocity in rotational coordinates
+  protected: std::vector< VectorXd > vels_rot;
   // number of dimensions
   protected: const int n_dim;
 

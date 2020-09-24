@@ -63,6 +63,11 @@ SimBase::SimBase(const YAML::Node& doc):
     robots.push_back(buff);
     vels.push_back(VectorXd::Zero(n_dim));
     accs.push_back(VectorXd::Zero(n_dim));
+
+    if (use_orientation && use_vel_ctrl)
+    {
+      vels_rot.push_back(VectorXd::Zero(2));
+    }
   }
 
   if (use_orientation)
@@ -282,6 +287,10 @@ void SimBase::updateSim()
         oris[i] += 2*M_PI;
       else if (oris[i] >= M_PI)
         oris[i] -= 2*M_PI;
+
+      // store the velocity in rotational cooridnates
+      vels_rot[i](0) = vel_rng;
+      vels_rot[i](1) = rot_rate;
 
       // update the velocity by the resulted acceleration.
       vels[i](0) = vel_rng*cos(oris[i]);

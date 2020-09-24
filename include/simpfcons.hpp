@@ -38,7 +38,7 @@ class SimPfCons: public SimNonParam
     const std::vector<double>& cumul_weights_ref,
     std::vector<double>& cumul_weights, const VectorXd& z);
   private: void resample(
-    std::vector<VectorXd>& est, const std::vector<double>& cumul_weights);
+    const int& robot_indx, const std::vector<double>& cumul_weights);
 
   protected: virtual void mutualLocImpl(
     const VectorXd& z, const std::pair<int,int>& edge) override;

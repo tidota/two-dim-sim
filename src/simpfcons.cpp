@@ -102,10 +102,11 @@ void SimPfCons::evalByZ(
 
 // =============================================================================
 void SimPfCons::resample(
-  std::vector<VectorXd>& est, const std::vector<double>& cumul_weights)
+  const int& robot_indx, const std::vector<double>& cumul_weights)
 {
   // new  population
   std::vector<VectorXd> new_est(n_particles, VectorXd(n_dim));
+  std::vector<double> new_est_ori(n_particles);
 
   for (int i = 0; i < n_particles; ++i)
   {
@@ -113,11 +114,15 @@ void SimPfCons::resample(
     int indx = drawRandIndx(cumul_weights);
 
     // add the picked one
-    new_est[i] = est[indx];
+    new_est[i] = this->ests[robot_indx][indx];
+    if (use_orientation)
+      new_est_ori[i] = this->est_oris[robot_indx][indx];
   }
 
   // swap
-  std::swap(est, new_est);
+  std::swap(this->ests[robot_indx], new_est);
+  if (use_orientation)
+    std::swap(this->est_oris[robot_indx], new_est_ori);
 }
 
 // =============================================================================
@@ -178,7 +183,7 @@ void SimPfCons::mutualLocImpl(const VectorXd& z, const std::pair<int,int>& edge)
   // resample
   if (enable_bidirectional)
   {
-    resample(ests[r1], cumul_weights1);
+    resample(r1, cumul_weights1);
   }
-  resample(ests[r2], cumul_weights2);
+  resample(r2, cumul_weights2);
 }

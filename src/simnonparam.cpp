@@ -699,51 +699,93 @@ void SimNonParam::predict()
   // for all robots
   for (int i = 0; i < n_robots; ++i)
   {
-    // velocity based on velocity control input
-    VectorXd deltaX = MatrixXd::Identity(n_dim, n_dim) * vels[i] * deltaT;
-
-    // === motion model === //
-    // calculate eigen vectors and values
-    double v = vels[i].norm();
-    MatrixXd EigenVecs(2, 2);
-    EigenVecs(0, 0) = vels[i](0) / v;
-    EigenVecs(1, 0) = vels[i](1) / v;
-    EigenVecs(0, 1) = -vels[i](1) / v;
-    EigenVecs(1, 1) = vels[i](0) / v;
-    MatrixXd EigenVals = MatrixXd::Identity(2, 2);
-    EigenVals(0, 0) = alpha1M * v * v;
-    EigenVals(1, 1) = alpha2M * v * v;
-
-    std::normal_distribution<> rnd1(0, std::sqrt(alpha1M) * v);
-    std::normal_distribution<> rnd2(0, std::sqrt(alpha1M) * v);
-    std::normal_distribution<> rndf(0, std::sqrt(betaM));
-
-    for (int ip = 0; ip < n_particles; ++ip)
+    if (use_orientation && use_vel_ctrl)
     {
-      // get a random value based on the first eigen value
-      double x1 = rnd1(gen_pf);
+      std::normal_distribution<> rnd1(0, std::sqrt(alpha1M) * vels_rot[i](0));
+      std::normal_distribution<> rnd2(0, std::sqrt(alpha2M) * vels_rot[i](0));
+      std::normal_distribution<> rndO(0, vels_rot[i](1)/5);
+      std::normal_distribution<> rndf(0, std::sqrt(betaM));
+      //vels_rot[i];
+      for (int ip = 0; ip < n_particles; ++ip)
+      {
+        // convert it into Cartesian coordinates by the particle's theta
+        VectorXd vel_cart = VectorXd::Zero(2);
+        vel_cart(0) = vels_rot[i](0) * std::cos(est_oris[i][ip]);
+        vel_cart(1) = vels_rot[i](0) * std::sin(est_oris[i][ip]);
 
-      // get a random value based on the second eigen value
-      double x2 = rnd2(gen_pf);
+        // add noise
+        VectorXd noise1_x1(n_dim);
+        noise1_x1 << std::cos(est_oris[i][ip]), std::cos(est_oris[i][ip]);
+        noise1_x1 *= rnd1(gen_pf);
+        VectorXd noise1_x2(n_dim);
+        noise1_x2 << std::cos(est_oris[i][ip] + M_PI/2),
+                     std::sin(est_oris[i][ip] + M_PI/2);
+        noise1_x2 *= rnd2(gen_pf);
+        VectorXd noise2(n_dim);
+        noise2 << rndf(gen_pf), rndf(gen_pf);
 
-      // make a vector of these random values
-      VectorXd rnd2D(n_dim);
-      rnd2D << x1, x2;
+        // calcualte deltaX
+        VectorXd deltaX = deltaT * (vel_cart + noise1_x1 + noise1_x2 + noise2);
+        // update the particle
+        ests[i][ip] += deltaX;
 
-      // transform it by eigen vectors
-      //EigenVecs * vec
-      VectorXd noise1 = EigenVecs * rnd2D;
+        // calculate deltaTheta
+        double deltaTheta = deltaT * (vels_rot[i](1) + rndO(gen_pf));
+        est_oris[i][ip] += deltaTheta;
+        if (est_oris[i][ip] > M_PI)
+          est_oris[i][ip] -= 2*M_PI;
+        else if (est_oris[i][ip] <= -M_PI)
+          est_oris[i][ip] += 2*M_PI;
+      }
+    }
+    else
+    {
+      // velocity based on velocity control input
+      VectorXd deltaX = MatrixXd::Identity(n_dim, n_dim) * vels[i] * deltaT;
 
-      // get a random vector based on the float effect
-      // VectorXd FloatEffect = VectorXd::Ones(2) * betaM;
-      double x1f = rndf(gen_pf);
-      double x2f = rndf(gen_pf);
-      VectorXd noise2(n_dim);
-      noise2 << x1f, x2f;
+      // === motion model === //
+      // calculate eigen vectors and values
+      double v = vels[i].norm();
+      MatrixXd EigenVecs(2, 2);
+      EigenVecs(0, 0) = vels[i](0) / v;
+      EigenVecs(1, 0) = vels[i](1) / v;
+      EigenVecs(0, 1) = -vels[i](1) / v;
+      EigenVecs(1, 1) = vels[i](0) / v;
+      MatrixXd EigenVals = MatrixXd::Identity(2, 2);
+      EigenVals(0, 0) = alpha1M * v * v;
+      EigenVals(1, 1) = alpha2M * v * v;
 
-      // calculate velocity with the noises
-      // add it to the estimation
-      ests[i][ip] += deltaX + (noise1 + noise2) * deltaT;
+      std::normal_distribution<> rnd1(0, std::sqrt(alpha1M) * v);
+      std::normal_distribution<> rnd2(0, std::sqrt(alpha2M) * v);
+      std::normal_distribution<> rndf(0, std::sqrt(betaM));
+
+      for (int ip = 0; ip < n_particles; ++ip)
+      {
+        // get a random value based on the first eigen value
+        double x1 = rnd1(gen_pf);
+
+        // get a random value based on the second eigen value
+        double x2 = rnd2(gen_pf);
+
+        // make a vector of these random values
+        VectorXd rnd2D(n_dim);
+        rnd2D << x1, x2;
+
+        // transform it by eigen vectors
+        //EigenVecs * vec
+        VectorXd noise1 = EigenVecs * rnd2D;
+
+        // get a random vector based on the float effect
+        // VectorXd FloatEffect = VectorXd::Ones(2) * betaM;
+        double x1f = rndf(gen_pf);
+        double x2f = rndf(gen_pf);
+        VectorXd noise2(n_dim);
+        noise2 << x1f, x2f;
+
+        // calculate velocity with the noises
+        // add it to the estimation
+        ests[i][ip] += deltaX + (noise1 + noise2) * deltaT;
+      }
     }
   }
 }
@@ -786,6 +828,7 @@ void SimNonParam::globalLocImpl(const VectorXd& z)
 
   // new  population
   std::vector<VectorXd> new_est(n_particles, VectorXd(n_dim));
+  std::vector<double> new_est_ori(n_particles);
 
   // resample
   for (int i = 0; i < n_particles; ++i)
@@ -795,10 +838,14 @@ void SimNonParam::globalLocImpl(const VectorXd& z)
 
     // add the picked one
     new_est[i] = this->ests[0][indx];
+    if (use_orientation)
+      new_est_ori[i] = this->est_oris[0][indx];
   }
 
   // swap
   std::swap(this->ests[0], new_est);
+  if (use_orientation)
+    std::swap(this->est_oris[0], new_est_ori);
 }
 
 // =============================================================================
