@@ -47,6 +47,8 @@ class SimNonParam: public SimBase
   private: std::ofstream fout;
   // file for plotting (particles at the end)
   private: std::ofstream fout_pf;
+  // buffer for showing covariances
+  private: std::vector< std::vector< std::vector<double> > > cov_buff;
 
   public: SimNonParam(const YAML::Node& doc);
   public: virtual ~SimNonParam(){}
