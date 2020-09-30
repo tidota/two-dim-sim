@@ -49,6 +49,7 @@ class SimNonParam: public SimBase
   private: std::ofstream fout_pf;
   // buffer for showing covariances
   private: std::vector< std::vector< std::vector<double> > > cov_buff;
+  private: bool show_covs;
 
   public: SimNonParam(const YAML::Node& doc);
   public: virtual ~SimNonParam(){}

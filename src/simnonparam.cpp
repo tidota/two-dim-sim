@@ -22,7 +22,8 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
   last_est(n_robots),
   cumul_errors(n_robots, 0),
   use_random_seed_pf(doc["use_random_seed_pf"].as<bool>()),
-  random_seed_pf(doc["random_seed_pf"].as<unsigned int>())
+  random_seed_pf(doc["random_seed_pf"].as<unsigned int>()),
+  show_covs(doc["show_covs"].as<bool>())
 {
   // for all robots
   for(int i = 0; i < n_robots; ++i)
@@ -183,6 +184,29 @@ void SimNonParam::endLog()
 
   // --- particles at the end --- //
   f_gnuplot << "unset object" << std::endl;
+  if (show_covs)
+  {
+    int count_cov = 0;
+    for (unsigned int i = 0; i < cov_buff.size(); ++i)
+    {
+      // if (i % 10 > 0)
+      //   continue;
+      for (auto data: cov_buff[i])
+      {
+        f_gnuplot << "set object " << std::to_string(count_cov + 1)
+                  << " ellipse center "
+                  << std::to_string(data[0]) << ","
+                  << std::to_string(data[1])
+                  << " size "
+                  << std::to_string(std::sqrt(data[2]) * 2) << ","
+                  << std::to_string(std::sqrt(data[3]) * 2)
+                  << " angle "
+                  << std::to_string(data[4])
+                  << " front fillstyle empty border -1" << std::endl;
+        ++count_cov;
+      }
+    }
+  }
   f_gnuplot << "h1 = 227/360.0" << std::endl;
   f_gnuplot << "h2 = 40/360.0" << std::endl;
   f_gnuplot << "set palette model HSV functions (1-gray)*(h2-h1)+h1,1,0.68"
@@ -465,32 +489,38 @@ void SimNonParam::plotImpl()
     for (int ip = 0; ip < n_particles; ++ip)
     {
       average += this->ests[i][ip];
-      VectorXd sqrd(2);
-      sqrd << this->ests[i][ip][0] * this->ests[i][ip][0],
-              this->ests[i][ip][1] * this->ests[i][ip][1];
-      squared_average += sqrd;
-      mix_average += this->ests[i][ip][0] * this->ests[i][ip][1];
+      if (show_covs)
+      {
+        VectorXd sqrd(2);
+        sqrd << this->ests[i][ip][0] * this->ests[i][ip][0],
+                this->ests[i][ip][1] * this->ests[i][ip][1];
+        squared_average += sqrd;
+        mix_average += this->ests[i][ip][0] * this->ests[i][ip][1];
+      }
     }
     // for covariance
     average /= n_particles;
-    squared_average /= n_particles;
-    mix_average /= n_particles;
-    MatrixXd vars(2,2);
-    vars << squared_average[0] - average[0]*average[0],
-            mix_average - average[0]*average[1],
-            mix_average - average[0]*average[1],
-            squared_average[1] - average[1]*average[1];
-    Eigen::EigenSolver<MatrixXd> s(vars);
-    auto eigen_val = s.eigenvalues();
-    auto eigen_vec = s.eigenvectors();
-    double var_ang
-      = std::atan2(eigen_vec.col(0)[1].real(), eigen_vec.col(0)[0].real())
-        / M_PI*180.0;
-    std::vector<double> cov
-      = {average[0], average[1],
-         eigen_val[0].real(), eigen_val[1].real(),
-         var_ang};
-    covs_at_time.push_back(std::move(cov));
+    if (show_covs)
+    {
+      squared_average /= n_particles;
+      mix_average /= n_particles;
+      MatrixXd vars(2,2);
+      vars << squared_average[0] - average[0]*average[0],
+              mix_average - average[0]*average[1],
+              mix_average - average[0]*average[1],
+              squared_average[1] - average[1]*average[1];
+      Eigen::EigenSolver<MatrixXd> s(vars);
+      auto eigen_val = s.eigenvalues();
+      auto eigen_vec = s.eigenvectors();
+      double var_ang
+        = std::atan2(eigen_vec.col(0)[1].real(), eigen_vec.col(0)[0].real())
+          / M_PI*180.0;
+      std::vector<double> cov
+        = {average[0], average[1],
+           eigen_val[0].real(), eigen_val[1].real(),
+           var_ang};
+      covs_at_time.push_back(std::move(cov));
+    }
 
     // --- Terminal Output --- //
     // current location

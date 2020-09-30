@@ -82,6 +82,8 @@ n_particles: 50
 use_random_seed_pf: true
 # random seed to give for PF
 random_seed_pf: 3000
+# show covariances in the path
+show_covs: true
 
 # enable_update_step for mutual localization
 enable_update_step: true
