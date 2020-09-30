@@ -454,16 +454,43 @@ void SimNonParam::plotImpl()
   fout << std::fixed << std::setprecision(3);
   fout << std::right << std::setw(8) << t << " ";
 
+  std::vector< std::vector <double> > covs_at_time;
   // For each robot
   for (int i = 0; i < n_robots; ++i)
   {
     // calculate average estimated location
     VectorXd average = VectorXd::Zero(n_dim);
+    VectorXd squared_average = VectorXd::Zero(n_dim);
+    double mix_average = 0;
     for (int ip = 0; ip < n_particles; ++ip)
     {
       average += this->ests[i][ip];
+      VectorXd sqrd(2);
+      sqrd << this->ests[i][ip][0] * this->ests[i][ip][0],
+              this->ests[i][ip][1] * this->ests[i][ip][1];
+      squared_average += sqrd;
+      mix_average += this->ests[i][ip][0] * this->ests[i][ip][1];
     }
-    average = average /= n_particles;
+    // for covariance
+    average /= n_particles;
+    squared_average /= n_particles;
+    mix_average /= n_particles;
+    MatrixXd vars(2,2);
+    vars << squared_average[0] - average[0]*average[0],
+            mix_average - average[0]*average[1],
+            mix_average - average[0]*average[1],
+            squared_average[1] - average[1]*average[1];
+    Eigen::EigenSolver<MatrixXd> s(vars);
+    auto eigen_val = s.eigenvalues();
+    auto eigen_vec = s.eigenvectors();
+    double var_ang
+      = std::atan2(eigen_vec.col(0)[1].real(), eigen_vec.col(0)[0].real())
+        / M_PI*180.0;
+    std::vector<double> cov
+      = {average[0], average[1],
+         eigen_val[0].real(), eigen_val[1].real(),
+         var_ang};
+    covs_at_time.push_back(std::move(cov));
 
     // --- Terminal Output --- //
     // current location
@@ -511,6 +538,7 @@ void SimNonParam::plotImpl()
       last_est[i][ip] = this->ests[i][ip];
     }
   }
+  cov_buff.push_back(std::move(covs_at_time));
 
   std::cout << std::endl;
   fout << std::endl;
