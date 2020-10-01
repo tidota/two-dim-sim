@@ -131,8 +131,9 @@ void SimParam::endLog()
               << std::to_string(last_mean[i](0)) << ","
               << std::to_string(last_mean[i](1))
               << " size "
-              << std::to_string(std::sqrt(eigen_val[0].real()) * 2) << ","
-              << std::to_string(std::sqrt(eigen_val[1].real()) * 2)
+              // https://www.visiondummy.com/2014/04/draw-error-ellipse-representing-covariance-matrix/
+              << std::to_string(std::sqrt(eigen_val[0].real()) * 2 * std::sqrt(5.991)) << ","
+              << std::to_string(std::sqrt(eigen_val[1].real()) * 2 * std::sqrt(5.991))
               << " angle "
               << std::to_string(var_ang)
               << " front fillstyle empty border -1" << std::endl;
