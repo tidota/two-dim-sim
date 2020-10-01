@@ -198,8 +198,9 @@ void SimNonParam::endLog()
                   << std::to_string(data[0]) << ","
                   << std::to_string(data[1])
                   << " size "
-                  << std::to_string(std::sqrt(data[2]) * 2) << ","
-                  << std::to_string(std::sqrt(data[3]) * 2)
+                  // https://www.visiondummy.com/2014/04/draw-error-ellipse-representing-covariance-matrix/
+                  << std::to_string(std::sqrt(data[2]) * 2 * std::sqrt(5.991)) << ","
+                  << std::to_string(std::sqrt(data[3]) * 2 * std::sqrt(5.991))
                   << " angle "
                   << std::to_string(data[4])
                   << " front fillstyle empty border -1" << std::endl;
