@@ -204,7 +204,7 @@ void SimNonParam::endLog()
         f_gnuplot << ":1";
     }
     f_gnuplot << " title \"R" << std::to_string(1+i) << "\""
-              << " with linespoints lt -1 lw 1.0 ps 3.0"
+              << " with linespoints dt 2 lt -1 lw 2.0 ps 3.0"
               << " pt " << std::to_string(i + 1)
               << " lc palette" << std::endl;
   }
@@ -258,7 +258,7 @@ void SimNonParam::endLog()
 
     "mpl.rcParams['text.usetex'] = True" << std::endl <<
 
-    "cm_new = False" << std::endl <<
+    "cm_new = True" << std::endl <<
 
     "# load data" << std::endl <<
     "f = open('output.dat', 'r')" << std::endl <<
@@ -283,12 +283,12 @@ void SimNonParam::endLog()
     "        h = (1-val)*(h2-h1)+h1" << std::endl <<
     "        return np.array(list(colorsys.hsv_to_rgb(h,1,0.68)) + [1])" << std::endl <<
 
-    "subtle_alpha = 0.25" << std::endl <<
+    "subtle_alpha = 0.90" << std::endl <<
     "def cmf_s(val):" << std::endl <<
     "    if cm_new:" << std::endl <<
     "        val /= maxt" << std::endl <<
     "        c = plt.cm.jet(0.97-val*0.82)" << std::endl <<
-    "        c[3] = subtle_alpha" << std::endl <<
+    //"        c[3] = subtle_alpha" << std::endl <<
     "        return c" << std::endl <<
     "    else:" << std::endl <<
     "        val /= maxt" << std::endl <<
