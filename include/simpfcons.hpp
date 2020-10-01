@@ -23,6 +23,7 @@ class SimPfCons: public SimNonParam
   private: double mode6_sigma;
   private: int mode6_Nref;
   private: bool mode6_no_frac_exp;
+  private: double mode6_rateQ;
 
   public: SimPfCons(const YAML::Node& doc);
   public: virtual ~SimPfCons(){}

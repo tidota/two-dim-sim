@@ -42,7 +42,7 @@ betaM: 0.5
 # 4: CI
 # 5: Centralized
 # 6: Particle filter
-mode: 3
+mode: 6
 # mode1 rate
 mode1_rateQ: 1.0
 # mode2 rate
@@ -71,6 +71,7 @@ mode6_omega: 0.6
 mode6_sigma: 0.085
 mode6_Nref: 5
 mode6_no_frac_exp: false
+mode6_rateQ: 1.0
 # Number of particles
 n_particles: 50
 # use random seed for PF

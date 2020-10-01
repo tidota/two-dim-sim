@@ -13,7 +13,8 @@ SimPfCons::SimPfCons(const YAML::Node& doc): SimNonParam(doc),
   mode6_omega(doc["mode6_omega"].as<double>()),
   mode6_sigma(doc["mode6_sigma"].as<double>()),
   mode6_Nref(doc["mode6_Nref"].as<int>()),
-  mode6_no_frac_exp(doc["mode6_no_frac_exp"].as<bool>())
+  mode6_no_frac_exp(doc["mode6_no_frac_exp"].as<bool>()),
+  mode6_rateQ(doc["mode6_rateQ"].as<double>())
 {}
 
 // =============================================================================
@@ -83,8 +84,8 @@ void SimPfCons::evalByZ(
       // evaluate
       cumul_weights[i]
         += exp(
-            -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR
-            -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT);
+            -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR*mode6_rateQ
+            -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT*mode6_rateQ);
     }
     double omega_weight = cumul_weights_target[i];
     if (i > 0)
