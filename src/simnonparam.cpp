@@ -141,8 +141,8 @@ void SimNonParam::endLog()
   fout_pf.close();
 
   // output of gnuplot command
-  // Note: each robot has actual positions, estimated, and error
-  const int off_next_robot = n_dim + n_dim + 1;
+  // Note: each robot has actual positions, estimated, and error+dist of contour
+  const int off_next_robot = n_dim + n_dim + 2;
 
   std::cout << std::endl;
   std::cout << "~~~ gnuplot command (errors vs determinants) ~~~" << std::endl;
@@ -152,8 +152,12 @@ void SimNonParam::endLog()
     std::cout << "clear" << std::endl;
     std::cout << "unset object" << std::endl;
     std::cout << "plot \"output.dat\" u 1:"
-              << std::to_string(2+(i+1)*off_next_robot-1)
+              << std::to_string(2+(i+1)*off_next_robot-2)
               << " title \"err of robot" << std::to_string(1+i) << "\" with line";
+    std::cout << std::endl;
+    std::cout << "replot \"output.dat\" u 1:"
+              << std::to_string(2+(i+1)*off_next_robot-1)
+              << " title \"Uncertainty of robot" << std::to_string(1+i) << "\" with line";
     std::cout << std::endl;
   }
   std::cout << std::endl;
@@ -168,7 +172,7 @@ void SimNonParam::endLog()
     else
       std::cout << "     ";
     std::cout << "\"output.dat\" u 1:"
-              << std::to_string(2+(i+1)*off_next_robot-1)
+              << std::to_string(2+(i+1)*off_next_robot-2)
               << " title \"err" << std::to_string(1+i) << "\" with line";
     if (i < n_robots - 1)
       std::cout << ", \\";
@@ -501,6 +505,7 @@ void SimNonParam::plotImpl()
     }
     // for covariance
     average /= n_particles;
+    double p95 = 0;
     if (show_covs)
     {
       squared_average /= n_particles;
@@ -521,6 +526,20 @@ void SimNonParam::plotImpl()
            eigen_val[0].real(), eigen_val[1].real(),
            var_ang};
       covs_at_time.push_back(std::move(cov));
+
+      VectorXd v = (robots[i] - average);
+      Rotation2D<double> Rot(
+          -std::atan2(eigen_vec.col(0)[1].real(), eigen_vec.col(0)[0].real()));
+      v = Rot * v;
+      double a = v(0);
+      double b = v(1);
+      double sx = std::sqrt(eigen_val[0].real());
+      double sy = std::sqrt(eigen_val[1].real());
+      if (vars.determinant() > 0 && v.norm() > 0)
+      {
+        p95 = std::sqrt(5.991) * sx * sy
+            * std::sqrt((a*a+b*b)/(a*a*sy*sy + b*b*sx*sx));
+      }
     }
 
     // --- Terminal Output --- //
@@ -561,6 +580,9 @@ void SimNonParam::plotImpl()
     // error
     fout << std::right << std::setw(8)
          << (robots[i] - average).norm() << " ";
+    // length at the ellipse counter crosses the lin to the ground-truth point.
+    fout << std::right << std::setw(8)
+         << p95 << " ";
 
     // store data to the buffer to plot
     last_loc[i] = robots[i];
