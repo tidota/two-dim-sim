@@ -59,13 +59,16 @@ mode3_rateQ: 1
 # 1: omega = 0 or 1 based on the determinants
 # 2: omega = 0.6 or 0.4
 # 3: omega = sqrt(det2)/(sqrt(det1) + sqrt(det2))
-# others: omega calculated by the formula
+# 4: omega = gsl_min_fminimizer
+# others: omega calculated by the closed formula
 mode4_omega_mode: 4
 mode4_rateQ: 1.0
 # CI with original algorithm if set to true
 mode4_original: true
 mode4_original_force: false
 mode4_original_omega: 0.95
+# CI objective function (trace, det)
+mode4_optim_obj_fn: trace
 # mode6 (pf) settings
 mode6_omega: 0.6
 mode6_sigma: 0.085

@@ -16,8 +16,6 @@
 using namespace std;
 using namespace Eigen;
 
-// helper function
-void getOmega(MatrixXd &C1, MatrixXd &C2, double &omega, const int &mode);
 
 class SimCi: public SimParam
 {
@@ -26,6 +24,7 @@ class SimCi: public SimParam
   private: const double mode4_rateQ;
   private: const double mode4_original_omega;
   private: const bool mode4_original_force;
+  private: const std::string mode4_optim_obj_fn;
 
   public: SimCi(const YAML::Node& doc);
   public: virtual ~SimCi(){}
@@ -34,6 +33,9 @@ class SimCi: public SimParam
     const VectorXd& z, const std::pair<int,int>& edge,
     const MatrixXd& H1, const MatrixXd& H2, const MatrixXd& Q,
     const VectorXd& z_diff) override;
+
+  // helper function
+  private: void getOmega(MatrixXd &C1, MatrixXd &C2, double &omega);
 };
 
 #endif

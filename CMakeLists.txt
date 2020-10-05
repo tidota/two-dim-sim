@@ -12,7 +12,7 @@ find_package(GSL REQUIRED)
 include_directories(include)
 file(GLOB SRC_FILES src/*.cpp)
 add_executable(twodimsim ${SRC_FILES})
-target_link_libraries(twodimsim yaml-cpp Eigen3::Eigen gsl gslcblab)
+target_link_libraries(twodimsim yaml-cpp Eigen3::Eigen gsl gslcblas)
 
 #configure_file(settings.yaml settings.yaml COPYONLY)
 add_custom_target(settings ALL COMMAND ${CMAKE_COMMAND} -E create_symlink ${PROJECT_SOURCE_DIR}/settings.yaml settings.yaml)

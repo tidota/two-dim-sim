@@ -1,5 +1,9 @@
 // simci.cpp
 
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_min.h>
+
 #include <yaml-cpp/yaml.h>
 #include <Eigen/Dense>
 
@@ -8,18 +12,26 @@
 using namespace std;
 using namespace Eigen;
 
+struct func_params
+{
+  MatrixXd invA;
+  MatrixXd invB;
+};
+
 // =============================================================================
 double obj_fn_trace (double omega, void * params)
 {
-  (void)(params);
-  return (x - 1.5)*(x - 1.5);
+  struct func_params* p = (struct func_params*)params;
+  MatrixXd C = (omega * p->invA + (1-omega) * p->invB).inverse();
+  return C.trace();
 }
 
 // =============================================================================
 double obj_fn_det (double omega, void * params)
 {
-  (void)(params);
-  return (x - 1.5)*(x - 1.5);
+  struct func_params* p = (struct func_params*)params;
+  MatrixXd C = (omega * p->invA + (1-omega) * p->invB).inverse();
+  return C.determinant();
 }
 
 // =============================================================================
@@ -28,7 +40,8 @@ SimCi::SimCi(const YAML::Node& doc): SimParam(doc),
   mode4_omega_mode(doc["mode4_omega_mode"].as<int>()),
   mode4_rateQ(doc["mode4_rateQ"].as<double>()),
   mode4_original_omega(doc["mode4_original_omega"].as<double>()),
-  mode4_original_force(doc["mode4_original_force"].as<bool>())
+  mode4_original_force(doc["mode4_original_force"].as<bool>()),
+  mode4_optim_obj_fn(doc["mode4_optim_obj_fn"].as<std::string>())
 {}
 
 // =============================================================================
@@ -73,7 +86,7 @@ void SimCi::mutualLocModeImpl(
       if (mode4_original_force)
         omega = mode4_original_omega;
       else
-        getOmega(A, B, omega, mode4_omega_mode);
+        getOmega(A, B, omega);
       MatrixXd C = (omega*A.inverse() + (1-omega)*B.inverse()).inverse();
       VectorXd c
         = C * (omega*A.inverse()*a + (1-omega)*B.inverse()*b);
@@ -99,7 +112,7 @@ void SimCi::mutualLocModeImpl(
       if (mode4_original_force)
         omega = mode4_original_omega;
       else
-        getOmega(A, B, omega, mode4_omega_mode);
+        getOmega(A, B, omega);
       MatrixXd C = (omega*A.inverse() + (1-omega)*B.inverse()).inverse();
       VectorXd c
         = C * (omega*A.inverse()*a + (1-omega)*B.inverse()*b);
@@ -114,7 +127,7 @@ void SimCi::mutualLocModeImpl(
       MatrixXd C2
         = H2 * vars[edge.second] * H2.transpose()
         + (Q * mode4_rateQ);
-      getOmega(C1, C2, omega, mode4_omega_mode);
+      getOmega(C1, C2, omega);
     }
     if (omega == 0)
     {
@@ -147,7 +160,7 @@ void SimCi::mutualLocModeImpl(
       MatrixXd C2
         = H1 * vars[edge.first] * H1.transpose()
         + (Q * mode4_rateQ);
-      getOmega(C1, C2, omega, mode4_omega_mode);
+      getOmega(C1, C2, omega);
     }
     if (omega == 0)
     {
@@ -183,9 +196,9 @@ void SimCi::mutualLocModeImpl(
 
 // =============================================================================
 // helper function for mode4 (Covariance Intersection)
-void getOmega(MatrixXd &C1, MatrixXd &C2, double &omega, const int &mode)
+void SimCi::getOmega(MatrixXd &C1, MatrixXd &C2, double &omega)
 {
-  if (mode == 0)
+  if (mode4_omega_mode == 0)
   {
     omega = 0.5;
     return;
@@ -200,25 +213,68 @@ void getOmega(MatrixXd &C1, MatrixXd &C2, double &omega, const int &mode)
   {
     omega = 0;
   }
-  else if (mode == 1)
+  else if (mode4_omega_mode == 1)
   {
     if (det1 < det2)
       omega = 1;
     else
       omega = 0;
   }
-  else if (mode == 2)
+  else if (mode4_omega_mode == 2)
   {
     if (det1 <= det2)
       omega = 0.6;
     else
       omega = 0.4;
   }
-  else if (mode == 3)
+  else if (mode4_omega_mode == 3)
   {
     double sig1 = std::sqrt(det1);
     double sig2 = std::sqrt(det2);
     omega = sig2 / (sig1 + sig2);
+  }
+  else if (mode4_omega_mode == 4)
+  {
+    int status;
+    int iter = 0, max_iter = 100;
+    const gsl_min_fminimizer_type *T;
+    gsl_min_fminimizer *s;
+    double m = 0.5;
+    double a = 0.0, b = 1.0;
+    gsl_function F;
+
+    if (mode4_optim_obj_fn == "trace")
+      F.function = &obj_fn_trace;
+    else if (mode4_optim_obj_fn == "det")
+      F.function = &obj_fn_det;
+    else
+      F.function = &obj_fn_trace;
+
+    struct func_params prm;
+    prm.invA = C1.inverse();
+    prm.invB = C2.inverse();
+
+    F.params = (void*)&prm;
+
+    T = gsl_min_fminimizer_brent;
+    s = gsl_min_fminimizer_alloc (T);
+    gsl_min_fminimizer_set (s, &F, m, a, b);
+
+    do
+    {
+      iter++;
+      status = gsl_min_fminimizer_iterate (s);
+
+      m = gsl_min_fminimizer_x_minimum (s);
+      a = gsl_min_fminimizer_x_lower (s);
+      b = gsl_min_fminimizer_x_upper (s);
+
+      status = gsl_min_test_interval (a, b, 0.001, 0.0);
+    }
+    while (status == GSL_CONTINUE && iter < max_iter);
+
+    gsl_min_fminimizer_free (s);
+    omega = m;
   }
   else
   {
