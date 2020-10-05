@@ -62,7 +62,7 @@ mode3_rateQ: 1
 # 4: omega = brute-force at an interval of 0.01
 # 5: gsl_min_fminimizer
 # others: omega calculated by the closed formula
-mode4_omega_mode: 5
+mode4_omega_mode: 4
 mode4_rateQ: 1.0
 # CI with original algorithm if set to true
 mode4_original: true

@@ -45,7 +45,8 @@ SimBase::SimBase(const YAML::Node& doc):
   enable_global_loc(doc["enable_global_loc"].as<bool>()),
   enable_bidirectional(doc["enable_bidirectional"].as<bool>()),
   global_loc_steps(doc["global_loc_steps"].as<int>()),
-  plot_interval(doc["plot_interval"].as<int>())
+  plot_interval(doc["plot_interval"].as<int>()),
+  show_covs(doc["show_covs"].as<bool>())
 {
   for(int i = 0; i < n_robots; ++i)
   {

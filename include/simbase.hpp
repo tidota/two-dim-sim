@@ -107,6 +107,10 @@ class SimBase
   protected: const int global_loc_steps;
   protected: const int plot_interval;
 
+  // buffer for showing covariances
+  protected: std::vector< std::vector< std::vector<double> > > cov_buff;
+  protected: bool show_covs;
+
   public: SimBase(const YAML::Node& doc);
   public: virtual ~SimBase(){}
 

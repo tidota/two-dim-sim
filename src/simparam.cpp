@@ -77,7 +77,7 @@ void SimParam::endLog()
   fout.close();
 
   // output of gnuplot command
-  const int off_next_robot = n_dim + n_dim + n_dim*n_dim + 2;
+  const int off_next_robot = n_dim + n_dim + n_dim*n_dim + 3;
   std::cout << std::endl;
   std::cout << "~~~ gnuplot command (errors vs determinants) ~~~" << std::endl;
   for (int i = 0; i < n_robots; ++i)
@@ -86,10 +86,25 @@ void SimParam::endLog()
     std::cout << "clear" << std::endl;
     std::cout << "unset object" << std::endl;
     std::cout << "plot \"output.dat\" u 1:"
-              << std::to_string(2+(i+1)*off_next_robot-2)
+              << std::to_string(2+(i+1)*off_next_robot-3)
               << " title \"|Sigma|^0.5 of robot" << std::to_string(1+i) << "\" with line, ";
     std::cout << "\"output.dat\" u 1:"
+              << std::to_string(2+(i+1)*off_next_robot-2)
+              << " title \"err of robot" << std::to_string(1+i) << "\" with line";
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
+  std::cout << "~~~ gnuplot command (errors vs uncertrainty) ~~~" << std::endl;
+  for (int i = 0; i < n_robots; ++i)
+  {
+    std::cout << "--- ROBOT " << (i + 1) << " ---" << std::endl;
+    std::cout << "clear" << std::endl;
+    std::cout << "unset object" << std::endl;
+    std::cout << "plot \"output.dat\" u 1:"
               << std::to_string(2+(i+1)*off_next_robot-1)
+              << " title \"Uncertainty of robot" << std::to_string(1+i) << "\" with line, ";
+    std::cout << "\"output.dat\" u 1:"
+              << std::to_string(2+(i+1)*off_next_robot-2)
               << " title \"err of robot" << std::to_string(1+i) << "\" with line";
     std::cout << std::endl;
   }
@@ -104,7 +119,7 @@ void SimParam::endLog()
     else
       std::cout << "     ";
     std::cout << "\"output.dat\" u 1:"
-              << std::to_string(2+(i+1)*off_next_robot-1)
+              << std::to_string(2+(i+1)*off_next_robot-2)
               << " title \"err" << std::to_string(1+i) << "\" with line";
     if (i < n_robots - 1)
       std::cout << ", \\";
@@ -137,6 +152,31 @@ void SimParam::endLog()
               << " angle "
               << std::to_string(var_ang)
               << " front fillstyle empty border -1" << std::endl;
+  }
+  if (show_covs)
+  {
+    int count_cov = 0;
+    for (unsigned int i = 0; i < cov_buff.size(); ++i)
+    {
+      // if (i % 10 > 0)
+      //   continue;
+      for (auto data: cov_buff[i])
+      {
+        f_gnuplot
+          << "set object " << std::to_string(n_robots + count_cov + 1)
+          << " ellipse center "
+          << std::to_string(data[0]) << ","
+          << std::to_string(data[1])
+          << " size "
+          // https://www.visiondummy.com/2014/04/draw-error-ellipse-representing-covariance-matrix/
+          << std::to_string(std::sqrt(data[2]) * 2 * std::sqrt(5.991)) << ","
+          << std::to_string(std::sqrt(data[3]) * 2 * std::sqrt(5.991))
+          << " angle "
+          << std::to_string(data[4])
+          << " front fillstyle empty border -1" << std::endl;
+        ++count_cov;
+      }
+    }
   }
   f_gnuplot << "h1 = 227/360.0" << std::endl;
   f_gnuplot << "h2 = 40/360.0" << std::endl;
@@ -405,6 +445,9 @@ void SimParam::plotImpl()
   fout << std::fixed << std::setprecision(3);
   fout << std::right << std::setw(8) << t << " ";
 
+  std::vector< std::vector <double> > covs_at_time;
+  double p95 = 0;
+
   for (int i = 0; i < n_robots; ++i)
   {
     for (int j = 0; j < n_dim; ++j)
@@ -448,11 +491,45 @@ void SimParam::plotImpl()
     fout << std::right << std::setw(8)
          << (robots[i] - means[i]).norm() << " ";
 
+    if (show_covs)
+    {
+      Eigen::EigenSolver<MatrixXd> s(vars[i]);
+      auto eigen_val = s.eigenvalues();
+      auto eigen_vec = s.eigenvectors();
+      double var_ang
+        = std::atan2(eigen_vec.col(0)[1].real(), eigen_vec.col(0)[0].real())
+          / M_PI*180.0;
+      std::vector<double> cov
+        = {means[i](0), means[i](1),
+           eigen_val[0].real(), eigen_val[1].real(),
+           var_ang};
+      covs_at_time.push_back(std::move(cov));
+
+      VectorXd v = (robots[i] - means[i]);
+      Rotation2D<double> Rot(
+          -std::atan2(eigen_vec.col(0)[1].real(), eigen_vec.col(0)[0].real()));
+      v = Rot * v;
+      double a = v(0);
+      double b = v(1);
+      double sx = std::sqrt(eigen_val[0].real());
+      double sy = std::sqrt(eigen_val[1].real());
+      if (vars[i].determinant() > 0 && v.norm() > 0)
+      {
+        p95 = std::sqrt(5.991) * sx * sy
+            * std::sqrt((a*a+b*b)/(a*a*sy*sy + b*b*sx*sx));
+      }
+    }
+    // length at the ellipse counter crosses the lin to the ground-truth point.
+    fout << std::right << std::setw(8)
+         << p95 << " ";
+
     // store data to the buffer to plot
     last_loc[i] = robots[i];
     last_mean[i] = means[i];
     last_var[i] = vars[i];
   }
+
+  cov_buff.push_back(std::move(covs_at_time));
 
   std::cout << std::endl;
   fout << std::endl;

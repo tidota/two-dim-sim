@@ -22,8 +22,7 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
   last_est(n_robots),
   cumul_errors(n_robots, 0),
   use_random_seed_pf(doc["use_random_seed_pf"].as<bool>()),
-  random_seed_pf(doc["random_seed_pf"].as<unsigned int>()),
-  show_covs(doc["show_covs"].as<bool>())
+  random_seed_pf(doc["random_seed_pf"].as<unsigned int>())
 {
   // for all robots
   for(int i = 0; i < n_robots; ++i)
@@ -145,7 +144,7 @@ void SimNonParam::endLog()
   const int off_next_robot = n_dim + n_dim + 2;
 
   std::cout << std::endl;
-  std::cout << "~~~ gnuplot command (errors vs determinants) ~~~" << std::endl;
+  std::cout << "~~~ gnuplot command (errors vs uncertrainty) ~~~" << std::endl;
   for (int i = 0; i < n_robots; ++i)
   {
     std::cout << "--- ROBOT " << (i + 1) << " ---" << std::endl;
