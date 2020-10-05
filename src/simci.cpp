@@ -8,8 +8,6 @@
 #include <Eigen/Dense>
 
 #include <simci.hpp>
-#include <iostream>
-#include <iomanip>
 using namespace std;
 using namespace Eigen;
 
