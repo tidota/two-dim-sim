@@ -8,7 +8,8 @@
 #include <Eigen/Dense>
 
 #include <simci.hpp>
-
+#include <iostream>
+#include <iomanip>
 using namespace std;
 using namespace Eigen;
 
@@ -21,9 +22,11 @@ struct func_params
 // =============================================================================
 double obj_fn_trace (double omega, void * params)
 {
-  struct func_params* p = (struct func_params*)params;
+  // std::cout << "😍" << std::endl;
+  struct func_params *p = (struct func_params*)params;
   MatrixXd C = (omega * p->invA + (1-omega) * p->invB).inverse();
   return C.trace();
+
 }
 
 // =============================================================================
@@ -42,7 +45,10 @@ SimCi::SimCi(const YAML::Node& doc): SimParam(doc),
   mode4_original_omega(doc["mode4_original_omega"].as<double>()),
   mode4_original_force(doc["mode4_original_force"].as<bool>()),
   mode4_optim_obj_fn(doc["mode4_optim_obj_fn"].as<std::string>())
-{}
+{
+  // disable the GSL error handler.
+  gsl_set_error_handler_off();
+}
 
 // =============================================================================
 void SimCi::mutualLocModeImpl(
@@ -235,7 +241,33 @@ void SimCi::getOmega(MatrixXd &C1, MatrixXd &C2, double &omega)
   }
   else if (mode4_omega_mode == 4)
   {
-    int status;
+    double (*fn)(double, void*);
+    if (mode4_optim_obj_fn == "trace")
+      fn = &obj_fn_trace;
+    else if (mode4_optim_obj_fn == "det")
+      fn = &obj_fn_det;
+    else
+      fn = &obj_fn_trace;
+
+    struct func_params prm;
+    prm.invA = C1.inverse();
+    prm.invB = C2.inverse();
+    double min = -1;
+    double min_x = 0;
+    for (double x = 0.0; x <= 1.0; x += 0.01)
+    {
+      double f = fn(x, &prm);
+      if (x == 0.0 || f < min)
+      {
+        min_x = x;
+        min = f;
+      }
+    }
+    omega = min_x;
+  }
+  else if (mode4_omega_mode == 5)
+  {
+    int status = GSL_CONTINUE;
     int iter = 0, max_iter = 100;
     const gsl_min_fminimizer_type *T;
     gsl_min_fminimizer *s;
@@ -243,12 +275,15 @@ void SimCi::getOmega(MatrixXd &C1, MatrixXd &C2, double &omega)
     double a = 0.0, b = 1.0;
     gsl_function F;
 
+    double (*fn)(double, void*);
     if (mode4_optim_obj_fn == "trace")
-      F.function = &obj_fn_trace;
+      fn = &obj_fn_trace;
     else if (mode4_optim_obj_fn == "det")
-      F.function = &obj_fn_det;
+      fn = &obj_fn_det;
     else
-      F.function = &obj_fn_trace;
+      fn = &obj_fn_trace;
+
+    F.function = fn;
 
     struct func_params prm;
     prm.invA = C1.inverse();
@@ -258,9 +293,9 @@ void SimCi::getOmega(MatrixXd &C1, MatrixXd &C2, double &omega)
 
     T = gsl_min_fminimizer_brent;
     s = gsl_min_fminimizer_alloc (T);
-    gsl_min_fminimizer_set (s, &F, m, a, b);
+    status = gsl_min_fminimizer_set (s, &F, m, a, b);
 
-    do
+    while (status == GSL_CONTINUE && iter < max_iter)
     {
       iter++;
       status = gsl_min_fminimizer_iterate (s);
@@ -271,9 +306,19 @@ void SimCi::getOmega(MatrixXd &C1, MatrixXd &C2, double &omega)
 
       status = gsl_min_test_interval (a, b, 0.001, 0.0);
     }
-    while (status == GSL_CONTINUE && iter < max_iter);
 
     gsl_min_fminimizer_free (s);
+
+    if (status != GSL_SUCCESS)
+    {
+      // when an error occurs, the function may be not convex but monotonic..
+      // so just pick either 0 or 1 whichever leads to a maller value.
+      if (fn(0, &prm) < fn(1.0, &prm))
+        m = 0;
+      else
+        m = 1.0;
+    }
+
     omega = m;
   }
   else

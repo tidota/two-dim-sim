@@ -42,7 +42,7 @@ betaM: 0.5
 # 4: CI
 # 5: Centralized
 # 6: Particle filter
-mode: 6
+mode: 3
 # mode1 rate
 mode1_rateQ: 1.0
 # mode2 rate
@@ -59,16 +59,17 @@ mode3_rateQ: 1
 # 1: omega = 0 or 1 based on the determinants
 # 2: omega = 0.6 or 0.4
 # 3: omega = sqrt(det2)/(sqrt(det1) + sqrt(det2))
-# 4: omega = gsl_min_fminimizer
+# 4: omega = brute-force at an interval of 0.01
+# 5: gsl_min_fminimizer
 # others: omega calculated by the closed formula
-mode4_omega_mode: 4
+mode4_omega_mode: 5
 mode4_rateQ: 1.0
 # CI with original algorithm if set to true
 mode4_original: true
 mode4_original_force: false
 mode4_original_omega: 0.95
 # CI objective function (trace, det)
-mode4_optim_obj_fn: trace
+mode4_optim_obj_fn: det
 # mode6 (pf) settings
 mode6_omega: 0.6
 mode6_sigma: 0.085
