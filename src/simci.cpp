@@ -1,4 +1,5 @@
 // simci.cpp
+#include <iostream>
 
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_math.h>
@@ -45,7 +46,7 @@ SimCi::SimCi(const YAML::Node& doc): SimParam(doc),
   mode4_optim_obj_fn(doc["mode4_optim_obj_fn"].as<std::string>())
 {
   // disable the GSL error handler.
-  gsl_set_error_handler_off();
+  //gsl_set_error_handler_off();
 }
 
 // =============================================================================
@@ -281,40 +282,56 @@ void SimCi::getOmega(MatrixXd &C1, MatrixXd &C2, double &omega)
     else
       fn = &obj_fn_trace;
 
-    F.function = fn;
-
     struct func_params prm;
     prm.invA = C1.inverse();
     prm.invB = C2.inverse();
 
-    F.params = (void*)&prm;
+    double f_m = fn(m, &prm);
+    double f_a = fn(a, &prm);
+    double f_b = fn(b, &prm);
 
-    T = gsl_min_fminimizer_brent;
-    s = gsl_min_fminimizer_alloc (T);
-    status = gsl_min_fminimizer_set (s, &F, m, a, b);
-
-    while (status == GSL_CONTINUE && iter < max_iter)
+    int count = 0;
+    while (f_m >= f_a && count < 100)
     {
-      iter++;
-      status = gsl_min_fminimizer_iterate (s);
-
-      m = gsl_min_fminimizer_x_minimum (s);
-      a = gsl_min_fminimizer_x_lower (s);
-      b = gsl_min_fminimizer_x_upper (s);
-
-      status = gsl_min_test_interval (a, b, 0.001, 0.0);
+      m = (m + a)/2.0;
+      f_m = fn(m, &prm);
+      ++count;
+    }
+    while (f_m >= f_b && count < 100)
+    {
+      m = (m + b)/2.0;
+      f_m = fn(m, &prm);
+      ++count;
     }
 
-    gsl_min_fminimizer_free (s);
-
-    if (status != GSL_SUCCESS)
+    if (count < 100)
     {
-      // when an error occurs, the function may be not convex but monotonic..
-      // so just pick either 0 or 1 whichever leads to a maller value.
-      if (fn(0, &prm) < fn(1.0, &prm))
-        m = 0;
-      else
-        m = 1.0;
+      F.function = fn;
+
+      F.params = (void*)&prm;
+
+      T = gsl_min_fminimizer_brent;
+      s = gsl_min_fminimizer_alloc (T);
+      status = gsl_min_fminimizer_set (s, &F, m, a, b);
+
+      while (status == GSL_CONTINUE && iter < max_iter)
+      {
+        iter++;
+        status = gsl_min_fminimizer_iterate (s);
+
+        m = gsl_min_fminimizer_x_minimum (s);
+        a = gsl_min_fminimizer_x_lower (s);
+        b = gsl_min_fminimizer_x_upper (s);
+
+        status = gsl_min_test_interval (a, b, 0.001, 0.0);
+      }
+
+      gsl_min_fminimizer_free (s);
+
+      // if (status != GSL_SUCCESS)
+      // {
+      //   std::cout << "😭" << std::endl;
+      // }
     }
 
     omega = m;
