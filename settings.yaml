@@ -42,7 +42,7 @@ betaM: 0.5
 # 4: CI
 # 5: Centralized
 # 6: Particle filter
-mode: 3
+mode: 6
 # mode1 rate
 mode1_rateQ: 1.0
 # mode2 rate
@@ -98,7 +98,7 @@ global_loc_steps: 1
 topology: complete
 # radius of communication area (used when topology is set to dynamic)
 comm_radius: 10.0
-# use orientation? (only affects when mode = 6 (Particle filter))
+# use orientation? (correctly works only when mode = 6 (Particle filter))
 use_orientation: true
 # use velocity control by orientation
 use_vel_ctrl: true
@@ -106,6 +106,10 @@ use_vel_ctrl: true
 sigmaMOri: 0.01
 # down rate for rotation force
 rot_dwn_rate: 1.0
+# if true, the sensory data will be the relative pose of the other robot w.r.t.
+# the robot. Otherwise, it is the relative pose of the robot w.r.t. to the other
+# this flag is active only if use_orientation is true
+use_beacon_sensor: false
 # robot's locations (x, y, orientation)
 robots:
   -

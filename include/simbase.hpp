@@ -32,6 +32,8 @@ class SimBase
   protected: const int mode;
   // use orientation
   protected: const bool use_orientation;
+  // use beacon-type sensor
+  protected: const bool use_beacon_sensor;
   // use vel control by orientation
   protected: const bool use_vel_ctrl;
   // random number generator for orientation proc

@@ -804,7 +804,23 @@ void SimNonParam::globalLocImpl(const VectorXd& z)
   {
     VectorXd z_hat(2);
     z_hat(0) = ests[0][i].norm();
-    z_hat(1) = std::atan2(ests[0][i](1), ests[0][i](0));
+
+    if (use_beacon_sensor)
+    {
+      z_hat(1) = std::atan2(-ests[0][i](1), -ests[0][i](0)) - est_oris[0][i];
+      if (z_hat(1) > M_PI)
+      {
+        z_hat(1) -= 2*M_PI;
+      }
+      else if (z_hat(1) <= -M_PI)
+      {
+        z_hat(1) += 2*M_PI;
+      }
+    }
+    else
+    {
+      z_hat(1) = std::atan2(ests[0][i](1), ests[0][i](0));
+    }
 
     VectorXd z_diff = z - z_hat;
     if (z_diff(1) > M_PI)

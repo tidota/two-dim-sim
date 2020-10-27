@@ -18,7 +18,10 @@ SimBase::SimBase(const YAML::Node& doc):
   n_robots(doc["robots"].size()),
   errors(n_robots, 0),
   mode(doc["mode"].as<int>()),
-  use_orientation(doc["use_orientation"].as<bool>()),
+  use_orientation(
+    (mode == 6)? doc["use_orientation"].as<bool>(): false),
+  use_beacon_sensor(
+    (use_orientation)? doc["use_beacon_sensor"].as<bool>(): false),
   use_vel_ctrl(doc["use_vel_ctrl"].as<bool>()),
   sigmaMOri(doc["sigmaMOri"].as<double>()),
   rot_dwn_rate(doc["rot_dwn_rate"].as<double>()),
@@ -144,6 +147,7 @@ SimBase::SimBase(const YAML::Node& doc):
 // =============================================================================
 void SimBase::printSimInfo()
 {
+  std::cout << "mode: " << mode << std::endl;
   std::cout << "network topology: " << topology << std::endl;
   std::cout << "max time: " << max_time << std::endl;
   std::cout << "simulation update frequency (Hz): " << sim_freq << std::endl;
@@ -169,6 +173,10 @@ void SimBase::printSimInfo()
   {
     std::cout << "(" << edge.first << ", " << edge.second << "), ";
   }
+  std::cout << "use_orientation: "
+            << ((use_orientation)? "true": "false") << std::endl;
+  std::cout << "use_beacon_sensor: "
+            << ((use_beacon_sensor)? "true": "false") << std::endl;
   std::cout << std::endl;
 }
 
@@ -374,7 +382,24 @@ void SimBase::globalLoc()
     std::normal_distribution<> global_locT_noise(0, sigmaGlobalLocT);
     VectorXd z(2);
     z(0) = robots[0].norm() + global_locR_noise(gen);
-    z(1) = std::atan2(robots[0](1), robots[0](0)) + global_locT_noise(gen);
+
+    if (use_beacon_sensor)
+    {
+      z(1) = std::atan2(-robots[0](1), -robots[0](0)) - oris[0]
+           + global_locT_noise(gen);
+      while (z(1) > M_PI)
+      {
+        z(1) -= 2*M_PI;
+      }
+      while (z(1) <= -M_PI)
+      {
+        z(1) += 2*M_PI;
+      }
+    }
+    else
+    {
+      z(1) = std::atan2(robots[0](1), robots[0](0)) + global_locT_noise(gen);
+    }
 
     // it is supposed to be followed by the inherited function.
     if (enable_global_loc)
