@@ -434,11 +434,37 @@ void SimBase::mutualLoc()
     // difference between the two robots
     VectorXd diff = robots[edge.second] - robots[edge.first];
     // take measurement (communication)
-    VectorXd z(2);
+    // z(0): dist
+    // z(1): bearing to robot2 r.w.t robot1
+    // z(2): bearing to robot1 r.w.t robot2 (only if use_orientation = true)
+    VectorXd z(3);
     std::normal_distribution<> sensor_noiseR(0, sigmaS_R);
     std::normal_distribution<> sensor_noiseT(0, sigmaS_T);
     z(0) = diff.norm() + sensor_noiseR(gen);
     z(1) = std::atan2(diff(1), diff(0)) + sensor_noiseT(gen);
+
+    if (use_orientation)
+    {
+      z(1) -= oris[edge.first];
+      while (z(1) > M_PI)
+      {
+        z(1) -= 2*M_PI;
+      }
+      while (z(1) <= -M_PI)
+      {
+        z(1) += 2*M_PI;
+      }
+      z(2) = std::atan2(-diff(1), -diff(0)) + sensor_noiseT(gen)
+           - oris[edge.second];
+      while (z(2) > M_PI)
+      {
+        z(2) -= 2*M_PI;
+      }
+      while (z(2) <= -M_PI)
+      {
+        z(2) += 2*M_PI;
+      }
+    }
 
     // if the update step is not enabled, just skip the rest. This just
     // generates random numbers which are the same sequence for the enabled
