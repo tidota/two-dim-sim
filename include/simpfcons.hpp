@@ -36,7 +36,8 @@ class SimPfCons: public SimNonParam
     const std::vector<double>& cumul_weights_target,
     const std::vector<VectorXd>& est_ref,
     const std::vector<double>& cumul_weights_ref,
-    std::vector<double>& cumul_weights, const VectorXd& z);
+    std::vector<double>& cumul_weights, const VectorXd& z,
+    const int est_ori_target = 0, const int est_ori_ref = 0);
   private: void resample(
     const int& robot_indx, const std::vector<double>& cumul_weights);
 

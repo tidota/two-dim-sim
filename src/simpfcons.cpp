@@ -56,7 +56,8 @@ void SimPfCons::evalByZ(
   const std::vector<double>& cumul_weights_target,
   const std::vector<VectorXd>& est_ref,
   const std::vector<double>& cumul_weights_ref,
-  std::vector<double>& cumul_weights, const VectorXd& z)
+  std::vector<double>& cumul_weights, const VectorXd& z,
+  const int est_ori_target, const int est_ori_ref)
 {
   for (int i = 0; i < n_particles; ++i)
   {
@@ -67,9 +68,14 @@ void SimPfCons::evalByZ(
       int indx = drawRandIndx(cumul_weights_ref);
 
       VectorXd diff = est_target[i] - est_ref[indx];
-      VectorXd z_hat(2);
+      VectorXd z_hat(3);
       z_hat(0) = diff.norm();
       z_hat(1) = std::atan2(diff(1), diff(0));
+
+      if (use_orientation)
+      {
+        z_hat(1) -= est_oris[est_ori_ref][indx];
+      }
 
       VectorXd z_diff = z - z_hat;
       if (z_diff(1) > M_PI)
@@ -167,18 +173,37 @@ void SimPfCons::mutualLocImpl(const VectorXd& z, const std::pair<int,int>& edge)
   if (enable_bidirectional)
   {
     VectorXd z_reversed = z;
-    if (z_reversed(1) >= 0)
-      z_reversed(1) -= M_PI;
+    if (use_orientation)
+    {
+      z_reversed(1) = z_reversed(2);
+      evalByZ(
+        ests[r1], cumul_weights_omega1, ests[r2], cumul_weights_omega2_comp,
+        cumul_weights1, z_reversed, r1, r2);
+    }
     else
-      z_reversed(1) += M_PI;
-    evalByZ(
-      ests[r1], cumul_weights_omega1, ests[r2], cumul_weights_omega2_comp,
-      cumul_weights1, z_reversed);
+    {
+      if (z_reversed(1) >= 0)
+        z_reversed(1) -= M_PI;
+      else
+        z_reversed(1) += M_PI;
+      evalByZ(
+        ests[r1], cumul_weights_omega1, ests[r2], cumul_weights_omega2_comp,
+        cumul_weights1, z_reversed);
+    }
   }
   std::vector<double> cumul_weights2(n_particles);
-  evalByZ(
-    ests[r2], cumul_weights_omega2, ests[r1], cumul_weights_omega1_comp,
-    cumul_weights2, z);
+  if (use_orientation)
+  {
+    evalByZ(
+      ests[r2], cumul_weights_omega2, ests[r1], cumul_weights_omega1_comp,
+      cumul_weights2, z, r2, r1);
+  }
+  else
+  {
+    evalByZ(
+      ests[r2], cumul_weights_omega2, ests[r1], cumul_weights_omega1_comp,
+      cumul_weights2, z);
+  }
 
   // resample
   if (enable_bidirectional)
