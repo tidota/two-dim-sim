@@ -20,6 +20,8 @@ SimBase::SimBase(const YAML::Node& doc):
   mode(doc["mode"].as<int>()),
   use_orientation(
     (mode == 6)? doc["use_orientation"].as<bool>(): false),
+  use_relative_bearing(
+    (use_orientation)? doc["use_relative_bearing"].as<bool>(): false),
   use_beacon_sensor(
     (use_orientation)? doc["use_beacon_sensor"].as<bool>(): false),
   use_vel_ctrl(
@@ -179,6 +181,8 @@ void SimBase::printSimInfo()
             << ((use_orientation)? "true": "false") << std::endl;
   std::cout << "use_vel_ctrl: "
             << ((use_vel_ctrl)? "true": "false") << std::endl;
+  std::cout << "use_relative_bearing: "
+            << ((use_relative_bearing)? "true": "false") << std::endl;
   std::cout << "use_beacon_sensor: "
             << ((use_beacon_sensor)? "true": "false") << std::endl;
   std::cout << std::endl;
@@ -447,7 +451,7 @@ void SimBase::mutualLoc()
     z(0) = diff.norm() + sensor_noiseR(gen);
     z(1) = std::atan2(diff(1), diff(0)) + sensor_noiseT(gen);
 
-    if (use_orientation)
+    if (use_relative_bearing)
     {
       z(1) -= oris[edge.first];
       while (z(1) > M_PI)

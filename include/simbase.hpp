@@ -32,6 +32,8 @@ class SimBase
   protected: const int mode;
   // use orientation
   protected: const bool use_orientation;
+  // use relative bearing information w.r.t. to the sensor's orientation.
+  protected: const bool use_relative_bearing;
   // use beacon-type sensor
   protected: const bool use_beacon_sensor;
   // use vel control by orientation

@@ -72,7 +72,7 @@ void SimPfCons::evalByZ(
       z_hat(0) = diff.norm();
       z_hat(1) = std::atan2(diff(1), diff(0));
 
-      if (use_orientation)
+      if (use_relative_bearing)
       {
         z_hat(1) -= est_oris[est_ori_ref][indx];
       }
