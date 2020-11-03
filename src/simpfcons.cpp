@@ -173,7 +173,7 @@ void SimPfCons::mutualLocImpl(const VectorXd& z, const std::pair<int,int>& edge)
   if (enable_bidirectional)
   {
     VectorXd z_reversed = z;
-    if (use_orientation)
+    if (use_relative_bearing)
     {
       z_reversed(1) = z_reversed(2);
       evalByZ(
