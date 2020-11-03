@@ -22,7 +22,8 @@ SimBase::SimBase(const YAML::Node& doc):
     (mode == 6)? doc["use_orientation"].as<bool>(): false),
   use_beacon_sensor(
     (use_orientation)? doc["use_beacon_sensor"].as<bool>(): false),
-  use_vel_ctrl(doc["use_vel_ctrl"].as<bool>()),
+  use_vel_ctrl(
+    (use_orientation)? doc["use_vel_ctrl"].as<bool>(): false),
   sigmaMOri(doc["sigmaMOri"].as<double>()),
   rot_dwn_rate(doc["rot_dwn_rate"].as<double>()),
   n_dim(2),
@@ -67,7 +68,7 @@ SimBase::SimBase(const YAML::Node& doc):
     vels.push_back(VectorXd::Zero(n_dim));
     accs.push_back(VectorXd::Zero(n_dim));
 
-    if (use_orientation && use_vel_ctrl)
+    if (use_vel_ctrl)
     {
       vels_rot.push_back(VectorXd::Zero(2));
     }
@@ -263,7 +264,7 @@ void SimBase::updateSim()
     accs[i] -= fric_rate * vels[i];
   }
 
-  if (use_orientation && use_vel_ctrl)
+  if (use_vel_ctrl)
   {
     // for all robots, apply the resulted accelerations
     for (int i = 0; i < n_robots; ++i)

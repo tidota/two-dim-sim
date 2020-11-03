@@ -98,9 +98,9 @@ global_loc_steps: 1
 topology: complete
 # radius of communication area (used when topology is set to dynamic)
 comm_radius: 10.0
-# use orientation? (correctly works only when mode = 6 (Particle filter))
+# use orientation? (automatically set to false unless mode = 6 (Particle filter))
 use_orientation: true
-# use velocity control by orientation
+# use velocity control by orientation (automatically set to false unsell use_orientation = true)
 use_vel_ctrl: true
 # motion noise in the rotation rate
 sigmaMOri: 0.01
