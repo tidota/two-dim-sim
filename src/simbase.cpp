@@ -173,8 +173,11 @@ void SimBase::printSimInfo()
   {
     std::cout << "(" << edge.first << ", " << edge.second << "), ";
   }
+  std::cout << std::endl;
   std::cout << "use_orientation: "
             << ((use_orientation)? "true": "false") << std::endl;
+  std::cout << "use_vel_ctrl: "
+            << ((use_vel_ctrl)? "true": "false") << std::endl;
   std::cout << "use_beacon_sensor: "
             << ((use_beacon_sensor)? "true": "false") << std::endl;
   std::cout << std::endl;
