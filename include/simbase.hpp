@@ -34,6 +34,8 @@ class SimBase
   protected: const bool use_orientation;
   // use relative bearing information w.r.t. to the sensor's orientation.
   protected: const bool use_relative_bearing;
+  // reduce the confidence in the compliment particles after the convolution.
+  protected: const bool post_reduction;
   // use beacon-type sensor
   protected: const bool use_beacon_sensor;
   // use vel control by orientation

@@ -38,14 +38,28 @@ void SimPfCons::evalByOmega(
       cumul_weights[j] += val;
     }
     double buff = pow(cumul_weights[i], mode6_omega);
+
     // p^omega / p = p^(omega - 1)
     cumul_weights[i] = buff / cumul_weights[i];
-    // p^(1-omega) / p = p^(-omega) = 1 / p^omega
-    cumul_weights_comp[i] = 1.0 / buff;
     if (i > 0)
     {
       cumul_weights[i] += cumul_weights[i-1];
-      cumul_weights_comp[i] += cumul_weights_comp[i-1];
+    }
+
+    if (post_reduction)
+    {
+      // will reduce the confidence for the compliment population later
+      // so the weights are initialized to represent a uniform distribution.
+      cumul_weights_comp[i] = (i + 1) * (i + 2) / 2;
+    }
+    else
+    {
+      // p^(1-omega) / p = p^(-omega) = 1 / p^omega
+      cumul_weights_comp[i] = 1.0 / buff;
+      if (i > 0)
+      {
+        cumul_weights_comp[i] += cumul_weights_comp[i-1];
+      }
     }
   }
 }
@@ -66,6 +80,7 @@ void SimPfCons::evalByZ(
     {
       // draw a sample from the reference population
       int indx = drawRandIndx(cumul_weights_ref);
+      //int indx = ((post_reduction)? j: drawRandIndx(cumul_weights_ref));
 
       VectorXd diff = est_target[i] - est_ref[indx];
       VectorXd z_hat(3);
@@ -88,10 +103,26 @@ void SimPfCons::evalByZ(
       }
 
       // evaluate
-      cumul_weights[i]
-        += exp(
-            -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR*mode6_rateQ
-            -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT*mode6_rateQ);
+      if (post_reduction)
+      {
+        // dont' use mode6_rateQ if the confidence is reduced at the end.
+        cumul_weights[i]
+          += exp(
+              -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR
+              -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT);
+      }
+      else
+      {
+        cumul_weights[i]
+          += exp(
+              -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR*mode6_rateQ
+              -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT*mode6_rateQ);
+      }
+    }
+    if (post_reduction)
+    {
+      // finally reduce the confidence by 1 - omega
+      cumul_weights[i] = pow(cumul_weights[i], 1 - mode6_omega);
     }
     double omega_weight = cumul_weights_target[i];
     if (i > 0)

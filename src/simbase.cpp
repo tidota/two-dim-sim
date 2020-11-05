@@ -22,6 +22,8 @@ SimBase::SimBase(const YAML::Node& doc):
     (mode == 6)? doc["use_orientation"].as<bool>(): false),
   use_relative_bearing(
     (use_orientation)? doc["use_relative_bearing"].as<bool>(): false),
+  post_reduction(
+    (mode == 6)? doc["post_reduction"].as<bool>(): false),
   use_beacon_sensor(
     (use_orientation)? doc["use_beacon_sensor"].as<bool>(): false),
   use_vel_ctrl(
@@ -183,6 +185,8 @@ void SimBase::printSimInfo()
             << ((use_vel_ctrl)? "true": "false") << std::endl;
   std::cout << "use_relative_bearing: "
             << ((use_relative_bearing)? "true": "false") << std::endl;
+  std::cout << "post_reduction: "
+            << ((post_reduction)? "true": "false") << std::endl;
   std::cout << "use_beacon_sensor: "
             << ((use_beacon_sensor)? "true": "false") << std::endl;
   std::cout << std::endl;

@@ -100,10 +100,12 @@ topology: complete
 comm_radius: 10.0
 # use orientation? (automatically set to false unless mode = 6 (Particle filter))
 use_orientation: true
-# use velocity control by orientation (automatically set to false unsell use_orientation = true)
+# use velocity control by orientation (automatically set to false unless use_orientation = true)
 use_vel_ctrl: true
 # if true, bearing info is w.r.t. to the sensor's orientation
 use_relative_bearing: true
+# reduce the confidence in the compliment population (automatically set to false unless mode = 6)
+post_reduction: true
 # motion noise in the rotation rate
 sigmaMOri: 0.01
 # down rate for rotation force
