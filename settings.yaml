@@ -73,7 +73,7 @@ mode4_optim_obj_fn: det
 # mode6 (pf) settings
 mode6_omega: 0.6
 mode6_sigma: 0.3 # 0.085
-mode6_Nref: 5
+mode6_Nref: 50
 mode6_no_frac_exp: false
 mode6_rateQ: 0.4 # 1.0
 # Number of particles

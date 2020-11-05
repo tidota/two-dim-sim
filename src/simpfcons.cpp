@@ -79,8 +79,7 @@ void SimPfCons::evalByZ(
     for (int j = 0; j < mode6_Nref; ++j)
     {
       // draw a sample from the reference population
-      int indx = drawRandIndx(cumul_weights_ref);
-      //int indx = ((post_reduction)? j: drawRandIndx(cumul_weights_ref));
+      int indx = ((post_reduction)? j: drawRandIndx(cumul_weights_ref));
 
       VectorXd diff = est_target[i] - est_ref[indx];
       VectorXd z_hat(3);
