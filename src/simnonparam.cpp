@@ -556,16 +556,24 @@ void SimNonParam::plotImpl()
           if (ave_ori - this->est_oris[i][ip] <= M_PI)
             ave_ori = (ip * ave_ori + this->est_oris[i][ip])/(ip + 1);
           else
+          {
             ave_ori
               = (ip * (ave_ori - 2*M_PI) + this->est_oris[i][ip])/(ip + 1);
+            if (ave_ori <= -M_PI)
+              ave_ori += 2*M_PI;
+          }
         }
         else
         {
           if (this->est_oris[i][ip] - ave_ori <= M_PI)
             ave_ori = (this->est_oris[i][ip] + ip * ave_ori)/(ip + 1);
           else
+          {
             ave_ori
               = ((this->est_oris[i][ip] - 2*M_PI) + ip * ave_ori)/(ip + 1);
+            if (ave_ori <= -M_PI)
+              ave_ori += 2*M_PI;
+          }
         }
       }
       if (show_covs)
