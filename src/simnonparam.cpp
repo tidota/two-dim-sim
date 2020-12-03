@@ -156,9 +156,14 @@ void SimNonParam::endLog()
   fout_pf.close();
 
   // output of gnuplot command
-  // Note: each robot has actual positions, estimated, and error+dist of contour
+  // NOTE: # of columns is different if using orientation.
+  //       If not using orientation,
+  //        actual position (x, y), estimated (x, y), error, p95.
+  //       If using orientation,
+  //        actual position (x, y, theta), estimated (x, y, theta),
+  //        error of location, p95, error of orientation, reserved
   const int off_next_robot
-    = (use_orientation)? n_dim + n_dim + 4: n_dim + n_dim + 2;
+    = (use_orientation)? n_dim + n_dim + 6: n_dim + n_dim + 2;
   const int off_next_column = (use_orientation)? n_dim + 1: n_dim;
 
   std::cout << std::endl;
@@ -169,13 +174,24 @@ void SimNonParam::endLog()
     std::cout << "clear" << std::endl;
     std::cout << "unset object" << std::endl;
     std::cout << "plot \"output.dat\" u 1:"
-              << std::to_string(2+(i+1)*off_next_robot-2)
+              << std::to_string(2+(i+1)*off_next_robot-4)
               << " title \"err of robot" << std::to_string(1+i) << "\" with line";
     std::cout << std::endl;
     std::cout << "replot \"output.dat\" u 1:"
-              << std::to_string(2+(i+1)*off_next_robot-1)
+              << std::to_string(2+(i+1)*off_next_robot-3)
               << " title \"Uncertainty of robot" << std::to_string(1+i) << "\" with line";
     std::cout << std::endl;
+    if (use_orientation)
+    {
+      std::cout << "--- orientation ---" << std::endl;
+      std::cout << "clear" << std::endl;
+      std::cout << "unset object" << std::endl;
+      std::cout << "set yrange [-180:180]" << std::endl;
+      std::cout << "plot \"output.dat\" u 1:"
+                << std::to_string(2+(i+1)*off_next_robot-2)
+                << " title \"Error in Orientation (deg)" << std::to_string(1+i) << "\" with line";
+      std::cout << std::endl;
+    }
   }
   std::cout << std::endl;
 
@@ -189,8 +205,25 @@ void SimNonParam::endLog()
     else
       std::cout << "     ";
     std::cout << "\"output.dat\" u 1:"
-              << std::to_string(2+(i+1)*off_next_robot-2)
+              << std::to_string(2+(i+1)*off_next_robot-4)
               << " title \"err" << std::to_string(1+i) << "\" with line";
+    if (i < n_robots - 1)
+      std::cout << ", \\";
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
+  std::cout << "~~~ (orientation errors) ~~~" << std::endl;
+  std::cout << "clear" << std::endl;
+  std::cout << "unset object" << std::endl;
+  for (int i = 0; i < n_robots; ++i)
+  {
+    if (i == 0)
+      std::cout << "plot ";
+    else
+      std::cout << "     ";
+    std::cout << "\"output.dat\" u 1:"
+              << std::to_string(2+(i+1)*off_next_robot-2)
+              << " title \"orientation err" << std::to_string(1+i) << " (deg)\" with line";
     if (i < n_robots - 1)
       std::cout << ", \\";
     std::cout << std::endl;
@@ -683,6 +716,18 @@ void SimNonParam::plotImpl()
     // length at the ellipse counter crosses the lin to the ground-truth point.
     fout << std::right << std::setw(8)
          << p95 << " ";
+    if (use_orientation)
+    {
+      double diff_ori = ave_ori - oris[i];
+      if (diff_ori > M_PI)
+        diff_ori -= 2*M_PI;
+      if (diff_ori <= -M_PI)
+        diff_ori += 2*M_PI;
+      diff_ori = diff_ori / M_PI * 180.0;
+      fout << std::right << std::setw(8)
+           << diff_ori << " ";
+      fout << "0 ";
+    }
 
     // store data to the buffer to plot
     last_loc[i] = robots[i];
