@@ -44,6 +44,8 @@ class SimNonParam: public SimBase
   // using random seed?
   protected: const bool use_random_seed_pf;
   protected: const unsigned int random_seed_pf;
+  // constant param for the evaluation process
+  private: const double gl_eval_cons;
 
   // file for plotting (trajectories)
   private: std::ofstream fout;

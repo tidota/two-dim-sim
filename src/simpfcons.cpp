@@ -14,7 +14,8 @@ SimPfCons::SimPfCons(const YAML::Node& doc): SimNonParam(doc),
   mode6_sigma(doc["mode6_sigma"].as<double>()),
   mode6_Nref(doc["mode6_Nref"].as<int>()),
   mode6_no_frac_exp(doc["mode6_no_frac_exp"].as<bool>()),
-  mode6_rateQ(doc["mode6_rateQ"].as<double>())
+  mode6_rateQ(doc["mode6_rateQ"].as<double>()),
+  ml_eval_cons(doc["ml_eval_cons"].as<double>())
 {}
 
 // =============================================================================
@@ -107,15 +108,19 @@ void SimPfCons::evalByZ(
         // dont' use mode6_rateQ if the confidence is reduced at the end.
         cumul_weights[i]
           += exp(
-              -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR
-              -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT);
+              -z_diff(0)*z_diff(0)
+                /sigmaS_R/sigmaS_R/ml_eval_cons
+              -z_diff(1)*z_diff(1)
+                /sigmaS_T/sigmaS_T/ml_eval_cons);
       }
       else
       {
         cumul_weights[i]
           += exp(
-              -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR*mode6_rateQ
-              -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT*mode6_rateQ);
+              -z_diff(0)*z_diff(0)
+                /sigmaS_R/sigmaS_R/ml_eval_cons*mode6_rateQ
+              -z_diff(1)*z_diff(1)
+                /sigmaS_T/sigmaS_T/ml_eval_cons*mode6_rateQ);
       }
     }
     if (post_reduction)

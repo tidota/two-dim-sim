@@ -24,6 +24,7 @@ class SimPfCons: public SimNonParam
   private: int mode6_Nref;
   private: bool mode6_no_frac_exp;
   private: double mode6_rateQ;
+  private: double ml_eval_cons;
 
   public: SimPfCons(const YAML::Node& doc);
   public: virtual ~SimPfCons(){}

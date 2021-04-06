@@ -24,7 +24,8 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
   last_est_ori(n_robots),
   cumul_errors(n_robots, 0),
   use_random_seed_pf(doc["use_random_seed_pf"].as<bool>()),
-  random_seed_pf(doc["random_seed_pf"].as<unsigned int>())
+  random_seed_pf(doc["random_seed_pf"].as<unsigned int>()),
+  gl_eval_cons(doc["gl_eval_cons"].as<double>())
 {
   // for all robots
   for(int i = 0; i < n_robots; ++i)
@@ -888,8 +889,8 @@ void SimNonParam::globalLocImpl(const VectorXd& z)
     // evaluate
     cumul_weights[i]
       = exp(
-          -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR
-          -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT);
+          -z_diff(0)*z_diff(0)/sigmaGlobalLocR/sigmaGlobalLocR/gl_eval_cons
+          -z_diff(1)*z_diff(1)/sigmaGlobalLocT/sigmaGlobalLocT/gl_eval_cons);
 
     if (i > 0)
       cumul_weights[i] += cumul_weights[i - 1];
