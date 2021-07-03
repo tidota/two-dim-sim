@@ -1,0 +1,160 @@
+# max time
+max_time: 100.0
+# simulation update frequendy
+sim_freq: 10.0
+# use random seed
+use_random_seed: true
+# random seed to give
+random_seed: 5000
+# weight of motion noise
+sigmaM: 1.5
+# sigma for floating effect
+sigmaF: 0.0
+# sigma for sensor model
+sigmaS_R: 0.1
+sigmaS_T: 0.05
+# sigma for global localizaiton
+sigmaGlobalLocR: 3.0
+sigmaGlobalLocT: 0.5
+# thresholds and rates to generate accelerations (repulsive and attractive)
+repul_thresh: 10.0
+repul_rate: 0.05
+attr_thresh: 1.0
+attr_rate: 0.01
+fric_rate: 0.6 # friction
+# second destinations
+second_dest: true
+second_dest_rate: 2.0
+# control rate
+ctrl_rate: 1.0
+# control max
+ctrl_max: 1.0
+# weights for motion model
+alpha1M: 1.0
+alpha2M: 0.5
+betaM: 0.5
+
+# mode
+# 0: No consideration of uncertainty of the other (assuming the other robot is a static landmark)
+# 1: Naive (consideration of uncertainty of the other, but ignoring correlation between robots)
+# 2: Conservative Data Exchange (doubling the unceratinties of both)
+# 3: Conservative Data Exchange
+# 4: CI-based
+# 5: Centralized
+# 6: Particle filter
+mode: 6
+# mode1 rate
+mode1_rateQ: 1.0
+# mode2 rate
+mode2_rate1: 2.0
+mode2_rate2: 2.0
+mode2_rateQ: 1.0
+# mode3 rate
+# if false, it is set to mode3_omega
+mode3_omega_variable: false
+mode3_omega: 0.95
+mode3_rateQ: 1
+# mode4 (CI)
+# 0: omega = 0.5
+# 1: omega = 0 or 1 based on the determinants
+# 2: omega = 0.6 or 0.4
+# 3: omega = sqrt(det2)/(sqrt(det1) + sqrt(det2))
+# 4: omega = brute-force at an interval of 0.01
+# 5: gsl_min_fminimizer
+# others: omega calculated by the closed formula
+mode4_omega_mode: 4
+mode4_rateQ: 1.0
+# CI with original algorithm if set to true
+mode4_original: true
+mode4_original_force: false
+mode4_original_omega: 0.95
+# CI objective function (trace, det)
+mode4_optim_obj_fn: det
+# mode6 (pf) settings
+mode6_omega: 0.8
+mode6_sigma: 5.0 # 0.085
+mode6_Nref: 25
+mode6_no_frac_exp: false
+mode6_rateQ: 1.0 #0.4 # 1.0
+# Number of particles
+n_particles: 50
+# use random seed for PF
+use_random_seed_pf: true
+# random seed to give for PF
+random_seed_pf: 3000
+# show covariances in the path
+show_covs: true
+# constant parameters for global/mutual loc evaluation
+gl_eval_cons: 2
+ml_eval_cons: 250
+
+# enable_update_step for mutual localization
+enable_update_step: true
+# enable bidirectional mutual update
+enable_bidirectional: true
+# global localization
+enable_global_loc: true
+# global localization at every specified steps
+global_loc_steps: 1
+# network topology
+# star, loop, complete, dynamic
+topology: complete
+# radius of communication area (used when topology is set to dynamic)
+comm_radius: 10.0
+# use orientation? (automatically set to false unless mode = 6 (Particle filter))
+use_orientation: true
+# use velocity control by orientation (automatically set to false unless use_orientation = true)
+use_vel_ctrl: true
+# if true, bearing info is w.r.t. to the sensor's orientation
+use_relative_bearing: true
+# reduce the confidence in the compliment population (automatically set to false unless mode = 6)
+post_reduction: false
+# motion noise in the rotation rate
+sigmaMOri: 0.01
+# down rate for rotation force
+rot_dwn_rate: 1.0
+# if true, the sensory data will be the relative pose of the other robot w.r.t.
+# the robot. Otherwise, it is the relative pose of the robot w.r.t. to the other
+# this flag is active only if use_orientation is true
+use_beacon_sensor: false
+# robot's locations (x, y, orientation)
+robots:
+  -
+    - 0.0
+    - 0.0
+    - -2.355
+  -
+    - 1.0
+    - 0.0
+    - -1.57
+  -
+    - 2.0
+    - 0.0
+    - -0.785
+  -
+    - 2.0
+    - 1.0
+    - 0.0
+  -
+    - 2.0
+    - 2.0
+    - 0.785
+  -
+    - 1.0
+    - 2.0
+    - 1.57
+  -
+    - 0.0
+    - 2.0
+    - 2.355
+  -
+    - 0.0
+    - 1.0
+    - 3.14
+# random order to update estimates?
+enable_random_order: true
+# probabilistically update?
+enable_prob_update: true
+prob_update_p: 1
+# every N time steps to plot
+plot_interval: 10
