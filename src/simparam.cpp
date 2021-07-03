@@ -313,7 +313,7 @@ void SimParam::endLog()
     "cm_s = copy.deepcopy(plt.cm.get_cmap('jet'))" << std::endl <<
     "cm_s._init()" << std::endl <<
     "cm_s._lut = np.array([cmf_s(x) for x in np.linspace(0, maxt, cm_s.N)])" << std::endl <<
-    "mpl.cm.register_cmap(name='cm_s', cmap=cm)" << std::endl <<
+    "mpl.cm.register_cmap(name='cm_s', cmap=cm_s)" << std::endl <<
 
     "# prep figure" << std::endl <<
     "fig, ax = plt.subplots()" << std::endl <<
@@ -332,8 +332,8 @@ void SimParam::endLog()
     "    print('plotting ground-truth of robot ' + str(i+1) + '...')" << std::endl <<
     "    plotPath(" << std::endl <<
     "        np.concatenate(" << std::endl <<
-    "            (data[:,1+10*i:2+10*i]," << std::endl <<
-    "             data[:,2+10*i:3+10*i]," << std::endl <<
+    "            (data[:,1+11*i:2+11*i]," << std::endl <<
+    "             data[:,2+11*i:3+11*i]," << std::endl <<
     "             data[:,0:1]),axis=1).tolist()," << std::endl <<
     "        markers[i]+'--', cmf_s, lw=1, ms=4)" << std::endl <<
     "# plot estimated trajectories" << std::endl <<
@@ -341,8 +341,8 @@ void SimParam::endLog()
     "    print('plotting estimation of robot ' + str(i+1) + '...')" << std::endl <<
     "    plotPath(" << std::endl <<
     "        np.concatenate(" << std::endl <<
-    "            (data[:,3+10*i:4+10*i]," << std::endl <<
-    "             data[:,4+10*i:5+10*i]," << std::endl <<
+    "            (data[:,3+11*i:4+11*i]," << std::endl <<
+    "             data[:,4+11*i:5+11*i]," << std::endl <<
     "             data[:,0:1]),axis=1).tolist()," << std::endl <<
     "        markers[i], cmf, lw=1, ms=4)" << std::endl <<
 
@@ -362,7 +362,7 @@ void SimParam::endLog()
     "norm = mpl.colors.Normalize(vmin = 0, vmax = maxt)" << std::endl <<
     "ax_cb = divider.new_horizontal(size=\"5%\", pad=0.05)" << std::endl <<
     "ax_cb.set_title('$t$ \\small{(sec)}', fontsize=18)" << std::endl <<
-    "cb = mpl.colorbar.ColorbarBase(ax_cb, cmap='cm', norm=norm, orientation='vertical')" << std::endl <<
+    "cb = mpl.colorbar.ColorbarBase(ax_cb, cmap=cm, norm=norm, orientation='vertical')" << std::endl <<
     "plt.gcf().add_axes(ax_cb)" << std::endl <<
 
     "# legends" << std::endl <<

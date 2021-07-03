@@ -1,5 +1,6 @@
 // simnonparam.cpp
 
+#include <cmath>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -248,14 +249,16 @@ void SimNonParam::endLog()
       //   continue;
       for (auto data: cov_buff[i])
       {
+        double s1 = std::sqrt(data[2]) * 2 * std::sqrt(5.991);
+        double s2 = std::sqrt(data[3]) * 2 * std::sqrt(5.991);
         f_gnuplot << "set object " << std::to_string(count_cov + 1)
                   << " ellipse center "
                   << std::to_string(data[0]) << ","
                   << std::to_string(data[1])
                   << " size "
                   // https://www.visiondummy.com/2014/04/draw-error-ellipse-representing-covariance-matrix/
-                  << std::to_string(std::sqrt(data[2]) * 2 * std::sqrt(5.991)) << ","
-                  << std::to_string(std::sqrt(data[3]) * 2 * std::sqrt(5.991))
+                  << ((std::isnan(s1))? "0.0": std::to_string(s1)) << ","
+                  << ((std::isnan(s2))? "0.0": std::to_string(s2))
                   << " angle "
                   << std::to_string(data[4])
                   << " front fillstyle empty border -1" << std::endl;
@@ -433,7 +436,7 @@ void SimNonParam::endLog()
     "cm_s = copy.deepcopy(plt.cm.get_cmap('jet'))" << std::endl <<
     "cm_s._init()" << std::endl <<
     "cm_s._lut = np.array([cmf_s(x) for x in np.linspace(0, maxt, cm_s.N)])" << std::endl <<
-    "mpl.cm.register_cmap(name='cm_s', cmap=cm)" << std::endl <<
+    "mpl.cm.register_cmap(name='cm_s', cmap=cm_s)" << std::endl <<
 
     "# prep figure" << std::endl <<
     "fig, ax = plt.subplots()" << std::endl <<
@@ -508,7 +511,7 @@ void SimNonParam::endLog()
     "norm = mpl.colors.Normalize(vmin = 0, vmax = maxt)" << std::endl <<
     "ax_cb = divider.new_horizontal(size=\"5%\", pad=0.05)" << std::endl <<
     "ax_cb.set_title('$t$ \\small{(sec)}', fontsize=18)" << std::endl <<
-    "cb = mpl.colorbar.ColorbarBase(ax_cb, cmap='cm', norm=norm, orientation='vertical')" << std::endl <<
+    "cb = mpl.colorbar.ColorbarBase(ax_cb, cmap=cm, norm=norm, orientation='vertical')" << std::endl <<
     "plt.gcf().add_axes(ax_cb)" << std::endl <<
 
     "# legends" << std::endl <<
