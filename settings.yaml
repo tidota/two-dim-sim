@@ -35,11 +35,11 @@ alpha2M: 0.5
 betaM: 0.5
 
 # mode
-# 0: no consideration of uncertainty of the other
-# 1: consideration of uncertainty of the other
-# 2: doubling the unceratinties of both
-# 3: biased
-# 4: CI
+# 0: No consideration of uncertainty of the other (assuming the other robot is a static landmark)
+# 1: Naive (consideration of uncertainty of the other, but ignoring correlation between robots)
+# 2: Conservative Data Exchange (doubling the unceratinties of both)
+# 3: Conservative Data Exchange
+# 4: CI-based
 # 5: Centralized
 # 6: Particle filter
 mode: 6
