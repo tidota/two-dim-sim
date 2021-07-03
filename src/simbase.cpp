@@ -449,7 +449,11 @@ void SimBase::mutualLoc()
     // z(0): dist
     // z(1): bearing to robot2 r.w.t robot1
     // z(2): bearing to robot1 r.w.t robot2 (only if use_orientation = true)
-    VectorXd z(3);
+    VectorXd z;
+    if (use_relative_bearing)
+      z.resize(3);
+    else
+      z.resize(2);
     std::normal_distribution<> sensor_noiseR(0, sigmaS_R);
     std::normal_distribution<> sensor_noiseT(0, sigmaS_T);
     z(0) = diff.norm() + sensor_noiseR(gen);
