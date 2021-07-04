@@ -30,9 +30,9 @@ ctrl_rate: 1.0
 # control max
 ctrl_max: 1.0
 # weights for motion model
-alpha1M: 1.0
-alpha2M: 0.5
-betaM: 0.5
+alpha1M: 1.5 #1.0
+alpha2M: 1.0 #0.5
+betaM: 1.0 #0.5
 
 # mode
 # 0: No consideration of uncertainty of the other (assuming the other robot is a static landmark)
@@ -71,7 +71,7 @@ mode4_original_omega: 0.95
 # CI objective function (trace, det)
 mode4_optim_obj_fn: det
 # mode6 (pf) settings
-mode6_omega: 0.7
+mode6_omega: 0.8
 mode6_sigma: 0.3 # 0.085
 mode6_Nref: 25
 mode6_no_frac_exp: false
@@ -86,7 +86,7 @@ random_seed_pf: 3000
 show_covs: true
 # constant parameters for global/mutual loc evaluation
 gl_eval_cons: 1
-ml_eval_cons: 250
+ml_eval_cons: 100
 
 # enable_update_step for mutual localization
 enable_update_step: true
