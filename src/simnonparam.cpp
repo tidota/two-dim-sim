@@ -176,11 +176,11 @@ void SimNonParam::endLog()
     std::cout << "clear" << std::endl;
     std::cout << "unset object" << std::endl;
     std::cout << "plot \"output.dat\" u 1:"
-              << std::to_string(2+(i+1)*off_next_robot-4)
+              << std::to_string(2 + i*off_next_robot + 2*off_next_column)
               << " title \"err of robot" << std::to_string(1+i) << "\" with line";
     std::cout << std::endl;
     std::cout << "replot \"output.dat\" u 1:"
-              << std::to_string(2+(i+1)*off_next_robot-3)
+              << std::to_string(2 + i*off_next_robot + 2*off_next_column + 1)
               << " title \"Uncertainty of robot" << std::to_string(1+i) << "\" with line";
     std::cout << std::endl;
     if (use_orientation)
@@ -190,7 +190,7 @@ void SimNonParam::endLog()
       std::cout << "unset object" << std::endl;
       std::cout << "set yrange [-180:180]" << std::endl;
       std::cout << "plot \"output.dat\" u 1:"
-                << std::to_string(2+(i+1)*off_next_robot-2)
+                << std::to_string(2 + i*off_next_robot + 2*off_next_column + 2)
                 << " title \"Error in Orientation (deg)" << std::to_string(1+i) << "\" with line";
       std::cout << std::endl;
     }
@@ -207,7 +207,7 @@ void SimNonParam::endLog()
     else
       std::cout << "     ";
     std::cout << "\"output.dat\" u 1:"
-              << std::to_string(2+(i+1)*off_next_robot-4)
+              << std::to_string(2 + i*off_next_robot + 2*off_next_column)
               << " title \"err" << std::to_string(1+i) << "\" with line";
     if (i < n_robots - 1)
       std::cout << ", \\";
@@ -224,7 +224,7 @@ void SimNonParam::endLog()
     else
       std::cout << "     ";
     std::cout << "\"output.dat\" u 1:"
-              << std::to_string(2+(i+1)*off_next_robot-2)
+              << std::to_string(2 + i*off_next_robot + 2*off_next_column + 2)
               << " title \"orientation err" << std::to_string(1+i) << " (deg)\" with line";
     if (i < n_robots - 1)
       std::cout << ", \\";
