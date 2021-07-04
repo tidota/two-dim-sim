@@ -808,9 +808,6 @@ void SimNonParam::predict()
       EigenVecs(1, 0) = vels[i](1) / v;
       EigenVecs(0, 1) = -vels[i](1) / v;
       EigenVecs(1, 1) = vels[i](0) / v;
-      MatrixXd EigenVals = MatrixXd::Identity(2, 2);
-      EigenVals(0, 0) = alpha1M * v * v;
-      EigenVals(1, 1) = alpha2M * v * v;
 
       std::normal_distribution<> rnd1(0, std::sqrt(alpha1M) * v);
       std::normal_distribution<> rnd2(0, std::sqrt(alpha2M) * v);
