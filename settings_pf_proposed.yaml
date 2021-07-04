@@ -71,8 +71,8 @@ mode4_original_omega: 0.95
 # CI objective function (trace, det)
 mode4_optim_obj_fn: det
 # mode6 (pf) settings
-mode6_omega: 0.8
-mode6_sigma: 5.0 # 0.085
+mode6_omega: 0.7
+mode6_sigma: 0.3 # 0.085
 mode6_Nref: 25
 mode6_no_frac_exp: false
 mode6_rateQ: 1.0 #0.4 # 1.0
@@ -85,8 +85,8 @@ random_seed_pf: 3000
 # show covariances in the path
 show_covs: true
 # constant parameters for global/mutual loc evaluation
-gl_eval_cons: 2
-ml_eval_cons: 2
+gl_eval_cons: 1
+ml_eval_cons: 250
 
 # enable_update_step for mutual localization
 enable_update_step: true
