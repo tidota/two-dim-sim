@@ -83,7 +83,8 @@ void SimPfCons::evalByZ(
       int indx = ((post_reduction)? j: drawRandIndx(cumul_weights_ref));
 
       VectorXd diff = est_target[i] - est_ref[indx];
-      VectorXd z_hat(2);
+      VectorXd z_hat;
+      z_hat.resize(z.size());
       z_hat(0) = diff.norm();
       z_hat(1) = std::atan2(diff(1), diff(0));
 

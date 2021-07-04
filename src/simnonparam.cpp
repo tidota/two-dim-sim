@@ -772,7 +772,7 @@ void SimNonParam::predict()
 
         // add noise
         VectorXd noise1_x1(n_dim);
-        noise1_x1 << std::cos(est_oris[i][ip]), std::cos(est_oris[i][ip]);
+        noise1_x1 << std::cos(est_oris[i][ip]), std::sin(est_oris[i][ip]);
         noise1_x1 *= rnd1(gen_pf);
         VectorXd noise1_x2(n_dim);
         noise1_x2 << std::cos(est_oris[i][ip] + M_PI/2),
