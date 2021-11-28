@@ -469,8 +469,9 @@ void SimNonParam::endLog()
     "             data[:,2+" << off_next_column << "+" << off_next_robot << "*i:3+"
                              << off_next_column << "+" << off_next_robot << "*i]," << std::endl <<
     "             data[:,0:1]),axis=1).tolist()," << std::endl <<
-    "        markers[i], cmf, lw=1, ms=4)" << std::endl <<
-
+    "        markers[i], cmf, lw=1, ms=4)" << std::endl;
+/*
+  f_pyplot <<
     "#plot particles" << std::endl <<
     "f = open('particles.dat', 'r')" << std::endl <<
     "pdata = np.array([[float(v) for v in line.split()] for line in f])" << std::endl <<
@@ -493,6 +494,7 @@ void SimNonParam::endLog()
       "            0.1*math.cos(pdata[j,2+" << off_next_column << "*i]), 0.1*math.sin(pdata[j,2+" << off_next_column << "*i])," <<
       "            head_width=0.01, head_length=0.03, fill=True, color='black')" << std::endl;
   }
+*/
 
   f_pyplot <<
     "# fix the ratio" << std::endl <<
