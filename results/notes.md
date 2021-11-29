@@ -113,42 +113,42 @@ set key left top
 ```
 clear
 unset object
-plot "output_pf_ori_naive.dat" u 1:8 title "Err" with line
+plot "output_pf_ori_naive.dat" u 1:8 title "Error" with line
 replot "output_pf_ori_naive.dat" u 1:9 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_naive.dat" u 1:18 title "Err" with line
+plot "output_pf_ori_naive.dat" u 1:18 title "Error" with line
 replot "output_pf_ori_naive.dat" u 1:19 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_naive.dat" u 1:28 title "Err" with line
+plot "output_pf_ori_naive.dat" u 1:28 title "Error" with line
 replot "output_pf_ori_naive.dat" u 1:29 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_naive.dat" u 1:38 title "Err" with line
+plot "output_pf_ori_naive.dat" u 1:38 title "Error" with line
 replot "output_pf_ori_naive.dat" u 1:39 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_naive.dat" u 1:48 title "Err" with line
+plot "output_pf_ori_naive.dat" u 1:48 title "Error" with line
 replot "output_pf_ori_naive.dat" u 1:49 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_naive.dat" u 1:58 title "Err" with line
+plot "output_pf_ori_naive.dat" u 1:58 title "Error" with line
 replot "output_pf_ori_naive.dat" u 1:59 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_naive.dat" u 1:68 title "Err" with line
+plot "output_pf_ori_naive.dat" u 1:68 title "Error" with line
 replot "output_pf_ori_naive.dat" u 1:69 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_naive.dat" u 1:78 title "Err" with line
+plot "output_pf_ori_naive.dat" u 1:78 title "Error" with line
 replot "output_pf_ori_naive.dat" u 1:79 title "Uncertainty" with line
 ```
 
@@ -199,42 +199,42 @@ plot "output_pf_ori_naive.dat" u 1:80 with line
 ```
 clear
 unset object
-plot "output_pf_ori_proposed.dat" u 1:8 title "Err" with line
+plot "output_pf_ori_proposed.dat" u 1:8 title "Error" with line
 replot "output_pf_ori_proposed.dat" u 1:9 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_proposed.dat" u 1:18 title "Err" with line
+plot "output_pf_ori_proposed.dat" u 1:18 title "Error" with line
 replot "output_pf_ori_proposed.dat" u 1:19 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_proposed.dat" u 1:28 title "Err" with line
+plot "output_pf_ori_proposed.dat" u 1:28 title "Error" with line
 replot "output_pf_ori_proposed.dat" u 1:29 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_proposed.dat" u 1:38 title "Err" with line
+plot "output_pf_ori_proposed.dat" u 1:38 title "Error" with line
 replot "output_pf_ori_proposed.dat" u 1:39 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_proposed.dat" u 1:48 title "Err" with line
+plot "output_pf_ori_proposed.dat" u 1:48 title "Error" with line
 replot "output_pf_ori_proposed.dat" u 1:49 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_proposed.dat" u 1:58 title "Err" with line
+plot "output_pf_ori_proposed.dat" u 1:58 title "Error" with line
 replot "output_pf_ori_proposed.dat" u 1:59 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_proposed.dat" u 1:68 title "Err" with line
+plot "output_pf_ori_proposed.dat" u 1:68 title "Error" with line
 replot "output_pf_ori_proposed.dat" u 1:69 title "Uncertainty" with line
 
 clear
 unset object
-plot "output_pf_ori_proposed.dat" u 1:78 title "Err" with line
+plot "output_pf_ori_proposed.dat" u 1:78 title "Error" with line
 replot "output_pf_ori_proposed.dat" u 1:79 title "Uncertainty" with line
 ```
 
