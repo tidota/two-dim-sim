@@ -1,5 +1,6 @@
 // simnonparam.cpp
 
+#include <cassert>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
@@ -24,6 +25,7 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
   last_est(n_robots),
   last_est_ori(n_robots),
   cumul_errors(n_robots, 0),
+  cumul_errors_ori(n_robots, 0),
   use_random_seed_pf(doc["use_random_seed_pf"].as<bool>()),
   random_seed_pf(doc["random_seed_pf"].as<unsigned int>()),
   gl_eval_cons(doc["gl_eval_cons"].as<double>())
@@ -553,13 +555,29 @@ void SimNonParam::endLog()
 
   std::cout << "~~~ average errors ~~~" << std::endl;
   // display errors
-  double total_error = 0;
-  for (int i = 0; i < n_robots; ++i)
   {
-    std::cout << "robot[" << i << "]'s average error:" << (cumul_errors[i]/(max_time*sim_freq)) << std::endl;
-    total_error += cumul_errors[i];
+    double total_error = 0;
+    for (int i = 0; i < n_robots; ++i)
+    {
+      std::cout << "robot[" << i << "]'s average error:" << (cumul_errors[i]/(max_time*sim_freq)) << std::endl;
+      total_error += cumul_errors[i];
+    }
+    std::cout << "overall average error: " << (total_error/(max_time*sim_freq)/n_robots) << std::endl;
   }
-  std::cout << "overall average error: " << (total_error/(max_time*sim_freq)/n_robots) << std::endl;
+
+  std::cout << "~~~ average errors (ori) ~~~" << std::endl;
+  // display errors in orientation
+  {
+    double total_error_ori = 0;
+    for (int i = 0; i < n_robots; ++i)
+    {
+      std::cout << "robot[" << i << "]'s average error (ori in deg):"
+                << (cumul_errors_ori[i]/(max_time*sim_freq)) / M_PI * 180.0 << std::endl;
+      total_error_ori += cumul_errors_ori[i];
+    }
+    std::cout << "overall average error (ori in deg): "
+              << (total_error_ori/(max_time*sim_freq)/n_robots) / M_PI * 180.0 << std::endl;
+  }
 }
 
 // =============================================================================
@@ -582,7 +600,10 @@ void SimNonParam::plotImpl()
   {
     // calculate average estimated location
     VectorXd average = VectorXd::Zero(n_dim);
-    double ave_ori = 0;
+    // NOTE: calculating the average orientation by using vectors
+    //double ave_ori = 0;
+    double sum_sin = 0;
+    double sum_cos = 0;
     VectorXd squared_average = VectorXd::Zero(n_dim);
     double mix_average = 0;
     for (int ip = 0; ip < n_particles; ++ip)
@@ -590,30 +611,32 @@ void SimNonParam::plotImpl()
       average += this->ests[i][ip];
       if (use_orientation)
       {
-        if (ave_ori >= this->est_oris[i][ip])
-        {
-          if (ave_ori - this->est_oris[i][ip] <= M_PI)
-            ave_ori = (ip * ave_ori + this->est_oris[i][ip])/(ip + 1);
-          else
-          {
-            ave_ori
-              = (ip * (ave_ori - 2*M_PI) + this->est_oris[i][ip])/(ip + 1);
-            if (ave_ori <= -M_PI)
-              ave_ori += 2*M_PI;
-          }
-        }
-        else
-        {
-          if (this->est_oris[i][ip] - ave_ori <= M_PI)
-            ave_ori = (this->est_oris[i][ip] + ip * ave_ori)/(ip + 1);
-          else
-          {
-            ave_ori
-              = ((this->est_oris[i][ip] - 2*M_PI) + ip * ave_ori)/(ip + 1);
-            if (ave_ori <= -M_PI)
-              ave_ori += 2*M_PI;
-          }
-        }
+        sum_sin += std::sin(this->est_oris[i][ip]);
+        sum_cos += std::cos(this->est_oris[i][ip]);
+        // if (ave_ori >= this->est_oris[i][ip])
+        // {
+        //   if (ave_ori - this->est_oris[i][ip] <= M_PI)
+        //     ave_ori = (ip * ave_ori + this->est_oris[i][ip])/(ip + 1);
+        //   else
+        //   {
+        //     ave_ori
+        //       = (ip * (ave_ori - 2*M_PI) + this->est_oris[i][ip])/(ip + 1);
+        //     if (ave_ori <= -M_PI)
+        //       ave_ori += 2*M_PI;
+        //   }
+        // }
+        // else
+        // {
+        //   if (this->est_oris[i][ip] - ave_ori <= M_PI)
+        //     ave_ori = (this->est_oris[i][ip] + ip * ave_ori)/(ip + 1);
+        //   else
+        //   {
+        //     ave_ori
+        //       = ((this->est_oris[i][ip] - 2*M_PI) + ip * ave_ori)/(ip + 1);
+        //     if (ave_ori <= -M_PI)
+        //       ave_ori += 2*M_PI;
+        //   }
+        // }
       }
       if (show_covs)
       {
@@ -661,6 +684,13 @@ void SimNonParam::plotImpl()
         p95 = std::sqrt(5.991) * sx * sy
             * std::sqrt((a*a+b*b)/(a*a*sy*sy + b*b*sx*sx));
       }
+    }
+    // calc average orientation
+    double ave_ori;
+    if (use_orientation)
+    {
+      assert(sum_sin + sum_cos != 0);
+      ave_ori = std::atan2(sum_sin, sum_cos);
     }
 
     // --- Terminal Output --- //
@@ -934,6 +964,26 @@ void SimNonParam::calcErrors()
     mean /= n_particles;
     errors[i] = (mean - robots[i]).norm();
     cumul_errors[i] += errors[i];
+  }
+  // NOTE: calculate errors in orientation
+  if (use_orientation)
+  {
+    for (int i = 0; i < n_robots; ++i)
+    {
+      double sum_sin = 0;
+      double sum_cos = 0;
+      for (int ip = 0; ip < n_particles; ++ip)
+      {
+        sum_sin += std::sin(this->est_oris[i][ip]);
+        sum_cos += std::cos(this->est_oris[i][ip]);
+      }
+      double ave_ori;
+      assert(sum_sin + sum_cos != 0);
+      ave_ori = std::atan2(sum_sin, sum_cos);
+
+      double error_ori = std::fabs(ave_ori - oris[i]);
+      cumul_errors_ori[i] += error_ori;
+    }
   }
 }
 

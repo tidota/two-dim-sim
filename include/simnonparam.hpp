@@ -39,6 +39,10 @@ class SimNonParam: public SimBase
   // buffer for calculation of average errors
   private: std::vector<double> cumul_errors;
 
+  // buffer for calculation of average errors in orientation
+  // It is calculated if use_orientation is set to true.
+  private: std::vector<double> cumul_errors_ori;
+
   // random value generator for sampling
   protected: std::mt19937 gen_pf;
   // using random seed?
