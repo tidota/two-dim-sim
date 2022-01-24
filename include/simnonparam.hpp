@@ -38,10 +38,19 @@ class SimNonParam: public SimBase
 
   // buffer for calculation of average errors
   private: std::vector<double> cumul_errors;
+  // buffer for calculation of average errors for each phase
+  // (a new phase is added when scaleControl is called)
+  private: std::vector< std::vector<double> > cumul_errors_phase;
+  // time steps for each phase
+  // (a new phase is added when scaleControl is called)
+  private: std::vector<int> time_steps_phase;
 
   // buffer for calculation of average errors in orientation
   // It is calculated if use_orientation is set to true.
   private: std::vector<double> cumul_errors_ori;
+  // buffer for calculation of average errors in orientation for each phase
+  // (a new phase is added when scaleControl is called)
+  private: std::vector< std::vector<double> > cumul_errors_ori_phase;
 
   // random value generator for sampling
   protected: std::mt19937 gen_pf;
@@ -58,6 +67,15 @@ class SimNonParam: public SimBase
 
   public: SimNonParam(const YAML::Node& doc);
   public: virtual ~SimNonParam(){}
+
+  // add items for the new phase
+  // (this function is called by scaleControl in SimBase)
+  protected: virtual void startNewPhase() override
+  {
+    cumul_errors_phase.push_back(std::vector<double>(n_robots, 0));
+    cumul_errors_ori_phase.push_back(std::vector<double>(n_robots, 0));
+    time_steps_phase.push_back(0);
+  }
 
   // print sim infor
   public: virtual void printSimInfo() override;

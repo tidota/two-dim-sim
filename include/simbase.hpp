@@ -100,7 +100,9 @@ class SimBase
   {
     repul_thresh *= repul_rate;
     attr_thresh *= attr_rate;
+    startNewPhase();
   }
+  protected: virtual void startNewPhase(){}
 
   // control rate
   protected: const double ctrl_rate;

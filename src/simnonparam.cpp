@@ -25,7 +25,12 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
   last_est(n_robots),
   last_est_ori(n_robots),
   cumul_errors(n_robots, 0),
+  cumul_errors_phase(1, std::vector<double>(n_robots, 0)),
+  // NOTE: time_steps_phase[0] is set to -1 so that step 0 is not counted.
+  //(step 0 is the initial state and there is no error)
+  time_steps_phase(1, -1),
   cumul_errors_ori(n_robots, 0),
+  cumul_errors_ori_phase(1, std::vector<double>(n_robots, 0)),
   use_random_seed_pf(doc["use_random_seed_pf"].as<bool>()),
   random_seed_pf(doc["random_seed_pf"].as<unsigned int>()),
   gl_eval_cons(doc["gl_eval_cons"].as<double>())
@@ -556,6 +561,7 @@ void SimNonParam::endLog()
   std::cout << "~~~ average errors ~~~" << std::endl;
   // display errors
   {
+    std::cout << "time steps: " << (max_time*sim_freq) << std::endl;
     double total_error = 0;
     for (int i = 0; i < n_robots; ++i)
     {
@@ -564,19 +570,58 @@ void SimNonParam::endLog()
     }
     std::cout << "overall average error: " << (total_error/(max_time*sim_freq)/n_robots) << std::endl;
   }
-
-  std::cout << "~~~ average errors (ori) ~~~" << std::endl;
-  // display errors in orientation
+  for (unsigned int iphase = 0; iphase < cumul_errors_phase.size(); ++iphase)
   {
-    double total_error_ori = 0;
-    for (int i = 0; i < n_robots; ++i)
+    std::cout << "~~~ average errors (phase " << (iphase+1) << ") ~~~" << std::endl;
+    // display errors
     {
-      std::cout << "robot[" << i << "]'s average error (ori in deg):"
-                << (cumul_errors_ori[i]/(max_time*sim_freq)) / M_PI * 180.0 << std::endl;
-      total_error_ori += cumul_errors_ori[i];
+      std::cout << "time steps: " << time_steps_phase[iphase] << std::endl;
+      double total_error_phase = 0;
+      for (int i = 0; i < n_robots; ++i)
+      {
+        std::cout << "robot[" << i << "]'s average error:"
+                  << (cumul_errors_phase[iphase][i]/time_steps_phase[iphase]) << std::endl;
+        total_error_phase += cumul_errors_phase[iphase][i];
+      }
+      std::cout << "overall average error: "
+                << (total_error_phase/time_steps_phase[iphase]/n_robots) << std::endl;
     }
-    std::cout << "overall average error (ori in deg): "
-              << (total_error_ori/(max_time*sim_freq)/n_robots) / M_PI * 180.0 << std::endl;
+  }
+  std::cout << std::endl;
+
+  if (use_orientation)
+  {
+    std::cout << "~~~ average errors (ori) ~~~" << std::endl;
+    // display errors in orientation
+    {
+      std::cout << "time steps: " << (max_time*sim_freq) << std::endl;
+      double total_error_ori = 0;
+      for (int i = 0; i < n_robots; ++i)
+      {
+        std::cout << "robot[" << i << "]'s average error (ori in deg):"
+                  << (cumul_errors_ori[i]/(max_time*sim_freq) / M_PI * 180.0) << std::endl;
+        total_error_ori += cumul_errors_ori[i];
+      }
+      std::cout << "overall average error (ori in deg): "
+                << (total_error_ori/(max_time*sim_freq)/n_robots / M_PI * 180.0) << std::endl;
+    }
+    for (unsigned int iphase = 0; iphase < cumul_errors_ori_phase.size(); ++iphase)
+    {
+      std::cout << "~~~ average errors (ori, phase " << (iphase+1) << ") ~~~" << std::endl;
+      // display errors
+      {
+        std::cout << "time steps: " << time_steps_phase[iphase] << std::endl;
+        double total_error_ori_phase = 0;
+        for (int i = 0; i < n_robots; ++i)
+        {
+          std::cout << "robot[" << i << "]'s average error (ori in deg):"
+                    << (cumul_errors_ori_phase[iphase][i]/time_steps_phase[iphase] / M_PI * 180.0) << std::endl;
+          total_error_ori_phase += cumul_errors_ori_phase[iphase][i];
+        }
+        std::cout << "overall average error (ori in deg): "
+                  << (total_error_ori_phase/time_steps_phase[iphase]/n_robots / M_PI * 180.0) << std::endl;
+      }
+    }
   }
 }
 
@@ -964,6 +1009,7 @@ void SimNonParam::calcErrors()
     mean /= n_particles;
     errors[i] = (mean - robots[i]).norm();
     cumul_errors[i] += errors[i];
+    cumul_errors_phase[cumul_errors_phase.size() - 1][i] += errors[i];
   }
   // NOTE: calculate errors in orientation
   if (use_orientation)
@@ -981,10 +1027,17 @@ void SimNonParam::calcErrors()
       assert(sum_sin + sum_cos != 0);
       ave_ori = std::atan2(sum_sin, sum_cos);
 
-      double error_ori = std::fabs(ave_ori - oris[i]);
+      double diff_ori = ave_ori - oris[i];
+      if (diff_ori > M_PI)
+        diff_ori -= 2*M_PI;
+      if (diff_ori <= -M_PI)
+        diff_ori += 2*M_PI;
+      double error_ori = std::fabs(diff_ori);
       cumul_errors_ori[i] += error_ori;
+      cumul_errors_ori_phase[cumul_errors_ori_phase.size() - 1][i] += error_ori;
     }
   }
+  time_steps_phase[time_steps_phase.size() - 1]++;
 }
 
 // =============================================================================
