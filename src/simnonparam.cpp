@@ -33,7 +33,8 @@ SimNonParam::SimNonParam(const YAML::Node& doc): SimBase(doc),
   cumul_errors_ori_phase(1, std::vector<double>(n_robots, 0)),
   use_random_seed_pf(doc["use_random_seed_pf"].as<bool>()),
   random_seed_pf(doc["random_seed_pf"].as<unsigned int>()),
-  gl_eval_cons(doc["gl_eval_cons"].as<double>())
+  gl_eval_cons(doc["gl_eval_cons"].as<double>()),
+  plot_particles(doc["plot_particles"].as<bool>())
 {
   // for all robots
   for(int i = 0; i < n_robots; ++i)
@@ -477,31 +478,33 @@ void SimNonParam::endLog()
                              << off_next_column << "+" << off_next_robot << "*i]," << std::endl <<
     "             data[:,0:1]),axis=1).tolist()," << std::endl <<
     "        markers[i], cmf, lw=1, ms=4)" << std::endl;
-/*
-  f_pyplot <<
-    "#plot particles" << std::endl <<
-    "f = open('particles.dat', 'r')" << std::endl <<
-    "pdata = np.array([[float(v) for v in line.split()] for line in f])" << std::endl <<
-    "f.close()" << std::endl <<
-    "for i in range(" << n_robots << "):" << std::endl <<
-    "    print('plotting particles of robot ' + str(i+1) + '...')" << std::endl <<
-    "    plt.plot(" << std::endl <<
-    "        pdata[:,0+" << off_next_column << "*i:1+" << off_next_column << "*i].tolist(), pdata[:,1+" << off_next_column << "*i:2+" << off_next_column << "*i].tolist()," << std::endl <<
-    "        markers[i], color='black', linewidth=0.5, markersize=2)" << std::endl;
 
-  if(use_orientation)
+  if (plot_particles)
   {
     f_pyplot <<
-      "n_particles = len(pdata[:,0:1].tolist())" << std::endl <<
+      "#plot particles" << std::endl <<
+      "f = open('particles.dat', 'r')" << std::endl <<
+      "pdata = np.array([[float(v) for v in line.split()] for line in f])" << std::endl <<
+      "f.close()" << std::endl <<
       "for i in range(" << n_robots << "):" << std::endl <<
-      "    print('plotting arrows of robot ' + str(i+1) + '...')" << std::endl <<
-      "    for j in range(n_particles):" << std::endl <<
-      "        plt.arrow(" << std::endl <<
-      "            pdata[j," << off_next_column << "*i], pdata[j,1+" << off_next_column << "*i]," << std::endl <<
-      "            0.1*math.cos(pdata[j,2+" << off_next_column << "*i]), 0.1*math.sin(pdata[j,2+" << off_next_column << "*i])," <<
-      "            head_width=0.01, head_length=0.03, fill=True, color='black')" << std::endl;
+      "    print('plotting particles of robot ' + str(i+1) + '...')" << std::endl <<
+      "    plt.plot(" << std::endl <<
+      "        pdata[:,0+" << off_next_column << "*i:1+" << off_next_column << "*i].tolist(), pdata[:,1+" << off_next_column << "*i:2+" << off_next_column << "*i].tolist()," << std::endl <<
+      "        markers[i], color='black', linewidth=0.5, markersize=1, zorder=100)" << std::endl;
+
+    if(use_orientation)
+    {
+      f_pyplot <<
+        "n_particles = len(pdata[:,0:1].tolist())" << std::endl <<
+        "for i in range(" << n_robots << "):" << std::endl <<
+        "    print('plotting arrows of robot ' + str(i+1) + '...')" << std::endl <<
+        "    for j in range(n_particles):" << std::endl <<
+        "        plt.arrow(" << std::endl <<
+        "            pdata[j," << off_next_column << "*i], pdata[j,1+" << off_next_column << "*i]," << std::endl <<
+        "            0.1*math.cos(pdata[j,2+" << off_next_column << "*i]), 0.1*math.sin(pdata[j,2+" << off_next_column << "*i])," <<
+        "            head_width=0.05, head_length=0.05, fill=True, color='black', zorder=100)" << std::endl;
+    }
   }
-*/
 
   f_pyplot <<
     "# fix the ratio" << std::endl <<

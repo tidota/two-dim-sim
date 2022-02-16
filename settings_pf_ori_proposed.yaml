@@ -87,6 +87,8 @@ show_covs: true
 # constant parameters for global/mutual loc evaluation
 gl_eval_cons: 1
 ml_eval_cons: 250
+# plot particles?
+plot_particles: false
 
 # enable_update_step for mutual localization
 enable_update_step: true
